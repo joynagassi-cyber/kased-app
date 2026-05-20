@@ -925,8 +925,8 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
                   ),
                 ),
                 const SizedBox(width: 8),
-                Flexible(
-                  child: Column(
+                const Flexible(
+                  child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: const [
@@ -1034,30 +1034,30 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // En-tête
-                    Row(
+                    const Row(
                       children: [
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Suivi en ligne',
+                              Text('Suivi en ligne',
                                   style: TextStyle(
                                       fontSize: 9, color: Color(0xFF94A3B8))),
-                              const Text('Cotisations 2024',
+                              Text('Cotisations 2024',
                                   style: TextStyle(
                                       fontSize: 13, fontWeight: FontWeight.w700,
                                       color: Colors.white)),
                             ],
                           ),
                         ),
-                        Column(
+                        const Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Text('Cumul total',
+                            Text('Cumul total',
                                 style: TextStyle(
                                     fontSize: 8, color: Color(0xFF94A3B8))),
                             Text('110 000 FCFA',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 12, fontWeight: FontWeight.w800,
                                     color: Colors.white)),
                           ],
@@ -1208,8 +1208,8 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Flexible(
-                                child: Column(
+                              const Flexible(
+                                child: const Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: const [
                                     Text('Audit Transparent',
