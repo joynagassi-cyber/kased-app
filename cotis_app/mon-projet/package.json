@@ -1,0 +1,13 @@
+{
+  "name": "mon-projet",
+  "version": "1.0.0",
+  "description": "Axiom-Core powered project",
+  "scripts": {
+    "bootstrap": "bash Axiom-scaffold/scripts/bootstrap.sh",
+    "init": "bash Axiom-scaffold/scripts/setup.sh",
+    "memory": "bash Axiom-scaffold/scripts/index-memory.sh",
+    "visualize": "bash Axiom-scaffold/scripts/build-visualizer.sh",
+    "security": "bash Axiom-scaffold/scripts/security-scan.sh",
+    "test": "bash Axiom-scaffold/scripts/validate-code.sh"
+  }
+}

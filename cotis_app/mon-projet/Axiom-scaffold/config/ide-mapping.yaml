@@ -1,0 +1,113 @@
+# Axiom-scaffold/config/ide-mapping.yaml
+# Cartographie des configurations par IDE/CLI.
+# L'agent lit ce fichier pour s'adapter automatiquement.
+
+version: "1.0.0"
+
+agents:
+  claude_code:
+    context_file: "CLAUDE.md"
+    skills_dir: ".claude/skills/"
+    rules_dir: ".claude/rules/"
+    mcp_config: "~/.claude/mcp/"
+    settings: "~/.claude/settings.json"
+    hooks: ".claude/hooks/"
+    caveman_install: "claude plugin marketplace add JuliusBrussee/caveman"
+  
+  codex:
+    context_file: "AGENTS.md"
+    skills_dir: ".codex/skills/"
+    config: "~/.codex/config.toml"
+    mcp_config: "config.toml [mcp_servers]"
+    caveman_install: "npx skills add JuliusBrussee/caveman -a codex"
+  
+  gemini:
+    context_file: "GEMINI.md"
+    settings: "~/.gemini/settings.json"
+    extensions: ".gemini/extensions/"
+    mcp_config: "settings.json mcpServers"
+    caveman_install: "gemini extensions install https://github.com/JuliusBrussee/caveman"
+  
+  cursor:
+    context_file: ".cursor/rules/axiom.mdc"
+    rules_format: "mdc"
+    rules_dir: ".cursor/rules/"
+    skills_dir: ".cursor/skills/"
+    mcp_config: ".cursor/mcp.json"
+    caveman_install: "npx skills add JuliusBrussee/caveman -a cursor"
+  
+  windsurf:
+    context_file: ".windsurfrules"
+    rules_dir: ".windsurf/rules/"
+    skills_dir: ".windsurf/skills/"
+    caveman_install: "npx skills add JuliusBrussee/caveman -a windsurf"
+  
+  cline:
+    context_file: ".clinerules/axiom.md"
+    caveman_install: "npx skills add JuliusBrussee/caveman -a cline"
+  
+  copilot:
+    context_file: ".github/copilot-instructions.md"
+    caveman_install: "npx skills add JuliusBrussee/caveman -a copilot"
+  
+  aider:
+    context_file: "CONVENTIONS.md"
+    config: ".aider.conf.yml"
+  
+  kiro:
+    context_file: ".kiro/AGENTS.md"
+    config_dir: ".kiro/"
+  
+  zed:
+    context_file: "AGENTS.md"
+    config: "settings.json (agent panel)"
+  
+  antigravity:
+    context_file: "GEMINI.md"
+    skills_dir: ".gravity/skills/"
+  
+  trae:
+    context_file: "AGENTS.md"
+  
+  warp:
+    context_file: "AGENTS.md"
+  
+  codeium:
+    context_file: "AGENTS.md"
+  
+  continue:
+    context_file: "~/.continue/config.json"
+  
+  cody:
+    context_file: ".cody/AGENTS.md"
+  
+  roo_code:
+    context_file: "AGENTS.md"
+  
+  devin:
+    context_file: ".devin/AGENTS.md"
+  
+  mistral_vibe:
+    context_file: "AGENTS.md"
+  
+  qwen_code:
+    context_file: "AGENTS.md"
+  
+  opencode:
+    context_file: "AGENTS.md"
+    config_dir: ".opencode/"
+  
+  jetbrains_junie:
+    context_file: ".junie/AGENTS.md"
+  
+  replit_agent:
+    context_file: ".replit/AGENTS.md"
+  
+  amazon_q:
+    context_file: ".amazonq/AGENTS.md"
+
+# Mapping universel: quel fichier de contexte pour chaque outil
+context_file_fallback: "AGENTS.md"
+
+# Commande de détection automatique
+detection_script: "Axiom-scaffold/scripts/detect-ide.sh"

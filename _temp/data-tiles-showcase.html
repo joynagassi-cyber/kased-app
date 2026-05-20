@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Showcase Data Tiles - Cotis App</title>
+    <style>
+        :root {
+            --primary: #1246C8;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --bg: #F7F8FC;
+            --surface: #FFFFFF;
+            --text-primary: #0E1631;
+            --text-secondary: #4A5578;
+            --border: #E2E6F3;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 40px; color: var(--text-primary); }
+        .canvas { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .tile { 
+            background: var(--surface); 
+            padding: 16px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border);
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 12px;
+            position: relative;
+        }
+        /* Nouvelle approche : Accent latéral */
+        .tile-data { border-left: 6px solid var(--primary); }
+        .tile-data.success { border-left-color: var(--success); }
+        .tile-data.warning { border-left-color: var(--warning); }
+        
+        .avatar { 
+            width: 48px; height: 48px; 
+            background: #F0F2F9; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; margin-right: 16px;
+        }
+        .content { flex-grow: 1; }
+        .name { font-weight: 700; font-size: 16px; margin: 0; }
+        .meta { font-size: 13px; color: var(--text-secondary); margin: 0; }
+        .amount { font-weight: 800; font-size: 18px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Design Canvas: Data Tiles</h1>
+    <div class="canvas">
+        <div>
+            <h3>Actuel (Standard)</h3>
+            <div class="tile">
+                <div class="avatar">JD</div>
+                <div class="content">
+                    <p class="name">Jean Dupont</p>
+                    <p class="meta">Dernier paiement: 15 Avril</p>
+                </div>
+                <div class="amount">20€</div>
+            </div>
+        </div>
+        <div>
+            <h3>Proposé (Data Tile)</h3>
+            <div class="tile tile-data success">
+                <div class="avatar">JD</div>
+                <div class="content">
+                    <p class="name">Jean Dupont</p>
+                    <p class="meta">Payé - 15 Avril</p>
+                </div>
+                <div class="amount">20,00€</div>
+            </div>
+            <div class="tile tile-data warning">
+                <div class="avatar">AM</div>
+                <div class="content">
+                    <p class="name">Alice Martin</p>
+                    <p class="meta">En retard - 30 Jours</p>
+                </div>
+                <div class="amount">15,00€</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

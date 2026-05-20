@@ -1,0 +1,56 @@
+# ============================================================
+# Template de Micro-Tâche — Axiom-Scaffold
+# Ce fichier décrit une micro-tâche atomique (≤ 100 lignes de code)
+# ============================================================
+
+# --- Identification ---
+task_id: ""                    # Identifiant unique (ex: task-001)
+feature: ""                    # Nom de la fonctionnalité parente
+target_symbol: ""              # Nom de la fonction/classe/composant à implémenter
+
+# --- Description ---
+description: |
+  Description détaillée de ce que doit faire cette micro-tâche.
+  Maximum 3-4 phrases.
+
+# --- Signature ---
+signature: |
+  Signature complète de la fonction/classe avec types.
+  Exemple: async function checkoutSession(amount: number): Promise<string>
+
+# --- Types associés ---
+types: |
+  Interfaces, types, enums nécessaires.
+  Exemple:
+  interface StripeSessionResponse {
+    url: string;
+    sessionId: string;
+  }
+
+# --- Dépendances ---
+dependencies: []               # Liste des imports/modules requis
+  # - stripe-sdk
+  # - config/payment.ts
+
+# --- Contraintes ---
+constraints: []                # Fichiers de specs à respecter
+  # - specs/rules/constitution.md
+  # - specs/rules/security-policies.md
+
+# --- Tests ---
+tests: []                      # Fichiers de tests à exécuter
+  # - tests/unit/checkoutSession.test.ts
+  # - tests/visual/checkoutSession.spec.ts
+
+# --- Tests visuels ---
+visual_test: false             # true si la tâche implique une UI
+
+# --- Correction ---
+retry_count: 0                 # Nombre de tentatives (max 3)
+previous_errors: []            # Erreurs des tentatives précédentes
+  # - "TypeError: Cannot read property 'amount' of undefined"
+
+# --- Métadonnées ---
+created_at: ""                 # Date de création (ISO 8601)
+updated_at: ""                 # Date de dernière modification
+status: "pending"              # pending, in_progress, completed, failed, escalated

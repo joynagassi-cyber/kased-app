@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "535496831713",
+    "project_id": "kased-app",
+    "storage_bucket": "kased-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535496831713:android:1fa72f4f13d868e4587da0",
+        "android_client_info": {
+          "package_name": "com.kasedapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "535496831713-4ol3svlekn919034dp509bbi6i9j0ndo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAjo5xIACbnicrBhngvSaCOq6t9F49UTg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "535496831713-4ol3svlekn919034dp509bbi6i9j0ndo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

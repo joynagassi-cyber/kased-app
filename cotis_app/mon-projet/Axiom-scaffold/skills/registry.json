@@ -1,0 +1,221 @@
+{
+    "version": "2.0.0",
+    "updated": "2026-05-09",
+    "description": "Registre des compétences (skills) d'Axiom-Scaffold",
+    "skills": {
+        "built-in": [
+            {
+                "id": "axiom-bootstrap",
+                "file": "built-in/bootstrap.md",
+                "triggers": [
+                    "bootstrap",
+                    "init",
+                    "démarrer",
+                    "setup"
+                ],
+                "description": "Initialise entièrement Axiom sur ce projet",
+                "category": "setup",
+                "mode": "both",
+                "script": "scripts/bootstrap.sh"
+            },
+            {
+                "id": "axiom-scan",
+                "file": "built-in/quick-scan.md",
+                "triggers": [
+                    "scan",
+                    "scanner",
+                    "analyser",
+                    "map"
+                ],
+                "description": "Scanne rapidement le projet pour détecter les sections",
+                "category": "analysis",
+                "mode": "both",
+                "script": "scripts/quick-scan.sh"
+            },
+            {
+                "id": "axiom-memory",
+                "file": "built-in/memory-update.md",
+                "triggers": [
+                    "memory",
+                    "index",
+                    "mémoire",
+                    "indexer"
+                ],
+                "description": "Met à jour la mémoire universelle (fusion des graphes)",
+                "category": "memory",
+                "mode": "both",
+                "script": "scripts/index-memory.sh"
+            },
+            {
+                "id": "axiom-visualize",
+                "file": "built-in/visualization-update.md",
+                "triggers": [
+                    "visualize",
+                    "visualiser",
+                    "graph",
+                    "graphe"
+                ],
+                "description": "Régénère la visualisation interactive du graphe",
+                "category": "visualization",
+                "mode": "both",
+                "script": "scripts/build-visualizer.sh"
+            },
+            {
+                "id": "axiom-research",
+                "file": "built-in/stack-research.md",
+                "triggers": [
+                    "research",
+                    "recherche",
+                    "stack",
+                    "technos"
+                ],
+                "description": "Recherche automatiquement les meilleures technologies et MCPs",
+                "category": "research",
+                "mode": "both",
+                "script": "scripts/stack-research.sh"
+            },
+            {
+                "id": "axiom-linear",
+                "file": "built-in/linear-sync.md",
+                "triggers": [
+                    "linear",
+                    "tickets",
+                    "sync",
+                    "synchroniser"
+                ],
+                "description": "Synchronise les tickets Linear avec le plan d'implémentation",
+                "category": "project-management",
+                "mode": "both",
+                "script": "scripts/linear-sync.sh"
+            },
+            {
+                "id": "axiom-focus",
+                "file": "built-in/focus-mode.md",
+                "triggers": [
+                    "focus",
+                    "autonome",
+                    "auto"
+                ],
+                "description": "Active le mode Focus (autonomie totale)",
+                "category": "configuration",
+                "mode": "both",
+                "script": "scripts/focus-mode.sh"
+            },
+            {
+                "id": "axiom-flex",
+                "file": "built-in/flex-mode.md",
+                "triggers": [
+                    "flex",
+                    "flexible",
+                    "approbation"
+                ],
+                "description": "Active le mode Flex (approbations avant actions critiques)",
+                "category": "configuration",
+                "mode": "both",
+                "script": "scripts/focus-mode.sh --flex"
+            },
+            {
+                "id": "axiom-plan",
+                "file": "built-in/plan-template.md",
+                "triggers": [
+                    "plan",
+                    "planifier",
+                    "implementation-plan"
+                ],
+                "description": "Crée un plan d'implémentation structuré",
+                "category": "planning",
+                "mode": "both",
+                "template": "templates/plan-template.md"
+            },
+            {
+                "id": "axiom-task",
+                "file": "built-in/task-template.md",
+                "triggers": [
+                    "task",
+                    "tâche",
+                    "micro-task"
+                ],
+                "description": "Crée une micro-tâche standardisée",
+                "category": "planning",
+                "mode": "both",
+                "template": "templates/task-template.md"
+            },
+            {
+                "id": "axiom-walkthrough",
+                "file": "built-in/walkthrough-template.md",
+                "triggers": [
+                    "walkthrough",
+                    "demo",
+                    "présentation"
+                ],
+                "description": "Crée un walkthrough documenté",
+                "category": "documentation",
+                "mode": "both",
+                "template": "templates/walkthrough-template.md"
+            },
+            {
+                "id": "caveman-mode",
+                "file": "built-in/caveman-mode.md",
+                "triggers": [
+                    "caveman",
+                    "compact",
+                    "ultra",
+                    "lite",
+                    "wenyan",
+                    "less tokens",
+                    "compress",
+                    "terse"
+                ],
+                "description": "Active le mode Caveman pour compression maximale des sorties (65-75% tokens économisés)",
+                "category": "communication",
+                "mode": "both",
+                "config": "config/caveman-rules.yaml"
+            },
+            {
+                "id": "caveman-mode",
+                "file": "built-in/caveman-mode.md",
+                "triggers": [
+                    "caveman",
+                    "compact",
+                    "ultra",
+                    "lite",
+                    "wenyan",
+                    "less tokens",
+                    "compress",
+                    "terse"
+                ],
+                "description": "Active le mode Caveman pour compression maximale des sorties (65-75% tokens économisés)",
+                "category": "configuration",
+                "mode": "both",
+                "config": "config/caveman-rules.yaml"
+            }
+        ],
+        "generated": [],
+        "custom": []
+    },
+    "categories": {
+        "setup": "Installation et configuration initiale",
+        "analysis": "Analyse et scan du projet",
+        "memory": "Gestion de la mémoire et des graphes",
+        "visualization": "Visualisation et exploration",
+        "research": "Recherche automatique de technologies",
+        "project-management": "Gestion de projet et Linear",
+        "configuration": "Configuration d'Axiom",
+        "planning": "Planification et décomposition",
+        "documentation": "Documentation et guides",
+        "communication": "Modes de communication et compression"
+    },
+    "usage": {
+        "activation": "Utiliser /axiom-<trigger> ou simplement /<trigger>",
+        "examples": [
+            "/axiom-bootstrap",
+            "/scan",
+            "/memory",
+            "/visualize",
+            "/research",
+            "/linear",
+            "/focus",
+            "/plan"
+        ]
+    }
+}

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axiom-Scaffold — Visualisation Vivante (GPU)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #graph-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        #toolbar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            min-width: 300px;
+        }
+
+        #search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: #e0e0e0;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            margin: 5px 5px 5px 0;
+            border: none;
+            border-radius: 4px;
+            background: #4a9eff;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn:hover {
+            background: #3a7ed8;
+        }
+
+        #stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            font-size: 12px;
+        }
+
+        #stats .separator {
+            margin: 0 15px;
+        }
+
+        .loading-subtitle {
+            font-size: 11px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2000;
+        }
+
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #4a9eff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Chargement du graphe (GPU)...</p>
+            <p class="loading-subtitle">
+                Graphe volumineux détecté. Utilisation de Cosmos.gl pour des performances optimales.
+            </p>
+        </div>
+
+        <canvas id="graph-canvas"></canvas>
+
+        <div id="toolbar">
+            <input type="text" id="search-box" placeholder="🔍 Rechercher un symbole...">
+            <div>
+                <button type="button" class="btn" id="btn-reset">🔄 Réinitialiser</button>
+                <button type="button" class="btn" id="btn-fit">📐 Ajuster</button>
+            </div>
+        </div>
+
+        <div id="stats">
+            <span id="node-count">Nœuds: 0</span>
+            <span class="separator">|</span>
+            <span id="edge-count">Arêtes: 0</span>
+            <span class="separator">|</span>
+            <span id="fps">FPS: 0</span>
+        </div>
+    </div>
+
+    <!-- Cosmos.gl Library -->
+    <script src="https://unpkg.com/@cosmograph/cosmos@1.5.0/dist/index.min.js"></script>
+
+    <script>
+        // Data injected by build-visualizer.sh
+        const GRAPH_DATA = __GRAPH_DATA__;
+
+        let cosmos = null;
+        let lastFrameTime = Date.now();
+        let frameCount = 0;
+        let fps = 0;
+
+        // Initialize visualization
+        function init() {
+            try {
+                const processedData = processGraphData(GRAPH_DATA);
+
+                // Update stats
+                document.getElementById('node-count').textContent = `Nœuds: ${processedData.nodes.length}`;
+                document.getElementById('edge-count').textContent = `Arêtes: ${processedData.links.length}`;
+
+                // Create graph
+                createGraph(processedData);
+
+                // Setup event listeners
+                setupEventListeners();
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+
+                // Start FPS counter
+                requestAnimationFrame(updateFPS);
+
+            } catch (error) {
+                console.error('Erreur lors de l\'initialisation:', error);
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p class="error-message">Erreur: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Process graph data for Cosmos
+        function processGraphData(data) {
+            const nodes = (data.nodes || []).map((node, index) => ({
+                id: node.id || `node-${index}`,
+                label: node.name || node.id,
+                cluster: node.cluster || 'default',
+                size: Math.max(5, Math.min(20, (node.impactScore || 1) * 10))
+            }));
+
+            const links = (data.edges || []).map(edge => ({
+                source: edge.source,
+                target: edge.target
+            }));
+
+            return { nodes, links };
+        }
+
+        // Create Cosmos graph
+        function createGraph(data) {
+            const canvas = document.getElementById('graph-canvas');
+
+            cosmos = new Cosmos.Graph(canvas, {
+                nodeColor: (node) => getClusterColor(node.cluster),
+                nodeSize: (node) => node.size,
+                linkColor: '#666666',
+                linkWidth: 1,
+                backgroundColor: '#1a1a1a',
+                spaceSize: 8192,
+                simulation: {
+                    repulsion: 0.5,
+                    linkSpring: 1,
+                    linkDistance: 30,
+                    gravity: 0.1
+                },
+                renderLinks: true,
+                curvedLinks: false,
+                events: {
+                    onClick: (node) => {
+                        if (node) {
+                            console.log('Clicked node:', node);
+                        }
+                    }
+                }
+            });
+
+            cosmos.setData(data.nodes, data.links);
+        }
+
+        // Get cluster color
+        function getClusterColor(cluster) {
+            const colors = {
+                'default': '#4a9eff',
+                'auth': '#2ecc71',
+                'api': '#e74c3c',
+                'ui': '#f39c12',
+                'database': '#9b59b6',
+                'utils': '#1abc9c'
+            };
+            return colors[cluster] || '#4a9eff';
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search
+            document.getElementById('search-box').addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                if (!query) return;
+
+                const nodes = cosmos.getNodes();
+                const found = nodes.find(node =>
+                    node.label && node.label.toLowerCase().includes(query)
+                );
+
+                if (found) {
+                    cosmos.selectNode(found);
+                    cosmos.zoomToNode(found, 2000);
+                }
+            });
+
+            // Reset
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                cosmos.restart();
+            });
+
+            // Fit view
+            document.getElementById('btn-fit').addEventListener('click', () => {
+                cosmos.fitView();
+            });
+        }
+
+        // Update FPS counter
+        function updateFPS() {
+            frameCount++;
+            const now = Date.now();
+            const elapsed = now - lastFrameTime;
+
+            if (elapsed >= 1000) {
+                fps = Math.round((frameCount * 1000) / elapsed);
+                document.getElementById('fps').textContent = `FPS: ${fps}`;
+                frameCount = 0;
+                lastFrameTime = now;
+            }
+
+            requestAnimationFrame(updateFPS);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            if (cosmos) {
+                cosmos.fitView();
+            }
+        });
+    </script>
+</body>
+
+</html>

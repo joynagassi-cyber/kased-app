@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kased · Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════
+   KASED DESIGN SYSTEM — CSS VARIABLES (Source de vérité)
+   À copier dans lib/core/theme/app_theme.dart
+═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── COULEURS PRINCIPALES ── */
+  --kased-primary:       #1246C8;   /* Bleu électrique principal */
+  --kased-primary-dark:  #0D35A0;   /* Hover / pressed */
+  --kased-primary-light: #E8EEFB;   /* Background info / badges */
+  --kased-primary-mid:   #3A6AE4;   /* Accents secondaires */
+
+  /* ── COULEURS SÉMANTIQUES ── */
+  --kased-success:       #059669;   /* Payé, validé */
+  --kased-success-light: #D1FAE5;
+  --kased-danger:        #DC2626;   /* Retard, erreur */
+  --kased-danger-light:  #FEE2E2;
+  --kased-warning:       #D97706;   /* Attention, montant spécial */
+  --kased-warning-light: #FEF3C7;
+
+  /* ── NEUTRES ── */
+  --kased-bg:            #F7F8FC;   /* Page background */
+  --kased-surface:       #FFFFFF;   /* Cards, surfaces */
+  --kased-surface-2:     #F0F2F9;   /* Surface secondaire */
+  --kased-border:        #E2E6F3;   /* Bordures légères */
+  --kased-border-strong: #C5CCE3;   /* Bordures marquées */
+
+  /* ── TYPOGRAPHIE ── */
+  --kased-text-1:        #0E1631;   /* Titres, corps principal */
+  --kased-text-2:        #4A5578;   /* Labels, secondaire */
+  --kased-text-3:        #8B97BA;   /* Placeholders, hints */
+  --kased-text-inverse:  #FFFFFF;   /* Sur fond bleu */
+
+  /* ── ESPACEMENT (Flutter: dp) ── */
+  --space-xs:  4px;   /* 4dp */
+  --space-sm:  8px;   /* 8dp */
+  --space-md:  16px;  /* 16dp */
+  --space-lg:  24px;  /* 24dp */
+  --space-xl:  32px;  /* 32dp */
+  --space-2xl: 48px;  /* 48dp */
+
+  /* ── RAYONS ── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 999px;
+
+  /* ── OMBRES ── */
+  --shadow-sm:  0 1px 3px rgba(18,70,200,.08), 0 1px 2px rgba(18,70,200,.04);
+  --shadow-md:  0 4px 12px rgba(18,70,200,.10), 0 2px 4px rgba(18,70,200,.06);
+  --shadow-lg:  0 8px 24px rgba(18,70,200,.14), 0 4px 8px rgba(18,70,200,.08);
+
+  /* ── TOUCH TARGETS (min 52dp WCAG) ── */
+  --touch-min: 52px;
+
+  /* ── FONTS ── */
+  --font-display: 'Syne', sans-serif;    /* Titres, AppBar, FAB */
+  --font-body:    'DM Sans', sans-serif; /* Corps, labels, données */
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font-body);
+  background: var(--kased-bg);
+  color: var(--kased-text-1);
+  line-height: 1.6;
+  padding: 0;
+}
+
+.ds-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ── Sections ── */
+.ds-section {
+  margin-bottom: 64px;
+}
+
+.ds-section-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--kased-primary);
+  margin-bottom: 6px;
+}
+
+.ds-section-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--kased-text-1);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.ds-section-sub {
+  font-size: 14px;
+  color: var(--kased-text-2);
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--kased-border);
+  padding-bottom: 16px;
+}
+
+.ds-code {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  background: var(--kased-surface-2);
+  border: 1px solid var(--kased-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  color: var(--kased-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════════ */
+.ds-header {
+  background: var(--kased-primary);
+  margin-bottom: 56px;
+  padding: 48px 24px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ds-header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+}
+
+.ds-header::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: 40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.04);
+}
+
+.ds-header-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+
+.ds-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ds-logo-mark {
+  width: 44px; height: 44px;
+  background: white;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--kased-primary);
+}
+
+.ds-logo-name {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.ds-logo-dot { color: rgba(255,255,255,.5); }
+
+.ds-header-title {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 800;
+  color: white;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  letter-spacing: -1px;
+}
+
+.ds-header-desc {
+  font-size: 15px;
+  color: rgba(255,255,255,.7);
+  max-width: 480px;
+}
+
+.ds-version {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,.15);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  color: rgba(255,255,255,.85);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §1 — COULEURS
+═══════════════════════════════════════════════════════════ */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.color-swatch {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--kased-border);
+  background: var(--kased-surface);
+}
+
+.swatch-block {
+  height: 72px;
+  width: 100%;
+}
+
+.swatch-info {
+  padding: 10px 12px;
+}
+
+.swatch-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kased-text-1);
+  margin-bottom: 2px;
+}
+
+.swatch-hex {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: var(--kased-text-3);
+}
+
+.swatch-flutter {
+  font-size: 10px;
+  color: var(--kased-primary);
+  margin-top: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §2 — TYPOGRAPHIE
+═══════════════════════════════════════════════════════════ */
+.typo-samples {
+  background: var(--kased-surface);
+  border: 1px solid var(--kased-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+}
+
+.typo-row {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--kased-border);
+}
+
+.typo-row:last-child { border-bottom: none; }
+
+.typo-meta {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.typo-role {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--kased-text-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.typo-spec {
+  font-size: 11px;
+  color: var(--kased-text-3);
+  margin-top: 2px;
+}
+
+.typo-sample { flex: 1; color: var(--kased-text-1); }
+
+/* ═══════════════════════════════════════════════════════════
+   §3 — COMPOSANTS
+═══════════════════════════════════════════════════════════ */
+
+/* ── Boutons ── */
+.btn-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 500;
+  transition: all .15s ease;
+  height: var(--touch-min);
+  padding: 0 20px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.btn-icon { font-size: 16px; }
+
+/* Primary */
+.btn-primary {
+  background: var(--kased-primary);
+  color: var(--kased-text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover { background: var(--kased-primary-dark); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* Secondary */
+.btn-secondary {
+  background: var(--kased-primary-light);
+  color: var(--kased-primary);
+  border: 1px solid rgba(18,70,200,.2);
+}
+.btn-secondary:hover { background: #d6e0f7; }
+
+/* Outlined */
+.btn-outlined {
+  background: transparent;
+  color: var(--kased-primary);
+  border: 1.5px solid var(--kased-primary);
+}
+.btn-outlined:hover { background: var(--kased-primary-light); }
+
+/* Danger */
+.btn-danger {
+  background: var(--kased-danger);
+  color: white;
+  box-shadow: 0 2px 8px rgba(220,38,38,.2);
+}
+.btn-danger:hover { background: #b91c1c; }
+
+/* Success */
+.btn-success {
+  background: var(--kased-success);
+  color: white;
+  box-shadow: 0 2px 8px rgba(5,150,105,.2);
+}
+
+/* Ghost */
+.btn-ghost {
+  background: transparent;
+  color: var(--kased-text-2);
+  border: 1px solid var(--kased-border);
+}
+.btn-ghost:hover { background: var(--kased-surface-2); }
+
+/* FAB */
+.btn-fab {
+  width: 56px; height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--kased-primary);
+  color: white;
+  padding: 0;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  font-size: 24px;
+}
+
+/* ── Cards ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: var(--kased-surface);
+  border: 1px solid var(--kased-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Stat Card */
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+}
+
+.stat-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--kased-text-1);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--kased-text-2);
+  font-weight: 400;
+}
+
+/* Culte Card */
+.culte-card {
+  padding: 16px 20px;
+}
+
+.culte-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.culte-date {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kased-text-1);
+}
+
+.culte-amount {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--kased-primary);
+}
+
+.progress-bar-wrap {
+  height: 6px;
+  background: var(--kased-surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--kased-success);
+  transition: width .4s ease;
+}
+
+.culte-stats {
+  font-size: 12px;
+  color: var(--kased-text-2);
+}
+
+/* ── Member Pay Tile ── */
+.member-tile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--kased-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--kased-border);
+  margin-bottom: 8px;
+  transition: all .15s;
+}
+
+.member-tile.paid {
+  background: #f0fdf6;
+  border-color: #bbf7d0;
+}
+
+.avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatar-blue { background: var(--kased-primary-light); color: var(--kased-primary); }
+.avatar-green { background: var(--kased-success-light); color: var(--kased-success); }
+
+.member-info { flex: 1; }
+.member-name { font-size: 14px; font-weight: 500; color: var(--kased-text-1); }
+.member-sub  { font-size: 12px; color: var(--kased-text-3); margin-top: 1px; }
+
+.pay-toggle {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--kased-border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 14px;
+  background: var(--kased-surface);
+}
+
+.pay-toggle.paid {
+  background: var(--kased-success);
+  border-color: var(--kased-success);
+  color: white;
+}
+
+/* ── Badges ── */
+.badge-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-primary { background: var(--kased-primary-light); color: var(--kased-primary); }
+.badge-success { background: var(--kased-success-light); color: var(--kased-success); }
+.badge-danger  { background: var(--kased-danger-light);  color: var(--kased-danger); }
+.badge-warning { background: var(--kased-warning-light); color: var(--kased-warning); }
+.badge-neutral { background: var(--kased-surface-2); color: var(--kased-text-2); }
+.badge-dot::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+
+/* ── Inputs ── */
+.input-group { margin-bottom: 16px; }
+
+.input-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kased-text-2);
+  margin-bottom: 6px;
+}
+
+.input-field {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 1.5px solid var(--kased-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--kased-text-1);
+  background: var(--kased-surface);
+  outline: none;
+  transition: border-color .15s;
+  -webkit-appearance: none;
+}
+
+.input-field:focus {
+  border-color: var(--kased-primary);
+  box-shadow: 0 0 0 3px rgba(18,70,200,.12);
+}
+
+.input-field::placeholder { color: var(--kased-text-3); }
+
+.input-error .input-field { border-color: var(--kased-danger); }
+.input-error-msg { font-size: 12px; color: var(--kased-danger); margin-top: 4px; }
+
+.input-success .input-field { border-color: var(--kased-success); }
+
+/* ── Bottom Navigation ── */
+.bottom-nav {
+  display: flex;
+  background: var(--kased-surface);
+  border-top: 1px solid var(--kased-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  cursor: pointer;
+  gap: 4px;
+  transition: all .15s;
+}
+
+.nav-icon { font-size: 22px; color: var(--kased-text-3); }
+.nav-label { font-size: 11px; color: var(--kased-text-3); font-weight: 400; }
+
+.nav-item.active .nav-icon { color: var(--kased-primary); }
+.nav-item.active .nav-label { color: var(--kased-primary); font-weight: 600; }
+
+.nav-indicator {
+  position: relative;
+}
+.nav-indicator::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px; height: 3px;
+  background: var(--kased-primary);
+  border-radius: 0 0 3px 3px;
+}
+
+/* ── Retard Row ── */
+.retard-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--kased-surface);
+  border: 1px solid var(--kased-border);
+  border-left: 4px solid var(--kased-danger);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.retard-info { flex: 1; }
+.retard-name { font-size: 14px; font-weight: 500; color: var(--kased-text-1); }
+.retard-detail { font-size: 12px; color: var(--kased-text-2); margin-top: 2px; }
+
+.retard-amount {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--kased-danger);
+}
+
+/* ── AppBar ── */
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--kased-primary);
+  padding: 14px 16px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  color: white;
+}
+
+.appbar-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  flex: 1;
+}
+
+.appbar-action {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: white;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--kased-surface);
+  border: 1px dashed var(--kased-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: .4;
+}
+
+.empty-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--kased-text-2);
+  margin-bottom: 6px;
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: var(--kased-text-3);
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* ── Snackbars ── */
+.snack-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.snack {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+}
+
+.snack-success { background: #022c22; color: #6ee7b7; }
+.snack-error   { background: #450a0a; color: #fca5a5; }
+.snack-info    { background: #0c1445; color: #93c5fd; }
+
+.snack-icon { font-size: 18px; }
+.snack-text { flex: 1; }
+.snack-action { font-size: 13px; font-weight: 600; cursor: pointer; opacity: .85; }
+
+/* ── Screen mockups ── */
+.screen-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.screen-mock {
+  background: var(--kased-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--kased-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.screen-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kased-text-2);
+  text-align: center;
+  padding: 8px;
+  background: var(--kased-surface-2);
+  border-top: 1px solid var(--kased-border);
+}
+
+.screen-body {
+  padding: 12px;
+  min-height: 220px;
+}
+
+/* ── Mode saisie rapide ── */
+.saisie-rapide {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  border: 1px solid var(--kased-border);
+}
+
+.saisie-progress {
+  height: 4px;
+  background: var(--kased-surface-2);
+  border-radius: var(--radius-full);
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.saisie-progress-fill {
+  height: 100%;
+  background: var(--kased-primary);
+  border-radius: var(--radius-full);
+  width: 60%;
+}
+
+.saisie-prenom {
+  font-size: 18px;
+  color: var(--kased-text-2);
+  margin-bottom: 4px;
+}
+
+.saisie-nom {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--kased-text-1);
+  margin-bottom: 32px;
+}
+
+.saisie-btns { display: flex; flex-direction: column; gap: 10px; }
+
+.saisie-btn-paye {
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: var(--kased-success);
+  color: white;
+  border: none;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+
+.saisie-btn-passer {
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--kased-surface-2);
+  color: var(--kased-text-2);
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: var(--kased-border);
+  margin: 24px 0;
+}
+
+/* ── Tag chip ── */
+.chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1.5px solid var(--kased-border);
+  background: var(--kased-surface);
+  color: var(--kased-text-2);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.chip:hover { border-color: var(--kased-primary); color: var(--kased-primary); background: var(--kased-primary-light); }
+.chip.active { border-color: var(--kased-primary); color: var(--kased-primary); background: var(--kased-primary-light); }
+
+/* ── Flutter Code Block ── */
+.code-block {
+  background: #0e1631;
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.code-block code {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #93c5fd;
+  white-space: pre;
+}
+
+.code-comment { color: #4a5578; }
+.code-key     { color: #c084fc; }
+.code-val     { color: #6ee7b7; }
+.code-str     { color: #fbbf24; }
+
+/* ── Section Flutter mapping ── */
+.flutter-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--kased-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--kased-border);
+}
+
+.flutter-table th {
+  background: var(--kased-surface-2);
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--kased-text-3);
+  font-weight: 600;
+}
+
+.flutter-table td {
+  padding: 10px 16px;
+  border-top: 1px solid var(--kased-border);
+  color: var(--kased-text-1);
+  vertical-align: middle;
+}
+
+.flutter-table tr:hover td { background: var(--kased-surface-2); }
+
+.color-dot {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<div class="ds-header">
+  <div class="ds-header-inner">
+    <div class="ds-logo">
+      <div class="ds-logo-mark">K</div>
+      <div class="ds-logo-name">kased<span class="ds-logo-dot">.</span></div>
+    </div>
+    <div class="ds-header-title">Design System</div>
+    <div class="ds-header-desc">Charte graphique officielle · Gestion de cotisations d'église · Flutter Android</div>
+    <div class="ds-version">v1.0 · Bleu électrique · Syne + DM Sans</div>
+  </div>
+</div>
+
+<div class="ds-page">
+
+<!-- ═══════════════ §1 — COULEURS ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 01</div>
+  <div class="ds-section-title">Palette de couleurs</div>
+  <div class="ds-section-sub">Toutes les couleurs de l'application. Le bleu électrique est la couleur signature de Kased. Les couleurs sémantiques couvrent les états payé, retard, et attention.</div>
+
+  <div class="color-grid">
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#1246C8;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Primary</div>
+        <div class="swatch-hex">#1246C8</div>
+        <div class="swatch-flutter">kased-primary</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#0D35A0;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Primary Dark</div>
+        <div class="swatch-hex">#0D35A0</div>
+        <div class="swatch-flutter">kased-primary-dark</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#E8EEFB;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Primary Light</div>
+        <div class="swatch-hex">#E8EEFB</div>
+        <div class="swatch-flutter">kased-primary-light</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#059669;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Success</div>
+        <div class="swatch-hex">#059669</div>
+        <div class="swatch-flutter">kased-success</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#D1FAE5;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Success Light</div>
+        <div class="swatch-hex">#D1FAE5</div>
+        <div class="swatch-flutter">kased-success-light</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#DC2626;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Danger</div>
+        <div class="swatch-hex">#DC2626</div>
+        <div class="swatch-flutter">kased-danger</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#FEE2E2;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Danger Light</div>
+        <div class="swatch-hex">#FEE2E2</div>
+        <div class="swatch-flutter">kased-danger-light</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#D97706;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Warning</div>
+        <div class="swatch-hex">#D97706</div>
+        <div class="swatch-flutter">kased-warning</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#F7F8FC;border:1px solid #E2E6F3;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Background</div>
+        <div class="swatch-hex">#F7F8FC</div>
+        <div class="swatch-flutter">kased-bg</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#FFFFFF;border:1px solid #E2E6F3;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Surface</div>
+        <div class="swatch-hex">#FFFFFF</div>
+        <div class="swatch-flutter">kased-surface</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#0E1631;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Text Primary</div>
+        <div class="swatch-hex">#0E1631</div>
+        <div class="swatch-flutter">kased-text-1</div>
+      </div>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-block" style="background:#4A5578;"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Text Secondary</div>
+        <div class="swatch-hex">#4A5578</div>
+        <div class="swatch-flutter">kased-text-2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flutter mapping -->
+  <div style="margin-top: 24px;">
+    <p style="font-size:13px; font-weight:600; color:var(--kased-text-2); margin-bottom:10px;">Équivalent Flutter (lib/core/theme/app_theme.dart)</p>
+    <div class="code-block"><code><span class="code-comment">// AppColors — à copier dans app_theme.dart</span>
+<span class="code-key">class</span> <span class="code-val">AppColors</span> {
+  <span class="code-key">static const</span> primary      = <span class="code-val">Color</span>(<span class="code-str">0xFF1246C8</span>);
+  <span class="code-key">static const</span> primaryDark  = <span class="code-val">Color</span>(<span class="code-str">0xFF0D35A0</span>);
+  <span class="code-key">static const</span> primaryLight = <span class="code-val">Color</span>(<span class="code-str">0xFFE8EEFB</span>);
+  <span class="code-key">static const</span> success      = <span class="code-val">Color</span>(<span class="code-str">0xFF059669</span>);
+  <span class="code-key">static const</span> successLight = <span class="code-val">Color</span>(<span class="code-str">0xFFD1FAE5</span>);
+  <span class="code-key">static const</span> danger       = <span class="code-val">Color</span>(<span class="code-str">0xFFDC2626</span>);
+  <span class="code-key">static const</span> dangerLight  = <span class="code-val">Color</span>(<span class="code-str">0xFFFEE2E2</span>);
+  <span class="code-key">static const</span> warning      = <span class="code-val">Color</span>(<span class="code-str">0xFFD97706</span>);
+  <span class="code-key">static const</span> background   = <span class="code-val">Color</span>(<span class="code-str">0xFFF7F8FC</span>);
+  <span class="code-key">static const</span> surface      = <span class="code-val">Color</span>(<span class="code-str">0xFFFFFFFF</span>);
+  <span class="code-key">static const</span> surface2     = <span class="code-val">Color</span>(<span class="code-str">0xFFF0F2F9</span>);
+  <span class="code-key">static const</span> border       = <span class="code-val">Color</span>(<span class="code-str">0xFFE2E6F3</span>);
+  <span class="code-key">static const</span> text1        = <span class="code-val">Color</span>(<span class="code-str">0xFF0E1631</span>);
+  <span class="code-key">static const</span> text2        = <span class="code-val">Color</span>(<span class="code-str">0xFF4A5578</span>);
+  <span class="code-key">static const</span> text3        = <span class="code-val">Color</span>(<span class="code-str">0xFF8B97BA</span>);
+}</code></div>
+  </div>
+</div>
+
+<!-- ═══════════════ §2 — TYPOGRAPHIE ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 02</div>
+  <div class="ds-section-title">Typographie</div>
+  <div class="ds-section-sub">
+    <strong>Syne</strong> (titres, AppBar, FAB, chiffres stats) ·
+    <strong>DM Sans</strong> (corps, labels, descriptions, données)
+  </div>
+
+  <div class="typo-samples">
+
+    <div class="typo-row">
+      <div class="typo-meta">
+        <div class="typo-role">Display</div>
+        <div class="typo-spec">Syne 800 · 32sp</div>
+      </div>
+      <div class="typo-sample" style="font-family:var(--font-display);font-size:32px;font-weight:800;">Kased · 1 200 FCFA</div>
+    </div>
+
+    <div class="typo-row">
+      <div class="typo-meta">
+        <div class="typo-role">Titre Screen</div>
+        <div class="typo-spec">Syne 700 · 22sp</div>
+      </div>
+      <div class="typo-sample" style="font-family:var(--font-display);font-size:22px;font-weight:700;">Retards du mois</div>
+    </div>
+
+    <div class="typo-row">
+      <div class="typo-meta">
+        <div class="typo-role">AppBar Title</div>
+        <div class="typo-spec">Syne 700 · 18sp · blanc</div>
+      </div>
+      <div class="typo-sample" style="font-family:var(--font-display);font-size:18px;font-weight:700;background:var(--kased-primary);color:white;padding:8px 16px;border-radius:8px;">Dimanche 27 Avril</div>
+    </div>
+
+    <div class="typo-row">
+      <div class="typo-meta">
+        <div class="typo-role">Stat Value</div>
+        <div class="typo-spec">Syne 700 · 28sp · primary</div>
+      </div>
+      <div class="typo-sample" style="font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--kased-primary);">18 / 24</div>
+    </div>
+
+    <div class="typo-row">
+      <div class="typo-meta">
+        <div class="typo-role">Nom membre</div>
+        <div class="typo-spec">DM Sans 500 · 15sp</div>
+      </div>
+      <div class="typo-sample" style="font-size:15px;font-weight:500;">Jean-Baptiste KOUASSI</div>
+    </div>
+
+    <div class="typo-row">
+      <div class="typo-meta">
+        <div class="typo-role">Corps / Label</div>
+        <div class="typo-spec">DM Sans 400 · 14sp</div>
+      </div>
+      <div class="typo-sample" style="font-size:14px;color:var(--kased-text-2);">3 dimanches manqués depuis le 12 janvier</div>
+    </div>
+
+    <div class="typo-row">
+      <div class="typo-meta">
+        <div class="typo-role">Caption / Badge</div>
+        <div class="typo-spec">DM Sans 500 · 12sp</div>
+      </div>
+      <div class="typo-sample" style="font-size:12px;font-weight:500;color:var(--kased-text-3);">RETARDS · SECTION LABEL</div>
+    </div>
+
+    <div class="typo-row">
+      <div class="typo-meta">
+        <div class="typo-role">Saisie rapide</div>
+        <div class="typo-spec">Syne 800 · 36sp</div>
+      </div>
+      <div class="typo-sample" style="font-family:var(--font-display);font-size:36px;font-weight:800;">KOUASSI</div>
+    </div>
+
+  </div>
+
+  <div class="code-block" style="margin-top:16px;"><code><span class="code-comment">// pubspec.yaml — Google Fonts</span>
+<span class="code-key">dependencies</span>:
+  google_fonts: ^6.1.0
+
+<span class="code-comment">// app_theme.dart</span>
+<span class="code-key">import</span> <span class="code-str">'package:google_fonts/google_fonts.dart'</span>;
+
+<span class="code-key">static final</span> displayFont = <span class="code-val">GoogleFonts</span>.syne();
+<span class="code-key">static final</span> bodyFont    = <span class="code-val">GoogleFonts</span>.dmSans();
+
+<span class="code-comment">// Usage dans un Widget</span>
+style: <span class="code-val">GoogleFonts</span>.syne(fontSize: <span class="code-str">22</span>, fontWeight: <span class="code-val">FontWeight</span>.w700)</code></div>
+</div>
+
+<!-- ═══════════════ §3 — BOUTONS ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 03</div>
+  <div class="ds-section-title">Boutons</div>
+  <div class="ds-section-sub">Tous les boutons ont une hauteur minimum de 52dp (WCAG touch target). Le FAB est toujours à 56dp de diamètre, ancré en bas à droite.</div>
+
+  <div class="btn-grid">
+    <button class="btn btn-primary"><span class="btn-icon">+</span> Nouveau culte</button>
+    <button class="btn btn-secondary"><span class="btn-icon">↓</span> Exporter</button>
+    <button class="btn btn-outlined">Voir détails</button>
+    <button class="btn btn-danger"><span class="btn-icon">✕</span> Supprimer</button>
+    <button class="btn btn-success"><span class="btn-icon">✓</span> Confirmer</button>
+    <button class="btn btn-ghost">Annuler</button>
+    <button class="btn btn-fab">+</button>
+  </div>
+
+  <div class="code-block"><code><span class="code-comment">// Bouton primaire Flutter</span>
+<span class="code-val">ElevatedButton</span>(
+  style: <span class="code-val">ElevatedButton</span>.styleFrom(
+    backgroundColor: <span class="code-val">AppColors</span>.primary,
+    foregroundColor: <span class="code-val">Colors</span>.white,
+    minimumSize: <span class="code-key">const</span> <span class="code-val">Size</span>(<span class="code-str">double.infinity</span>, <span class="code-str">52</span>),
+    shape: <span class="code-val">RoundedRectangleBorder</span>(borderRadius: <span class="code-val">BorderRadius</span>.circular(<span class="code-str">10</span>)),
+    textStyle: <span class="code-val">GoogleFonts</span>.dmSans(fontSize: <span class="code-str">15</span>, fontWeight: <span class="code-val">FontWeight</span>.w500),
+  ),
+  onPressed: () {},
+  child: <span class="code-key">const</span> <span class="code-val">Text</span>(<span class="code-str">'Nouveau culte'</span>),
+)</code></div>
+</div>
+
+<!-- ═══════════════ §4 — CARDS ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 04</div>
+  <div class="ds-section-title">Cards & Tiles</div>
+  <div class="ds-section-sub">Quatre types de cards utilisées dans l'app. Toutes avec border-radius 16dp, border 1px, pas de shadow agressive.</div>
+
+  <div class="cards-grid">
+    <!-- Stat card -->
+    <div class="card stat-card">
+      <div class="stat-icon" style="background:var(--kased-primary-light);">👥</div>
+      <div>
+        <div class="stat-value">24</div>
+        <div class="stat-label">Membres actifs</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon" style="background:var(--kased-success-light);">💰</div>
+      <div>
+        <div class="stat-value" style="color:var(--kased-success);">1 200</div>
+        <div class="stat-label">FCFA collectés</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon" style="background:var(--kased-danger-light);">⚠</div>
+      <div>
+        <div class="stat-value" style="color:var(--kased-danger);">6</div>
+        <div class="stat-label">Membres en retard</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon" style="background:var(--kased-warning-light);">🕍</div>
+      <div>
+        <div class="stat-value">12</div>
+        <div class="stat-label">Cultes enregistrés</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Culte card -->
+  <div class="card culte-card" style="margin-bottom:16px;">
+    <div class="culte-card-header">
+      <div>
+        <div class="culte-date">Dimanche 27 Avril 2025</div>
+        <div style="font-size:12px;color:var(--kased-text-3);margin-top:2px;">18 payés sur 24 membres</div>
+      </div>
+      <div class="culte-amount">900 FCFA</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" style="width:75%;"></div>
+    </div>
+    <div class="culte-stats">75% de participation</div>
+  </div>
+
+  <!-- Member tiles -->
+  <div class="member-tile paid">
+    <div class="avatar avatar-green">MK</div>
+    <div class="member-info">
+      <div class="member-name">Marie KOUASSI</div>
+      <div class="member-sub">Depuis 12 Jan 2024</div>
+    </div>
+    <div class="pay-toggle paid">✓</div>
+  </div>
+
+  <div class="member-tile">
+    <div class="avatar avatar-blue">JD</div>
+    <div class="member-info">
+      <div class="member-name">Jean DUBOIS</div>
+      <div class="member-sub">Depuis 3 Mar 2024</div>
+    </div>
+    <div class="pay-toggle"></div>
+  </div>
+
+  <!-- Retard row -->
+  <div style="margin-top:16px;">
+    <div class="retard-row">
+      <div class="avatar avatar-blue">AB</div>
+      <div class="retard-info">
+        <div class="retard-name">Aimé BELLO</div>
+        <div class="retard-detail">4 dimanches manqués · Dernier paiement il y a 5 sem.</div>
+      </div>
+      <div class="retard-amount">200 F</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ §5 — BADGES & CHIPS ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 05</div>
+  <div class="ds-section-title">Badges & Chips de filtre</div>
+  <div class="ds-section-sub">Les badges encodent les états. Les chips servent aux filtres rapides dans CulteDetailScreen.</div>
+
+  <div class="badge-grid" style="margin-bottom:20px;">
+    <span class="badge badge-primary badge-dot">À jour</span>
+    <span class="badge badge-success badge-dot">Payé</span>
+    <span class="badge badge-danger badge-dot">En retard</span>
+    <span class="badge badge-warning badge-dot">Montant spécial</span>
+    <span class="badge badge-neutral">Inactif</span>
+    <span class="badge badge-primary">🎂 Anniversaire</span>
+  </div>
+
+  <div class="chip-grid">
+    <span class="chip active">Tous (24)</span>
+    <span class="chip">Payés (18)</span>
+    <span class="chip">Non payés (6)</span>
+  </div>
+</div>
+
+<!-- ═══════════════ §6 — INPUTS ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 06</div>
+  <div class="ds-section-title">Champs de saisie</div>
+  <div class="ds-section-sub">Focus ring bleu 3px. Erreur en rouge. Hauteur min 52dp. Labels DM Sans 500 13sp.</div>
+
+  <div style="max-width:440px;">
+    <div class="input-group">
+      <label class="input-label">Nom du membre</label>
+      <input class="input-field" placeholder="Ex: KOUASSI" type="text">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Prénom</label>
+      <input class="input-field" placeholder="Ex: Marie" type="text" value="Marie">
+    </div>
+    <div class="input-group input-error">
+      <label class="input-label">Montant (FCFA)</label>
+      <input class="input-field" value="-50" type="number">
+      <div class="input-error-msg">Le montant doit être supérieur à 0</div>
+    </div>
+    <div class="input-group input-success">
+      <label class="input-label">Date d'inscription</label>
+      <input class="input-field" value="2024-01-12" type="date">
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ §7 — NAVIGATION ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 07</div>
+  <div class="ds-section-title">Navigation & AppBar</div>
+  <div class="ds-section-sub">AppBar bleu électrique avec titre Syne 700 blanc. Bottom navigation 5 onglets (avec Stats après feature 03).</div>
+
+  <!-- AppBar -->
+  <div class="appbar" style="margin-bottom:16px;">
+    <div style="font-size:18px;color:rgba(255,255,255,.7);cursor:pointer;">←</div>
+    <div class="appbar-title">Dimanche 27 Avr</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:600;">18/24 · 900F</div>
+    <div class="appbar-action">⚡</div>
+    <div class="appbar-action">⋯</div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon nav-indicator">⌂</span>
+      <span class="nav-label" style="color:var(--kased-primary);font-weight:600;">Accueil</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">Membres</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🕍</span>
+      <span class="nav-label">Cultes</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚠</span>
+      <span class="nav-label">Retards</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Stats</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ §8 — FEATURE 07 : SAISIE RAPIDE ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 08 · Feature 07</div>
+  <div class="ds-section-title">Mode saisie rapide</div>
+  <div class="ds-section-sub">Interface fullscreen post-culte. Un membre à la fois. Boutons géants. Zéro distraction. Nom en Syne 800 36sp.</div>
+
+  <div style="max-width:340px;">
+    <div class="saisie-rapide">
+      <div class="saisie-progress">
+        <div class="saisie-progress-fill"></div>
+      </div>
+      <div style="font-size:13px;color:var(--kased-text-3);margin-bottom:6px;">12 / 20 traités</div>
+      <div class="saisie-prenom">Jean-Baptiste</div>
+      <div class="saisie-nom">KOUASSI</div>
+      <div class="saisie-btns">
+        <button class="saisie-btn-paye">✓ &nbsp; Payé — 50 FCFA</button>
+        <button class="saisie-btn-passer">→ Passer pour plus tard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ §9 — SNACKBARS & EMPTY STATES ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 09</div>
+  <div class="ds-section-title">Feedback & États vides</div>
+  <div class="ds-section-sub">Snackbars sombres pour les confirmations. Empty state centré avec icône grande et message encourageant.</div>
+
+  <div class="snack-grid" style="margin-bottom:24px;">
+    <div class="snack snack-success">
+      <span class="snack-icon">✓</span>
+      <span class="snack-text">Paiement de Marie KOUASSI enregistré</span>
+      <span class="snack-action">Annuler</span>
+    </div>
+    <div class="snack snack-error">
+      <span class="snack-icon">✕</span>
+      <span class="snack-text">Erreur de connexion · Réessayer</span>
+      <span class="snack-action">Réessayer</span>
+    </div>
+    <div class="snack snack-info">
+      <span class="snack-icon">ℹ</span>
+      <span class="snack-text">Mode hors-ligne · Données non synchronisées</span>
+    </div>
+  </div>
+
+  <div class="empty-state">
+    <div class="empty-icon">✅</div>
+    <div class="empty-title">Tout le monde est à jour !</div>
+    <div class="empty-desc">Aucun membre en retard de cotisation. Félicitations à la communauté.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ §10 — MAPPING FLUTTER ═══════════════ -->
+<div class="ds-section">
+  <div class="ds-section-label">Section 10</div>
+  <div class="ds-section-title">Correspondances Flutter complètes</div>
+  <div class="ds-section-sub">Tableau de référence — design token → widget Flutter → valeur exacte.</div>
+
+  <table class="flutter-table">
+    <thead>
+      <tr>
+        <th>Élément</th>
+        <th>Widget Flutter</th>
+        <th>Valeur / Paramètre</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="color-dot" style="background:#1246C8;"></span>Couleur principale</td>
+        <td><code class="ds-code">AppColors.primary</code></td>
+        <td><code class="ds-code">Color(0xFF1246C8)</code></td>
+      </tr>
+      <tr>
+        <td>Font titres</td>
+        <td><code class="ds-code">GoogleFonts.syne()</code></td>
+        <td>weight: 700/800</td>
+      </tr>
+      <tr>
+        <td>Font corps</td>
+        <td><code class="ds-code">GoogleFonts.dmSans()</code></td>
+        <td>weight: 400/500</td>
+      </tr>
+      <tr>
+        <td>Rayon card</td>
+        <td><code class="ds-code">BorderRadius.circular(16)</code></td>
+        <td>16dp</td>
+      </tr>
+      <tr>
+        <td>Touch target min</td>
+        <td><code class="ds-code">minimumSize: Size(x, 52)</code></td>
+        <td>52dp hauteur min</td>
+      </tr>
+      <tr>
+        <td>Border card</td>
+        <td><code class="ds-code">Border.all(color: AppColors.border)</code></td>
+        <td>width: 1, Color(0xFFE2E6F3)</td>
+      </tr>
+      <tr>
+        <td>Background page</td>
+        <td><code class="ds-code">scaffoldBackgroundColor</code></td>
+        <td><code class="ds-code">Color(0xFFF7F8FC)</code></td>
+      </tr>
+      <tr>
+        <td>AppBar</td>
+        <td><code class="ds-code">AppBarTheme</code></td>
+        <td>bg: primary, fg: white, elevation: 0</td>
+      </tr>
+      <tr>
+        <td>FAB</td>
+        <td><code class="ds-code">FloatingActionButton</code></td>
+        <td>bg: primary, 56dp, radius: full</td>
+      </tr>
+      <tr>
+        <td>Skeleton loading</td>
+        <td><code class="ds-code">shimmer package</code></td>
+        <td>Jamais de CircularProgressIndicator</td>
+      </tr>
+      <tr>
+        <td>Avatar initiales</td>
+        <td><code class="ds-code">CircleAvatar</code></td>
+        <td>radius: 20, bg: primaryLight, text: Syne 700</td>
+      </tr>
+      <tr>
+        <td>Progress bar culte</td>
+        <td><code class="ds-code">LinearProgressIndicator</code></td>
+        <td>color: success, bg: surface2, height: 6</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<div style="text-align:center; padding-top:32px; border-top:1px solid var(--kased-border);">
+  <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--kased-primary);margin-bottom:6px;">kased.</div>
+  <div style="font-size:12px;color:var(--kased-text-3);">Design System v1.0 · Bleu électrique · Flutter Android · InsForge Backend</div>
+</div>
+
+</div><!-- /ds-page -->
+</body>
+</html>

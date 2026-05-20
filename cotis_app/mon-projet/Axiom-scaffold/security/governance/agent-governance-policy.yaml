@@ -1,0 +1,191 @@
+# Agent Governance Policy
+# Configuration pour Microsoft Agent Governance Toolkit
+# Applique les 10 risques OWASP Agentic Top 10
+
+version: "1.0.0"
+enabled: true
+
+# AGENT01 - Prompt Injection
+promptInjection:
+  enabled: true
+  severity: CRITICAL
+  detection:
+    - pattern: "ignore previous instructions"
+    - pattern: "disregard all prior"
+    - pattern: "new instructions:"
+    - pattern: "system:"
+    - pattern: "<system>"
+  action: BLOCK
+  logging: true
+
+# AGENT02 - Insecure Output Handling
+outputHandling:
+  enabled: true
+  severity: CRITICAL
+  validation:
+    - validateBeforeExecution: true
+    - sanitizeOutputs: true
+    - escapeHTML: true
+    - escapeSQL: true
+    - escapeShell: true
+  blockedPatterns:
+    - "eval\\("
+    - "exec\\("
+    - "Function\\("
+    - "setTimeout\\("
+    - "setInterval\\("
+  action: SANITIZE
+  logging: true
+
+# AGENT03 - Training Data Poisoning
+trainingDataPoisoning:
+  enabled: true
+  severity: HIGH
+  validation:
+    - validateSources: true
+    - checksumVerification: true
+    - humanReview: true
+  trustedSources:
+    - "internal-knowledge-base"
+    - "verified-documentation"
+  action: REVIEW
+  logging: true
+
+# AGENT04 - Model Denial of Service
+modelDoS:
+  enabled: true
+  severity: HIGH
+  limits:
+    maxPromptTokens: 4000
+    maxCompletionTokens: 2000
+    requestsPerMinute: 10
+    requestsPerHour: 100
+    timeout: 30000
+  action: RATE_LIMIT
+  logging: true
+
+# AGENT05 - Supply Chain Vulnerabilities
+supplyChain:
+  enabled: true
+  severity: CRITICAL
+  validation:
+    - auditDependencies: true
+    - verifyChecksums: true
+    - signedArtifacts: true
+    - trustedRegistries: true
+  blockedPackages:
+    - "malicious-package"
+  action: BLOCK
+  logging: true
+
+# AGENT06 - Sensitive Information Disclosure
+sensitiveInfoDisclosure:
+  enabled: true
+  severity: CRITICAL
+  detection:
+    - detectPII: true
+    - detectSecrets: true
+    - detectCredentials: true
+  patterns:
+    - "sk-[a-zA-Z0-9]{48}"
+    - "AKIA[0-9A-Z]{16}"
+    - "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"
+    - "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+  action: REDACT
+  logging: true
+
+# AGENT07 - Insecure Plugin Design
+pluginSecurity:
+  enabled: true
+  severity: HIGH
+  validation:
+    - codeReview: true
+    - sandboxExecution: true
+    - permissionSystem: true
+  allowedPlugins:
+    - "read_file"
+    - "write_file"
+    - "list_directory"
+  blockedPlugins:
+    - "execute_command"
+    - "delete_file"
+  action: SANDBOX
+  logging: true
+
+# AGENT08 - Excessive Agency
+excessiveAgency:
+  enabled: true
+  severity: CRITICAL
+  restrictions:
+    - leastPrivilege: true
+    - humanApproval: true
+    - actionLimits: true
+  criticalActions:
+    - "delete_file"
+    - "modify_database"
+    - "deploy_production"
+    - "modify_permissions"
+    - "access_secrets"
+  action: REQUIRE_APPROVAL
+  logging: true
+
+# AGENT09 - Overreliance
+overreliance:
+  enabled: true
+  severity: HIGH
+  validation:
+    - zeroTrustPipeline: true
+    - humanReview: true
+    - automatedTesting: true
+  requirements:
+    - compilation: true
+    - linting: true
+    - unitTests: true
+    - mutationTests: true
+    - securityScan: true
+  action: VALIDATE
+  logging: true
+
+# AGENT10 - Model Theft
+modelTheft:
+  enabled: true
+  severity: HIGH
+  detection:
+    - detectExtractionPatterns: true
+    - detectRepetitiveQueries: true
+    - watermarking: true
+  limits:
+    maxSimilarQueries: 10
+    maxResponseSize: 10000
+  action: RATE_LIMIT
+  logging: true
+
+# Global Settings
+global:
+  logLevel: INFO
+  logPath: "logs/agent-governance.log"
+  logFormat: JSON
+  retentionDays: 90
+  
+  alerts:
+    enabled: true
+    channels:
+      - slack
+      - email
+    severity:
+      - CRITICAL
+      - HIGH
+  
+  metrics:
+    enabled: true
+    interval: 60
+    export:
+      - prometheus
+      - grafana
+  
+  reporting:
+    enabled: true
+    frequency: DAILY
+    recipients:
+      - security-team@axiom-scaffold.com
+      - tech-lead@axiom-scaffold.com

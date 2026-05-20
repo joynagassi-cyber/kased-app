@@ -1,0 +1,4 @@
+{
+    "biome.lsp.trace.server": "messages",
+    "biome.lsp.watcher.kind": "recommended"
+}

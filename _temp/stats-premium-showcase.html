@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats Premium - Cotis App</title>
+    <style>
+        :root {
+            --primary: #1246C8;
+            --surface: #FFFFFF;
+            --bg: #F9FAFB;
+            --text-main: #0F172A;
+            --text-sub: #64748B;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 24px; color: var(--text-main); }
+        .mobile-frame { width: 320px; margin: 0 auto; }
+        
+        /* Premium Stat Graph Style */
+        .chart-placeholder {
+            height: 180px;
+            background: linear-gradient(180deg, rgba(18, 70, 200, 0.05) 0%, rgba(255,255,255,0) 100%);
+            border-bottom: 2px solid var(--primary);
+            display: flex; align-items: flex-end; padding: 0 10px; gap: 8px;
+        }
+        .bar { flex: 1; background: var(--primary); border-radius: 4px 4px 0 0; opacity: 0.6; }
+
+        .stat-item { padding: 24px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-sub); }
+        .value { font-size: 28px; font-weight: 800; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <h1>Statistiques</h1>
+        
+        <!-- Graph Area -->
+        <div class="chart-placeholder">
+            <div class="bar" style="height: 40%"></div>
+            <div class="bar" style="height: 60%"></div>
+            <div class="bar" style="height: 100%"></div>
+            <div class="bar" style="height: 75%"></div>
+            <div class="bar" style="height: 90%"></div>
+        </div>
+
+        <!-- Metric List -->
+        <div class="stat-item">
+            <div class="label">Moyenne Collecte / Culte</div>
+            <div class="value">45 200 F</div>
+        </div>
+        <div class="stat-item">
+            <div class="label">Croissance Membres</div>
+            <div class="value" style="color: var(--primary);">+12%</div>
+        </div>
+    </div>
+</body>
+</html>

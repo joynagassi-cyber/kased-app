@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kased Onboarding Preview</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1246C8;
+            --background: #F7F8FC;
+            --surface: #FFFFFF;
+            --text-primary: #0E1631;
+            --text-secondary: #4A5578;
+            --border: #E2E6F3;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #e0e0e0;
+            font-family: 'DM Sans', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background-color: var(--background);
+            border: 12px solid #333;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            padding: 32px 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .spacer { flex-grow: 1; }
+
+        .hero-container {
+            height: 300px;
+            width: 100%;
+            background-color: var(--surface);
+            border-radius: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .hero-icon {
+            font-size: 100px;
+            color: var(--primary);
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+            text-align: center;
+        }
+
+        p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin: 16px 0 0 0;
+            line-height: 1.6;
+        }
+
+        .btn {
+            width: 100%;
+            height: 56px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            margin-bottom: 16px;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover { opacity: 0.9; }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-outlined {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        <div class="content">
+            <div class="spacer" style="flex-grow: 2;"></div>
+            
+            <div class="hero-container">
+                <div class="hero-icon">⛪</div>
+            </div>
+            
+            <h1>Bienvenue sur Kased</h1>
+            <p>Simplifiez la gestion des cotisations de votre communauté avec Kased.</p>
+            
+            <div class="spacer" style="flex-grow: 2;"></div>
+            
+            <button class="btn btn-primary" onclick="console.log('Get Started clicked')">Get Started</button>
+            <button class="btn btn-outlined" onclick="console.log('Sign In clicked')">Sign In</button>
+            <button class="btn-text" onclick="console.log('Guest clicked')">Continue as Guest</button>
+        </div>
+    </div>
+
+</body>
+</html>

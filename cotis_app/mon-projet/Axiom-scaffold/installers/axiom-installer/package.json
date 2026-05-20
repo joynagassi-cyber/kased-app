@@ -1,0 +1,92 @@
+{
+  "name": "axiom-scaffold-installer",
+  "type": "module",
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.33.0",
+  "description": "Interactive installer for Axiom-Scaffold — Add agentic skills to your favorite AI coding tools",
+  "author": "Axiom-Scaffold Team",
+  "license": "MIT",
+  "homepage": "https://github.com/axiom-scaffold/axiom-installer#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axiom-scaffold/axiom-installer.git"
+  },
+  "bugs": "https://github.com/axiom-scaffold/axiom-installer/issues",
+  "keywords": [
+    "axiom",
+    "scaffold",
+    "skills",
+    "ai",
+    "cli",
+    "installer",
+    "agent",
+    "cursor",
+    "claude",
+    "windsurf",
+    "kiro"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./cli": "./dist/cli.mjs",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "bin": {
+    "axiom-scaffold": "./dist/cli.mjs",
+    "axiom-install": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "eslint",
+    "prepublishOnly": "nr build",
+    "release": "bumpp",
+    "start": "tsx src/cli.ts",
+    "test": "vitest",
+    "typecheck": "tsc",
+    "prepare": "git submodule update --init --recursive && simple-git-hooks && pnpm start"
+  },
+  "dependencies": {
+    "@clack/prompts": "catalog:prod",
+    "cac": "catalog:prod",
+    "gray-matter": "catalog:prod",
+    "picocolors": "catalog:prod",
+    "tinyglobby": "catalog:prod",
+    "unconfig": "catalog:prod",
+    "xdg-basedir": "catalog:prod",
+    "yaml": "catalog:prod"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:dev",
+    "@antfu/ni": "catalog:dev",
+    "@antfu/utils": "catalog:inlined",
+    "@slidev/cli": "catalog:examples",
+    "@types/node": "catalog:types",
+    "baseline-browser-mapping": "catalog:dev",
+    "bumpp": "catalog:dev",
+    "eslint": "catalog:dev",
+    "lint-staged": "catalog:dev",
+    "publint": "catalog:dev",
+    "simple-git": "catalog:dev",
+    "simple-git-hooks": "catalog:dev",
+    "tinyexec": "catalog:testing",
+    "tsdown": "catalog:dev",
+    "tsx": "catalog:dev",
+    "typescript": "catalog:dev",
+    "vite": "catalog:dev",
+    "vitest": "catalog:testing",
+    "vitest-package-exports": "catalog:testing"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}

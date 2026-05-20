@@ -1,0 +1,110 @@
+# ============================================================
+# Configuration du Pipeline de Validation Zero-Trust
+# Chaque étape doit passer pour que le code soit fusionné
+# ============================================================
+
+# --- Étapes du pipeline ---
+pipeline:
+  steps:
+    - order: 1
+      name: "compilation"
+      description: "Vérification de la compilation TypeScript"
+      command: "tsc --noEmit"
+      required: true
+      timeout: 30
+      error_patterns:
+        - "error TS"
+        - "Cannot find"
+    
+    - order: 2
+      name: "linting"
+      description: "Vérification des conventions de code"
+      command: "eslint . --max-warnings 0"
+      required: true
+      timeout: 30
+      error_patterns:
+        - "warning"
+        - "error"
+    
+    - order: 3
+      name: "unit_tests"
+      description: "Tests unitaires avec couverture 100%"
+      command: "jest --coverage --coverageThreshold='{\"global\":{\"branches\":100,\"functions\":100,\"lines\":100,\"statements\":100}}'"
+      required: true
+      timeout: 60
+      error_patterns:
+        - "FAIL"
+        - "Coverage"
+    
+    - order: 4
+      name: "mutation_tests"
+      description: "Tests de mutation (score 100%)"
+      command: "npx stryker run"
+      required: true
+      timeout: 120
+      error_patterns:
+        - "Mutant survived"
+        - "Score below"
+    
+    - order: 5
+      name: "security"
+      description: "Scan de sécurité (dépendances + secrets)"
+      command: "npm audit --audit-level=high && detect-secrets scan --baseline .secrets.baseline"
+      required: true
+      timeout: 30
+      error_patterns:
+        - "vulnerabilities"
+        - "Secret detected"
+    
+    - order: 6
+      name: "visual_regression"
+      description: "Tests de régression visuelle (si applicable)"
+      command: "npx playwright test"
+      required: false  # Seulement si visual_test: true dans la tâche
+      timeout: 60
+      error_patterns:
+        - "failed"
+        - "Screenshot mismatch"
+
+# --- Seuils de qualité ---
+thresholds:
+  coverage:
+    branches: 100
+    functions: 100
+    lines: 100
+    statements: 100
+  
+  mutation:
+    score: 100
+  
+  security:
+    max_vulnerabilities: 0
+    allowed_levels: []  # Aucune vulnérabilité autorisée
+  
+  visual:
+    max_diff_percentage: 1.0  # Maximum 1% de pixels différents
+
+# --- Correction ---
+correction:
+  max_retries: 3
+  escalation:
+    enabled: true
+    notify: ["linear", "github-issues"]
+    message_template: |
+      🚨 Escalade requise pour la tâche {task_id}
+      
+      Symbole: {target_symbol}
+      Feature: {feature}
+      Tentatives: {retry_count}/{max_retries}
+      
+      Dernière erreur:
+      {last_error}
+      
+      Logs complets: {log_file}
+
+# --- Traçabilité ---
+traceability:
+  save_prompts: true
+  save_errors: true
+  save_generated_code: true
+  log_directory: "logs/execution"

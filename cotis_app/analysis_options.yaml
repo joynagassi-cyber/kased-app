@@ -1,0 +1,24 @@
+# This file configures the static analysis results for your project (dart analyze).
+#
+# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
+# IDEs (VS Code, Android Studio, IntelliJ IDEA). This file can also be used to
+# customize static analysis rules.
+#
+# For a list of all available lints, see https://dart.dev/guides/language/analysis-options
+
+analyzer:
+  errors:
+    invalid_use_of_visible_for_overriding_member: ignore
+  exclude:
+    - "**/*.g.dart"
+
+linter:
+  rules:
+    - always_declare_return_types
+    - cancel_subscriptions
+    - close_sinks
+    - avoid_print
+    - prefer_const_constructors
+    - prefer_const_constructors_in_immutables
+    - prefer_const_declarations
+    - prefer_const_literals_to_create_immutables

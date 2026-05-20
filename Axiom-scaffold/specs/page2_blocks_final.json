@@ -1,0 +1,432 @@
+[
+  {
+    "object": "block",
+    "type": "heading_2",
+    "heading_2": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "1. Authentification Google OAuth 2.0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "paragraph",
+    "paragraph": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Le secrétariat se connecte de manière hautement sécurisée via Google Sign-In."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "paragraph",
+    "paragraph": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Le flux d'authentification s'articule comme suit :"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "numbered_list_item",
+    "numbered_list_item": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "L'utilisateur clique sur "
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "\"Se connecter avec Google\""
+          },
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "numbered_list_item",
+    "numbered_list_item": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "L'application Flutter invoque le SDK natif Google."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "numbered_list_item",
+    "numbered_list_item": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Google renvoie un "
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "idToken"
+          },
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": " et un "
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "accessToken"
+          },
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": " sécurisés."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "numbered_list_item",
+    "numbered_list_item": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "L'application transmet ces tokens à "
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "InsForge Auth"
+          },
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": " pour valider et ouvrir une session JWT."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "numbered_list_item",
+    "numbered_list_item": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Le JWT est stocké localement de manière sécurisée et injecté dans les en-têtes HTTP de chaque requête subséquente : "
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "Authorization: Bearer <JWT>"
+          },
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "code",
+    "code": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Future<AuthResult> signInWithGoogle() async {\n  final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();\n  if (googleUser == null) throw Exception(\"Connexion annulée par l'utilisateur.\");\n  \n  final GoogleSignInAuthentication googleAuth = await googleUser.authentication;\n  \n  final response = await _dio.post('/api/auth/oauth/google', data: {\n    'id_token': googleAuth.idToken,\n    'access_token': googleAuth.accessToken,\n  });\n  \n  return AuthResult.fromJson(response.data);\n}"
+          }
+        }
+      ],
+      "language": "dart"
+    }
+  },
+  {
+    "object": "block",
+    "type": "heading_2",
+    "heading_2": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "2. Inscription/Connexion par E-mail & Persistance"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "paragraph",
+    "paragraph": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Pour les comptes administratifs secondaires, l'authentification s'effectue par e-mail et mot de passe."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "paragraph",
+    "paragraph": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "La persistance de session est assurée par un gestionnaire sécurisé :"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "bulleted_list_item",
+    "bulleted_list_item": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Le token de rafraîchissement (Refresh Token) est sauvegardé dans le stockage sécurisé du téléphone ("
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "flutter_secure_storage"
+          },
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": ")."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "bulleted_list_item",
+    "bulleted_list_item": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Au lancement de l'application, si un token de rafraîchissement est présent, une demande silencieuse de renouvellement du JWT est envoyée à InsForge afin d'éviter à l'utilisateur de devoir se reconnecter manuellement."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "heading_2",
+    "heading_2": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "3. Résolution du Bug Critique de Timeout (Dio 60s)"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "heading_3",
+    "heading_3": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Problème rencontré"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "paragraph",
+    "paragraph": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Lors de l'inscription par e-mail, les utilisateurs rencontraient de manière systématique une erreur de timeout réseau de type "
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "DioException [connection timeout]"
+          },
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "heading_3",
+    "heading_3": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Cause racine"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "paragraph",
+    "paragraph": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "InsForge est configuré pour envoyer un e-mail de confirmation à l'utilisateur dès sa création. L'intégration de la passerelle SMTP d'envoi d'e-mail d'InsForge pouvait prendre jusqu'à 25-30 secondes pour achever l'envoi du mail. Le client Dio ayant un timeout par défaut fixé à 10-15 secondes, la requête HTTP était coupée prématurément par le client Flutter alors que le serveur InsForge était simplement en train de finaliser la transaction SMTP de confirmation."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "heading_3",
+    "heading_3": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Solution appliquée"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "paragraph",
+    "paragraph": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Le timeout de connexion et de réception du client HTTP Dio a été étendu à "
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "60 secondes"
+          },
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": " spécifiquement sur le service d'authentification pour tolérer les délais d'envoi d'e-mail des serveurs SMTP externes."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "object": "block",
+    "type": "code",
+    "code": {
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "// Configuration du client Dio dans lib/services/insforge_service.dart\nfinal BaseOptions options = BaseOptions(\n  baseUrl: 'https://kased-app.region.insforge.app',\n  connectTimeout: const Duration(seconds: 60), // Timeout étendu à 60s\n  receiveTimeout: const Duration(seconds: 60), // Timeout étendu à 60s\n);"
+          }
+        }
+      ],
+      "language": "dart"
+    }
+  }
+]

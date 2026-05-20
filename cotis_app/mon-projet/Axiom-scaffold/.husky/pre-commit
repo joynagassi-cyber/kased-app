@@ -1,0 +1,92 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Axiom pre-commit checks..."
+
+# Couleurs pour les messages
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+# Fonction pour afficher les erreurs en rouge
+error() {
+    echo "${RED}❌ $1${NC}"
+}
+
+# Fonction pour afficher les succès en vert
+success() {
+    echo "${GREEN}✅ $1${NC}"
+}
+
+# Vérifier si package.json existe (projet Node.js)
+if [ -f "package.json" ]; then
+    # Lancer les tests
+    echo "→ Exécution des tests..."
+    if npm test; then
+        success "Tests réussis"
+    else
+        error "Tests échoués. Corrige les tests avant de commit."
+        exit 1
+    fi
+
+    # Linting
+    echo "→ Vérification du linting..."
+    if npm run lint; then
+        success "Linting réussi"
+    else
+        error "Lint échoué. Corrige les erreurs de lint avant de commit."
+        echo "💡 Astuce : exécute 'npm run lint:fix' pour corriger automatiquement"
+        exit 1
+    fi
+
+    # Audit de sécurité
+    echo "→ Audit de sécurité..."
+    if npm audit --audit-level=high; then
+        success "Aucune vulnérabilité critique détectée"
+    else
+        error "Vulnérabilités détectées. Mets à jour les dépendances."
+        echo "💡 Astuce : exécute 'npm audit fix' pour corriger automatiquement"
+        exit 1
+    fi
+fi
+
+# Vérifier si requirements.txt existe (projet Python)
+if [ -f "requirements.txt" ]; then
+    echo "→ Vérification Python..."
+    
+    # Linting Python (si pylint est installé)
+    if command -v pylint &> /dev/null; then
+        echo "→ Linting Python..."
+        if pylint **/*.py; then
+            success "Linting Python réussi"
+        else
+            error "Lint Python échoué"
+            exit 1
+        fi
+    fi
+    
+    # Tests Python (si pytest est installé)
+    if command -v pytest &> /dev/null; then
+        echo "→ Tests Python..."
+        if pytest; then
+            success "Tests Python réussis"
+        else
+            error "Tests Python échoués"
+            exit 1
+        fi
+    fi
+fi
+
+# Vérification des secrets (si git-secrets est installé)
+if command -v git-secrets &> /dev/null; then
+    echo "→ Détection de secrets..."
+    if git secrets --scan; then
+        success "Aucun secret détecté"
+    else
+        error "Secrets détectés dans le commit. Retire-les avant de commit."
+        exit 1
+    fi
+fi
+
+echo ""
+success "Tous les checks sont passés. Commit autorisé."

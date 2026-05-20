@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kased - Inscription</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Couleurs Kased-app (extraites du thème Flutter) */
+            --primary: #1246C8;
+            --primary-dark: #0D35A0;
+            --primary-light: #E8EEFB;
+            --primary-mid: #3A6AE4;
+
+            --success: #059669;
+            --success-light: #D1FAE5;
+            --danger: #DC2626;
+            --danger-light: #FEE2E2;
+            --warning: #D97706;
+            --warning-light: #FEF3C7;
+
+            --background: #F7F8FC;
+            --surface: #FFFFFF;
+            --surface2: #F0F2F9;
+            --border: #E2E6F3;
+            --border-strong: #C5CCE3;
+
+            --text-primary: #0E1631;
+            --text-secondary: #4A5578;
+            --text-tertiary: #8B97BA;
+            --text-inverse: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Logo Kased-app */
+        .app-logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 32px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(18, 70, 200, 0.15);
+            position: relative;
+        }
+
+        .app-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Fallback : Logo SVG si l'image ne charge pas */
+        .app-logo-fallback {
+            width: 100px;
+            height: 100px;
+            background: var(--primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 32px;
+            box-shadow: 0 10px 40px rgba(18, 70, 200, 0.15);
+            position: relative;
+        }
+
+        .app-logo-fallback svg {
+            width: 80px;
+            height: 80px;
+        }
+
+        /* Titre */
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: -0.4px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 48px;
+            line-height: 1.6;
+        }
+
+        /* Bouton Google Sign-In */
+        .google-button {
+            width: 100%;
+            height: 56px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(14, 22, 49, 0.04);
+        }
+
+        .google-button:hover {
+            background: var(--surface2);
+            border-color: var(--border-strong);
+            box-shadow: 0 4px 12px rgba(14, 22, 49, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .google-button:active {
+            transform: translateY(0);
+        }
+
+        .google-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            letter-spacing: 0.5px;
+        }
+
+        /* Lien vers Login */
+        .login-link {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .login-link a {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .login-link a:hover {
+            color: var(--primary-dark);
+        }
+
+        /* Note de sécurité */
+        .security-note {
+            margin-top: 32px;
+            padding: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .security-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            fill: var(--primary);
+        }
+
+        .security-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100%;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 15px;
+            }
+
+            .app-logo,
+            .app-logo-fallback {
+                width: 90px;
+                height: 90px;
+            }
+        }
+
+        /* Loading state */
+        .google-button.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Badge informatif */
+        .info-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Badge informatif -->
+        <div class="info-badge">
+            ✨ Design exact de l'application Flutter Kased-app
+        </div>
+
+        <!-- Logo Kased-app -->
+        <div class="app-logo">
+            <!-- Remplacez ce SVG par votre vraie image PNG si disponible -->
+            <!-- <img src="assets/images/kased_logo.png" alt="Logo Kased"> -->
+
+            <!-- Logo SVG Kased-app (reproduction du design) -->
+            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <!-- Fond bleu -->
+                <rect width="1024" height="1024" fill="#1246C8" rx="200" />
+
+                <!-- Cercle doré -->
+                <circle cx="512" cy="380" r="220" fill="none" stroke="#F5A623" stroke-width="30" />
+
+                <!-- Église blanche (simplifiée) -->
+                <g fill="#FFFFFF">
+                    <!-- Tour centrale -->
+                    <rect x="462" y="250" width="100" height="200" rx="10" />
+                    <path d="M 512 220 L 532 250 L 492 250 Z" />
+                    <circle cx="512" cy="320" r="25" fill="#1246C8" />
+
+                    <!-- Tours latérales -->
+                    <rect x="362" y="320" width="80" height="130" rx="8" />
+                    <path d="M 402 300 L 418 320 L 386 320 Z" />
+                    <circle cx="402" cy="370" r="18" fill="#1246C8" />
+
+                    <rect x="582" y="320" width="80" height="130" rx="8" />
+                    <path d="M 622 300 L 638 320 L 606 320 Z" />
+                    <circle cx="622" cy="370" r="18" fill="#1246C8" />
+                </g>
+
+                <!-- Pièces dorées avec coche -->
+                <g>
+                    <!-- Pile de pièces -->
+                    <ellipse cx="512" cy="520" rx="60" ry="15" fill="#F5A623" />
+                    <ellipse cx="512" cy="510" rx="60" ry="15" fill="#F5A623" />
+                    <ellipse cx="512" cy="500" rx="60" ry="15" fill="#F5A623" />
+                    <ellipse cx="512" cy="490" rx="60" ry="15" fill="#F5A623" />
+
+                    <!-- Coche blanche -->
+                    <path d="M 495 485 L 505 495 L 530 470" stroke="#FFFFFF" stroke-width="8" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </g>
+
+                <!-- Mains blanches en soutien -->
+                <g fill="#FFFFFF">
+                    <!-- Main gauche -->
+                    <path
+                        d="M 300 480 Q 280 500 280 530 L 280 580 Q 280 600 300 600 L 420 600 Q 420 580 420 560 L 420 520 Q 420 500 400 490 L 300 480 Z" />
+
+                    <!-- Main droite -->
+                    <path
+                        d="M 724 480 Q 744 500 744 530 L 744 580 Q 744 600 724 600 L 604 600 Q 604 580 604 560 L 604 520 Q 604 500 624 490 L 724 480 Z" />
+                </g>
+
+                <!-- Texte KASED -->
+                <text x="512" y="720" font-family="Syne, sans-serif" font-size="120" font-weight="800" fill="#FFFFFF"
+                    text-anchor="middle">KASED</text>
+
+                <!-- Triangle jaune dans le A -->
+                <path d="M 485 680 L 512 640 L 539 680 Z" fill="#F5A623" />
+
+                <!-- Slogan -->
+                <g font-family="DM Sans, sans-serif" font-size="28" font-weight="600" fill="#F5A623"
+                    text-anchor="middle">
+                    <text x="512" y="820">GIVE • GROW • IMPACT</text>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Titre -->
+        <h1>Créer un compte</h1>
+        <p class="subtitle">Gérez les cotisations de votre église facilement</p>
+
+        <!-- Bouton Google Sign-In -->
+        <button class="google-button" id="googleButton" type="button">
+            <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            <span>S'inscrire avec Google</span>
+        </button>
+
+        <!-- Divider -->
+        <div class="divider">
+            <div class="divider-line"></div>
+            <span class="divider-text">OU</span>
+            <div class="divider-line"></div>
+        </div>
+
+        <!-- Lien vers Login -->
+        <p class="login-link">
+            Vous avez déjà un compte ? <a href="#login">Se connecter</a>
+        </p>
+
+        <!-- Note de sécurité -->
+        <div class="security-note">
+            <svg class="security-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+            </svg>
+            <p class="security-text">
+                Vos données sont sécurisées et stockées localement
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Simulation de l'interaction
+        const googleButton = document.getElementById('googleButton');
+
+        googleButton.addEventListener('click', function () {
+            // Ajouter l'état de chargement
+            this.classList.add('loading');
+            this.innerHTML = '<div class="spinner"></div><span>Connexion...</span>';
+
+            // Simuler une connexion (dans la vraie app, cela déclencherait Google Sign-In)
+            setTimeout(() => {
+                alert('Dans l\'application Flutter, cela ouvrira Google Sign-In');
+                this.classList.remove('loading');
+                this.innerHTML = '<svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg><span>S\'inscrire avec Google</span>';
+            }, 2000);
+        });
+    </script>
+</body>
+
+</html>

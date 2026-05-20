@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo Prototype - CotisApp</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        nav { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { padding: 10px 15px; cursor: pointer; border: none; background: var(--primary); color: white; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prototype Demo - CotisApp</h1>
+        <nav>
+            <button onclick="render('membres')">Membres</button>
+            <button onclick="render('cultes')">Cultes</button>
+            <button onclick="render('cotisations')">Cotisations</button>
+            <button onclick="render('paiements')">Paiements</button>
+        </nav>
+        <div id="content">Sélectionnez une catégorie pour voir les données.</div>
+    </div>
+
+    <script>
+        const data = {
+            membres: [{id: 1, nom: 'Jean', prenom: 'Dupont'}, {id: 2, nom: 'Marie', prenom: 'Curie'}],
+            cultes: [{id: 1, date: '2026-05-10', titre: 'Culte de Pentecôte'}],
+            cotisations: [{id: 1, membre: 'Jean Dupont', montant: 50, statut: 'Payé'}],
+            paiements: [{id: 1, membre: 'Jean Dupont', montant: 50, date: '2026-05-11'}]
+        };
+
+        function render(cat) {
+            let html = `<h2>${cat.toUpperCase()}</h2><table><tr>`;
+            Object.keys(data[cat][0]).forEach(k => html += `<th>${k}</th>`);
+            html += `</tr>`;
+            data[cat].forEach(item => {
+                html += `<tr>${Object.values(item).map(v => `<td>${v}</td>`).join('')}</tr>`;
+            });
+            document.getElementById('content').innerHTML = html + `</table>`;
+        }
+    </script>
+</body>
+</html>

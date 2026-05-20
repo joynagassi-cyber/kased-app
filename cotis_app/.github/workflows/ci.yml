@@ -1,0 +1,94 @@
+name: Kased CI/CD
+
+on:
+  push:
+    branches: [main, develop, 'release/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  analyze:
+    name: Analyse statique
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Installer les dépendances
+        run: flutter pub get
+
+      - name: Analyser le code
+        run: flutter analyze --no-pub
+
+  test:
+    name: Tests unitaires & widgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: analyze
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Installer les dépendances
+        run: flutter pub get
+
+      - name: Exécuter les tests
+        run: flutter test test/unit/ test/widget/ --no-pub --reporter expanded
+
+  build-android:
+    name: Build APK (release)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Installer les dépendances
+        run: flutter pub get
+
+      - name: Décoder le keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > android/app/keystore.jks
+
+      - name: Ajouter google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        if: env.GOOGLE_SERVICES_JSON != ''
+        run: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+
+      - name: Build APK release
+        run: |
+          flutter build apk --release \
+            --dart-define=INSFORGE_URL=${{ vars.INSFORGE_URL }} \
+            --dart-define=INSFORGE_KEY=${{ secrets.INSFORGE_KEY }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kased-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
