@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:kased_app/providers/notifications_provider.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/widgets/kased_card.dart';
@@ -27,6 +29,115 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(appDataProvider.notifier).loadDashboard();
     });
+  }
+
+  void _showNotificationPanel(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.3,
+              maxChildSize: 0.85,
+              expand: false,
+              builder: (_, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40, height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Notifications',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                          ),
+                          TextButton(
+                            onPressed: () => ref.read(notificationsProvider.notifier).marquerToutesLues(),
+                            child: const Text('Tout marquer lu'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(),
+                      Expanded(
+                        child: Builder(
+                          builder: (context) {
+                            final notifState = ref.watch(notificationsProvider);
+                            final notifs = notifState.liste;
+                            if (notifs.isEmpty) {
+                              return const Center(child: Text('Aucune notification'));
+                            }
+                            return ListView.separated(
+                              controller: scrollController,
+                              itemCount: notifs.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1),
+                              itemBuilder: (_, i) {
+                                final n = notifs[i];
+                                return ListTile(
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: n.isLue
+                                          ? Colors.grey.withValues(alpha: 0.1)
+                                          : AppColors.primary.withValues(alpha: 0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.notifications,
+                                      size: 18,
+                                      color: n.isLue ? Colors.grey : AppColors.primary,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    n.titre,
+                                    style: TextStyle(
+                                      fontWeight: n.isLue ? FontWeight.normal : FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  subtitle: Text(n.message, style: const TextStyle(fontSize: 12)),
+                                  trailing: Text(
+                                    DateFormat('dd/MM').format(n.date),
+                                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                  ),
+                                  onTap: () {
+                                    if (!n.isLue) {
+                                      ref.read(notificationsProvider.notifier).marquerLue(i);
+                                    }
+                                  },
+                                );
+                              },
+                            );
+                        },
+                      ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -56,6 +167,47 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
             ),
+            actions: [
+              Builder(
+                builder: (context) {
+                  final notifState = ref.watch(notificationsProvider);
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.notifications_outlined,
+                          color: colorScheme.onSurface,
+                        ),
+                        onPressed: () => _showNotificationPanel(context, ref),
+                      ),
+                      if (notifState.nbNonLues > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                            child: Text(
+                              '${notifState.nbNonLues}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
           body: appDataAsync.when(
             data: (state) {
@@ -73,7 +225,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         height: 320,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                          color: AppColors.primary.withValues(alpha: isDark ? 0.08 : 0.04),
                         ),
                         child: ImageFiltered(
                           imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
@@ -89,7 +241,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         height: 360,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.gradientEnd.withValues(alpha: isDark ? 0.12 : 0.06),
+                          color: AppColors.gradientEnd.withValues(alpha: isDark ? 0.06 : 0.03),
                         ),
                         child: ImageFiltered(
                           imageFilter: ImageFilter.blur(sigmaX: 90, sigmaY: 90),

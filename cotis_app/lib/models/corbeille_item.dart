@@ -10,4 +10,7 @@ class CorbeilleItem {
   late String entityType; // 'culte', 'membre'
   late String payloadJson; // Données JSON complètes de l'entité (permet une restauration parfaite)
   late DateTime deletedAt;
+  DateTime? updatedAt; // Dernière modification (extrait du payload)
+
+  DateTime get derniereModification => updatedAt ?? deletedAt;
 }

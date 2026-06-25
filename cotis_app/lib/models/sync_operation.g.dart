@@ -22,28 +22,58 @@ const SyncOperationSchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'entityId': PropertySchema(
+    r'deviceId': PropertySchema(
       id: 1,
+      name: r'deviceId',
+      type: IsarType.string,
+    ),
+    r'entityId': PropertySchema(
+      id: 2,
       name: r'entityId',
       type: IsarType.string,
     ),
     r'entityType': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'entityType',
       type: IsarType.string,
     ),
+    r'hasFailed': PropertySchema(
+      id: 4,
+      name: r'hasFailed',
+      type: IsarType.bool,
+    ),
+    r'isSynced': PropertySchema(
+      id: 5,
+      name: r'isSynced',
+      type: IsarType.bool,
+    ),
+    r'lastError': PropertySchema(
+      id: 6,
+      name: r'lastError',
+      type: IsarType.string,
+    ),
+    r'operationId': PropertySchema(
+      id: 7,
+      name: r'operationId',
+      type: IsarType.string,
+    ),
     r'payloadJson': PropertySchema(
-      id: 3,
+      id: 8,
       name: r'payloadJson',
       type: IsarType.string,
     ),
+    r'retryCount': PropertySchema(
+      id: 9,
+      name: r'retryCount',
+      type: IsarType.long,
+    ),
     r'type': PropertySchema(
-      id: 4,
+      id: 10,
       name: r'type',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 5,
+      id: 11,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -68,8 +98,16 @@ int _syncOperationEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.deviceId.length * 3;
   bytesCount += 3 + object.entityId.length * 3;
   bytesCount += 3 + object.entityType.length * 3;
+  {
+    final value = object.lastError;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.operationId.length * 3;
   bytesCount += 3 + object.payloadJson.length * 3;
   bytesCount += 3 + object.type.length * 3;
   return bytesCount;
@@ -82,11 +120,17 @@ void _syncOperationSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.createdAt);
-  writer.writeString(offsets[1], object.entityId);
-  writer.writeString(offsets[2], object.entityType);
-  writer.writeString(offsets[3], object.payloadJson);
-  writer.writeString(offsets[4], object.type);
-  writer.writeDateTime(offsets[5], object.updatedAt);
+  writer.writeString(offsets[1], object.deviceId);
+  writer.writeString(offsets[2], object.entityId);
+  writer.writeString(offsets[3], object.entityType);
+  writer.writeBool(offsets[4], object.hasFailed);
+  writer.writeBool(offsets[5], object.isSynced);
+  writer.writeString(offsets[6], object.lastError);
+  writer.writeString(offsets[7], object.operationId);
+  writer.writeString(offsets[8], object.payloadJson);
+  writer.writeLong(offsets[9], object.retryCount);
+  writer.writeString(offsets[10], object.type);
+  writer.writeDateTime(offsets[11], object.updatedAt);
 }
 
 SyncOperation _syncOperationDeserialize(
@@ -97,12 +141,18 @@ SyncOperation _syncOperationDeserialize(
 ) {
   final object = SyncOperation();
   object.createdAt = reader.readDateTime(offsets[0]);
-  object.entityId = reader.readString(offsets[1]);
-  object.entityType = reader.readString(offsets[2]);
+  object.deviceId = reader.readString(offsets[1]);
+  object.entityId = reader.readString(offsets[2]);
+  object.entityType = reader.readString(offsets[3]);
+  object.hasFailed = reader.readBool(offsets[4]);
+  object.isSynced = reader.readBool(offsets[5]);
   object.isarId = id;
-  object.payloadJson = reader.readString(offsets[3]);
-  object.type = reader.readString(offsets[4]);
-  object.updatedAt = reader.readDateTimeOrNull(offsets[5]);
+  object.lastError = reader.readStringOrNull(offsets[6]);
+  object.operationId = reader.readString(offsets[7]);
+  object.payloadJson = reader.readString(offsets[8]);
+  object.retryCount = reader.readLong(offsets[9]);
+  object.type = reader.readString(offsets[10]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[11]);
   return object;
 }
 
@@ -122,8 +172,20 @@ P _syncOperationDeserializeProp<P>(
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 5:
+      return (reader.readBool(offset)) as P;
+    case 6:
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
+      return (reader.readString(offset)) as P;
+    case 11:
       return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -277,6 +339,142 @@ extension SyncOperationQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deviceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'deviceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'deviceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'deviceId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'deviceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'deviceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'deviceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'deviceId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deviceId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      deviceIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'deviceId',
+        value: '',
       ));
     });
   }
@@ -554,6 +752,26 @@ extension SyncOperationQueryFilter
   }
 
   QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      hasFailedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hasFailed',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      isSyncedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isSynced',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
       isarIdEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -605,6 +823,296 @@ extension SyncOperationQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastError',
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastError',
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastError',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastError',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastError',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastError',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'lastError',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'lastError',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'lastError',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'lastError',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastError',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      lastErrorIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'lastError',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'operationId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'operationId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'operationId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'operationId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'operationId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'operationId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'operationId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'operationId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'operationId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      operationIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'operationId',
+        value: '',
       ));
     });
   }
@@ -741,6 +1249,62 @@ extension SyncOperationQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'payloadJson',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      retryCountEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'retryCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      retryCountGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'retryCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      retryCountLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'retryCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
+      retryCountBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'retryCount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -976,6 +1540,19 @@ extension SyncOperationQuerySortBy
     });
   }
 
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByDeviceId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deviceId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      sortByDeviceIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deviceId', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByEntityId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'entityId', Sort.asc);
@@ -1002,6 +1579,58 @@ extension SyncOperationQuerySortBy
     });
   }
 
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByHasFailed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasFailed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      sortByHasFailedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasFailed', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByIsSynced() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isSynced', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      sortByIsSyncedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isSynced', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByLastError() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastError', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      sortByLastErrorDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastError', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByOperationId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'operationId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      sortByOperationIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'operationId', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByPayloadJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'payloadJson', Sort.asc);
@@ -1012,6 +1641,19 @@ extension SyncOperationQuerySortBy
       sortByPayloadJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'payloadJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByRetryCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'retryCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      sortByRetryCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'retryCount', Sort.desc);
     });
   }
 
@@ -1056,6 +1698,19 @@ extension SyncOperationQuerySortThenBy
     });
   }
 
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByDeviceId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deviceId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      thenByDeviceIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deviceId', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByEntityId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'entityId', Sort.asc);
@@ -1082,6 +1737,32 @@ extension SyncOperationQuerySortThenBy
     });
   }
 
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByHasFailed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasFailed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      thenByHasFailedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasFailed', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByIsSynced() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isSynced', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      thenByIsSyncedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isSynced', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByIsarId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.asc);
@@ -1091,6 +1772,32 @@ extension SyncOperationQuerySortThenBy
   QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByIsarIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByLastError() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastError', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      thenByLastErrorDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastError', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByOperationId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'operationId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      thenByOperationIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'operationId', Sort.desc);
     });
   }
 
@@ -1104,6 +1811,19 @@ extension SyncOperationQuerySortThenBy
       thenByPayloadJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'payloadJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByRetryCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'retryCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
+      thenByRetryCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'retryCount', Sort.desc);
     });
   }
 
@@ -1141,6 +1861,13 @@ extension SyncOperationQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByDeviceId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deviceId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByEntityId(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1155,10 +1882,42 @@ extension SyncOperationQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByHasFailed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hasFailed');
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByIsSynced() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isSynced');
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByLastError(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastError', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByOperationId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'operationId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByPayloadJson(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'payloadJson', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByRetryCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'retryCount');
     });
   }
 
@@ -1190,6 +1949,12 @@ extension SyncOperationQueryProperty
     });
   }
 
+  QueryBuilder<SyncOperation, String, QQueryOperations> deviceIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deviceId');
+    });
+  }
+
   QueryBuilder<SyncOperation, String, QQueryOperations> entityIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'entityId');
@@ -1202,9 +1967,39 @@ extension SyncOperationQueryProperty
     });
   }
 
+  QueryBuilder<SyncOperation, bool, QQueryOperations> hasFailedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hasFailed');
+    });
+  }
+
+  QueryBuilder<SyncOperation, bool, QQueryOperations> isSyncedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isSynced');
+    });
+  }
+
+  QueryBuilder<SyncOperation, String?, QQueryOperations> lastErrorProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastError');
+    });
+  }
+
+  QueryBuilder<SyncOperation, String, QQueryOperations> operationIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'operationId');
+    });
+  }
+
   QueryBuilder<SyncOperation, String, QQueryOperations> payloadJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'payloadJson');
+    });
+  }
+
+  QueryBuilder<SyncOperation, int, QQueryOperations> retryCountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'retryCount');
     });
   }
 

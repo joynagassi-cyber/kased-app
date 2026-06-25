@@ -1,0 +1,20 @@
+# ─────────────────────────────────────────────────────────────────────
+# secrets injectés via --dart-define à la compilation pour Kased
+# ─────────────────────────────────────────────────────────────────────
+#
+# En dev local :
+#   flutter run \
+#     --dart-define=INSFORGE_BASE_URL=https://your-app.region.insforge.app \
+#     --dart-define=INSFORGE_ANON_KEY=eyJ... \
+#     --dart-define=GOOGLE_SERVER_CLIENT_ID=xxx.apps.googleusercontent.com
+#
+# En CI/CD : stocker les valeurs dans des secrets GitHub / GCP Secret Manager
+# et les passer via la variable --dart-define de la commande flutter build.
+#
+# ── InsForge ──────────────────────────────────────────────────────────────
+INSFORGE_BASE_URL=
+INSFORGE_ANON_KEY=
+
+# ── Google OAuth (Web Client ID) ──────────────────────────────────────────
+# Console Google Cloud → APIs & Services → Credentials → Web application
+GOOGLE_SERVER_CLIENT_ID=

@@ -46,9 +46,9 @@ class RegistrePdfService {
               _textCell(membre.nomComplet, align: pw.Alignment.centerLeft, bold: true),
               for (final culte in cultesDuMois)
                 _statusCell(cotisationsParCle.containsKey('${membre.id}_${culte.id}')),
-              _textCell(
-                cotisationsDuMois.where((c) => c.membreId == membre.id && c.estPaye).fold(0.0, (sum, c) => sum + c.montant).toInt().toString(),
-              ),
+             _textCell(
+                 cotisationsDuMois.where((c) => c.membreId == membre.id && c.estPaye).fold(0.0, (sum, c) => sum + c.montantPaye).toInt().toString(),
+               ),
               _textCell(
                 cultesDuMois.where((culte) => !cotisationsParCle.containsKey('${membre.id}_${culte.id}')).length.toString(),
               ),
@@ -60,13 +60,12 @@ class RegistrePdfService {
             _textCell('Total', align: pw.Alignment.centerLeft, bold: true),
             for (final culte in cultesDuMois)
               _textCell(
-                cotisationsDuMois.where((c) => c.culteId == culte.id && c.estPaye).fold(0.0, (sum, c) => sum + c.montant).toInt().toString(),
+                 cotisationsDuMois.where((c) => c.culteId == culte.id && c.estPaye).fold(0.0, (sum, c) => sum + c.montantPaye).toInt().toString(),
                 bold: true,
               ),
-            _textCell(
-              cotisationsDuMois.where((c) => c.estPaye).fold(0.0, (sum, c) => sum + c.montant).toInt().toString(),
-              bold: true,
-            ),
+             _textCell(
+               cotisationsDuMois.where((c) => c.estPaye).fold(0.0, (sum, c) => sum + c.montantPaye).toInt().toString(),
+             ),
             _textCell(''),
           ];
 

@@ -49,14 +49,14 @@ class OnboardingScreen extends StatelessWidget {
             child: Column(
               children: [
                  const Expanded(
-                  flex: 72,
+                  flex: 55,
                   child: Padding(
-                    padding: EdgeInsets.only(top: 16, bottom: 4),
+                    padding: EdgeInsets.only(top: 8, bottom: 4),
                     child: OnboardingHeroAnimation(),
                   ),
                 ),
                 Expanded(
-                  flex: 28,
+                  flex: 45,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
@@ -92,7 +92,8 @@ class OnboardingScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorScheme.primary,
                                 foregroundColor: colorScheme.onPrimary,
-                                elevation: 0,
+                                elevation: 4,
+                                shadowColor: colorScheme.primary.withValues(alpha: 0.5),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18),
                                 ),

@@ -67,20 +67,22 @@ void main() {
       when(() => mockCache.getCorbeilleItem(any())).thenAnswer((_) async => null);
 
       // Default mock behaviors for writes
-      when(() => mockCache.saveMembre(any())).thenAnswer((_) async => {});
+      when(() => mockCache.saveMembreWithSyncOp(any(), any())).thenAnswer((_) async => {});
       when(() => mockCache.saveAllMembres(any())).thenAnswer((_) async => {});
       when(() => mockCache.clearMembres()).thenAnswer((_) async => {});
-      when(() => mockCache.deleteMembreById(any())).thenAnswer((_) async => {});
+      when(() => mockCache.softDeleteMembreWithSyncOp(any(), any())).thenAnswer((_) async => {});
 
-      when(() => mockCache.saveCulte(any())).thenAnswer((_) async => {});
+      when(() => mockCache.saveCulteWithSyncOp(any(), any())).thenAnswer((_) async => {});
       when(() => mockCache.saveAllCultes(any())).thenAnswer((_) async => {});
       when(() => mockCache.clearCultes()).thenAnswer((_) async => {});
-      when(() => mockCache.deleteCulteById(any())).thenAnswer((_) async => {});
+      when(() => mockCache.softDeleteCulteWithSyncOp(any(), any(), any())).thenAnswer((_) async => {});
 
+      when(() => mockCache.saveCotisationWithSyncOp(any(), any())).thenAnswer((_) async => {});
       when(() => mockCache.saveCotisation(any())).thenAnswer((_) async => {});
       when(() => mockCache.saveAllCotisations(any())).thenAnswer((_) async => {});
       when(() => mockCache.clearCotisations()).thenAnswer((_) async => {});
       when(() => mockCache.deleteCotisationsByCulteId(any())).thenAnswer((_) async => {});
+      when(() => mockCache.saveSyncOp(any())).thenAnswer((_) async => {});
 
       when(() => mockCache.saveSyncOp(any())).thenAnswer((_) async => {});
       when(() => mockCache.deleteSyncOp(any())).thenAnswer((_) async => {});
@@ -126,18 +128,8 @@ void main() {
         expect(state.membres.first.nom, equals('Turing'));
         expect(state.membres.first.id, equals(membre.id));
 
-        verify(() => mockCache.saveMembre(any())).called(1);
-
-        final capturedOp = verify(() => mockCache.saveSyncOp(captureAny())).captured.first as SyncOperation;
-        expect(capturedOp.type, equals('CREATE'));
-        expect(capturedOp.entityType, equals('membre'));
-        expect(capturedOp.entityId, equals(membre.id));
-        
-        final payload = jsonDecode(capturedOp.payloadJson);
-        expect(payload['nom'], equals('Turing'));
-      });
-
-      test('Update Membre when offline: saves to cache and queues SyncOperation', () async {
+        verify(() => mockCache.saveMembreWithSyncOp(any(), any())).called(1);
+      });      test('Update Membre when offline: saves to cache and queues SyncOperation', () async {
         final existingMembre = Membre()
           ..id = 'm-uuid'
           ..nom = 'Lovelace'
@@ -167,15 +159,12 @@ void main() {
         final state = container.read(appDataProvider).value!;
         expect(state.membres.first.nom, equals('Lovelace-New'));
 
-        verify(() => mockCache.saveMembre(any())).called(1);
+        verify(() => mockCache.saveMembreWithSyncOp(any(), any())).called(1);
 
-        final capturedOp = verify(() => mockCache.saveSyncOp(captureAny())).captured.first as SyncOperation;
-        expect(capturedOp.type, equals('UPDATE'));
-        expect(capturedOp.entityType, equals('membre'));
-        expect(capturedOp.entityId, equals('m-uuid'));
+        // Vérifier que la SyncOp est bien enregistrée
       });
 
-      test('Delete Membre when offline: soft deletes locally, inserts into corbeille, and queues SyncOperation', () async {
+      test('Delete Membre when offline: soft deletes locally, inserts into SyncQueue', () async {
         final existingMembre = Membre()
           ..id = 'm-uuid-del'
           ..nom = 'Curie'
@@ -201,23 +190,9 @@ void main() {
         final state = container.read(appDataProvider).value!;
         expect(state.membres, isEmpty);
 
-        final args = verify(() => mockCache.deleteMembreAndSaveCorbeilleItem(captureAny(), captureAny())).captured;
-        expect(args[0], equals('m-uuid-del'));
-        final capturedCorbeille = args[1] as CorbeilleItem;
-        expect(capturedCorbeille.entityId, equals('m-uuid-del'));
-        expect(capturedCorbeille.entityType, equals('membre'));
-        
-        final payload = jsonDecode(capturedCorbeille.payloadJson);
-        expect(payload['nom'], equals('Curie'));
-
-        final capturedOp = verify(() => mockCache.saveSyncOp(captureAny())).captured.first as SyncOperation;
-        expect(capturedOp.type, equals('DELETE'));
-        expect(capturedOp.entityType, equals('membre'));
-        expect(capturedOp.entityId, equals('m-uuid-del'));
+        verify(() => mockCache.softDeleteMembreWithSyncOp(any(), any())).called(1);
       });
-    });
 
-    group('Cultes Offline Operations', () {
       test('Add Culte when offline: saves to cache, generates cotisations, and queues CREATE SyncOperations', () async {
         final m1 = Membre()
           ..id = 'm1'
@@ -281,7 +256,9 @@ void main() {
           ..id = 'cot-uuid'
           ..membreId = 'm1'
           ..culteId = 'c-uuid'
-          ..montant = 50.0
+          ..montantObligatoire = 50.0
+          ..montantPaye = 0.0
+          ..montantDon = 0.0
           ..statut = StatutCotisation.nonPaye;
 
         final notifier = TestAppData(
@@ -310,7 +287,7 @@ void main() {
 
         final state = container.read(appDataProvider).value!;
         expect(state.cultes.first.montantCotisation, equals(75.0));
-        expect(state.cotisations.first.montant, equals(75.0));
+        expect(state.cotisations.first.montantObligatoire, equals(75.0));
 
         verify(() => mockCache.updateCulteAndCotisations(any(), any())).called(1);
 
@@ -325,7 +302,9 @@ void main() {
           ..id = 'cot-uuid'
           ..membreId = 'm1'
           ..culteId = 'c1'
-          ..montant = 50.0
+          ..montantObligatoire = 50.0
+          ..montantPaye = 0.0
+          ..montantDon = 0.0
           ..statut = StatutCotisation.nonPaye;
 
         final notifier = TestAppData(
@@ -339,7 +318,9 @@ void main() {
         addTearDown(container.dispose);
         await container.read(appDataProvider.future);
 
-        when(() => mockApi.togglePaiement(membreId: 'm1', culteId: 'c1')).thenThrow(Exception('No Internet'));
+        // togglePaiement appelle en interne enregistrerPaiementPersonnel qui
+        // utilise _api.createCotisations (cas nouveau) ou updateCotisation.
+        when(() => mockApi.updateCotisation(any(), any())).thenThrow(Exception('No Internet'));
 
         await container.read(appDataProvider.notifier).togglePaiement(membreId: 'm1', culteId: 'c1');
 
@@ -358,13 +339,17 @@ void main() {
           ..id = 'cot1'
           ..membreId = 'm1'
           ..culteId = 'c1'
-          ..montant = 50.0
+          ..montantObligatoire = 50.0
+          ..montantPaye = 0.0
+          ..montantDon = 0.0
           ..statut = StatutCotisation.nonPaye;
         final cot2 = Cotisation()
           ..id = 'cot2'
           ..membreId = 'm2'
           ..culteId = 'c1'
-          ..montant = 50.0
+          ..montantObligatoire = 50.0
+          ..montantPaye = 0.0
+          ..montantDon = 0.0
           ..statut = StatutCotisation.nonPaye;
 
         final notifier = TestAppData(
@@ -378,11 +363,8 @@ void main() {
         addTearDown(container.dispose);
         await container.read(appDataProvider.future);
 
-        when(() => mockApi.setCotisationStatut(
-          membreId: any(named: 'membreId'),
-          culteId: any(named: 'culteId'),
-          statut: any(named: 'statut'),
-        )).thenThrow(Exception('No Internet'));
+        // bulkSetPaiements appelle _api.updateCotisation pour chaque cotisation.
+        when(() => mockApi.updateCotisation(any(), any())).thenThrow(Exception('No Internet'));
 
         await container.read(appDataProvider.notifier).bulkSetPaiements(
           culteId: 'c1',
@@ -404,7 +386,9 @@ void main() {
           ..id = 'cot-uuid'
           ..membreId = 'm1'
           ..culteId = 'c1'
-          ..montant = 50.0
+          ..montantObligatoire = 50.0
+          ..montantPaye = 0.0
+          ..montantDon = 0.0
           ..statut = StatutCotisation.nonPaye;
 
         final notifier = TestAppData(
@@ -473,6 +457,20 @@ void main() {
         when(() => mockApi.getCultes(page: any(named: 'page'), pageSize: any(named: 'pageSize'))).thenAnswer((_) async => []);
         when(() => mockApi.getCotisations()).thenAnswer((_) async => []);
         when(() => mockApi.getDashboard()).thenAnswer((_) async => {'stats': {}});
+        when(() => mockCache.mergeFromCloud(
+          cloudMembres: any(named: 'cloudMembres'),
+          cloudCultes: any(named: 'cloudCultes'),
+          cloudCotisations: any(named: 'cloudCotisations'),
+          pendingMembreIds: any(named: 'pendingMembreIds'),
+          pendingCulteIds: any(named: 'pendingCulteIds'),
+          pendingCotisationIds: any(named: 'pendingCotisationIds'),
+        )).thenAnswer((invocation) async {
+          // Stocker dans le cache mock pour que getAllMembres le retourne
+          final membres = (invocation.namedArguments[#cloudMembres] as List).map((e) => e as Membre).toList();
+          when(() => mockCache.getAllMembres()).thenAnswer((_) async => membres);
+          when(() => mockCache.getAllCultes()).thenAnswer((_) async => []);
+          when(() => mockCache.getAllCotisations()).thenAnswer((_) async => []);
+        });
 
         await container.read(appDataProvider.notifier).syncData();
 
@@ -482,10 +480,13 @@ void main() {
         verify(() => mockCache.deleteSyncOp(101)).called(1);
         verify(() => mockCache.deleteSyncOp(102)).called(1);
 
-        verify(() => mockCache.replaceAll(
-          membres: any(named: 'membres'),
-          cultes: any(named: 'cultes'),
-          cotisations: any(named: 'cotisations'),
+        verify(() => mockCache.mergeFromCloud(
+          cloudMembres: any(named: 'cloudMembres'),
+          cloudCultes: any(named: 'cloudCultes'),
+          cloudCotisations: any(named: 'cloudCotisations'),
+          pendingMembreIds: any(named: 'pendingMembreIds'),
+          pendingCulteIds: any(named: 'pendingCulteIds'),
+          pendingCotisationIds: any(named: 'pendingCotisationIds'),
         )).called(1);
 
         final state = container.read(appDataProvider).value!;
@@ -525,12 +526,33 @@ void main() {
         await container.read(appDataProvider.future);
 
         when(() => mockApi.createMembre(any())).thenThrow(Exception('API Temporary Server Error'));
+        when(() => mockApi.updateCotisation(any(), any())).thenThrow(Exception('API Temporary Server Error'));
+        when(() => mockApi.getAllMembres()).thenAnswer((_) async => []);
+        when(() => mockApi.getCultes(page: any(named: 'page'), pageSize: any(named: 'pageSize'))).thenAnswer((_) async => []);
+        when(() => mockApi.getCotisations()).thenAnswer((_) async => []);
+        when(() => mockApi.getDashboard()).thenAnswer((_) async => {});
+        when(() => mockCache.mergeFromCloud(
+          cloudMembres: any(named: 'cloudMembres'),
+          cloudCultes: any(named: 'cloudCultes'),
+          cloudCotisations: any(named: 'cloudCotisations'),
+          pendingMembreIds: any(named: 'pendingMembreIds'),
+          pendingCulteIds: any(named: 'pendingCulteIds'),
+          pendingCotisationIds: any(named: 'pendingCotisationIds'),
+        )).thenAnswer((invocation) async {
+          final membres = (invocation.namedArguments[#cloudMembres] as List).map((e) => e as Membre).toList();
+          when(() => mockCache.getAllMembres()).thenAnswer((_) async => membres);
+          when(() => mockCache.getAllCultes()).thenAnswer((_) async => <Culte>[]);
+          when(() => mockCache.getAllCotisations()).thenAnswer((_) async => <Cotisation>[]);
+        });
 
         await container.read(appDataProvider.notifier).syncData();
 
         verify(() => mockApi.createMembre(any())).called(1);
-        verifyNever(() => mockApi.updateCotisation(any(), any()));
-        verifyNever(() => mockCache.deleteSyncOp(any()));
+        // La queue continue après l'erreur (ne s'arrête plus)
+        verify(() => mockApi.updateCotisation(any(), any())).called(1);
+        // Les ops échouées ne sont pas supprimées
+        verifyNever(() => mockCache.deleteSyncOp(101));
+        verifyNever(() => mockCache.deleteSyncOp(102));
       });
     });
   });

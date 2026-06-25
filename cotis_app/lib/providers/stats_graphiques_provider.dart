@@ -65,16 +65,16 @@ class DonneesGraphiques {
     final now = DateTime.now();
     const moisLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
-    final collecteParMois = List.generate(12, (index) {
-      final monthDate = DateTime(now.year, now.month - (11 - index), 1);
-      final label = moisLabels[monthDate.month - 1];
-      final montant = state.cotisations
-          .where((c) => c.estPaye)
-          .where((c) => c.datePaiement != null)
-          .where((c) => c.datePaiement!.year == monthDate.year && c.datePaiement!.month == monthDate.month)
-          .fold(0.0, (sum, c) => sum + c.montant);
-      return CollecteParMois(libelle: label, montant: montant);
-    });
+     final collecteParMois = List.generate(12, (index) {
+       final monthDate = DateTime(now.year, now.month - (11 - index), 1);
+       final label = moisLabels[monthDate.month - 1];
+       final montant = state.cotisations
+           .where((c) => c.estPaye)
+           .where((c) => c.datePaiement != null)
+           .where((c) => c.datePaiement!.year == monthDate.year && c.datePaiement!.month == monthDate.month)
+           .fold(0.0, (sum, c) => sum + c.montantPaye);
+       return CollecteParMois(libelle: label, montant: montant);
+     });
 
     final cultesTries = [...state.cultes]..sort((a, b) => a.dateCulte.compareTo(b.dateCulte));
     final participationParCulte = cultesTries.map((culte) {

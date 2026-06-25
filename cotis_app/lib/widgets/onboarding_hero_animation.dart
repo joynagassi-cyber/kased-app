@@ -122,17 +122,6 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
     return curve.transform(_ep(v, start, end)).clamp(0.0, 1.0);
   }
 
-  // Compteur formaté FCFA
-  String _fmt(num n) {
-    final s = n.round().toString();
-    final b = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) b.write(' ');
-      b.write(s[i]);
-    }
-    return '$b FCFA';
-  }
-
   // ── BUILD ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -293,7 +282,7 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Cahier de cotisations',
+                    const Text('Gestion manuelle',
                         style: TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w700,
                             color: Color(0xFF0F172A))),
@@ -529,7 +518,6 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
 
     // Compteurs calculés localement à partir de v
     final _c1 = _cp(v, _s2Counter, _s2CounterEnd, const Cubic(0.15, 0, 0.2, 1));
-    final _localTotal = (100000 * _c1).round();
     final _localFill = 0.80 * _c1;
 
     return ClipRRect(
@@ -558,10 +546,12 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Text('Groupe actif',
-                      style: TextStyle(
-                          fontSize: 9, fontWeight: FontWeight.w700,
-                          color: Color(0xFFCBD5E1))),
+                  const Flexible(
+                    child: Text('Suivi en temps réel',
+                        style: TextStyle(
+                            fontSize: 9, fontWeight: FontWeight.w700,
+                            color: Color(0xFFCBD5E1))),
+                  ),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -587,7 +577,7 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  _fmt(_localTotal),
+                  '${(100000 * _cp(v, _s2Counter, _s2CounterEnd, const Cubic(0.15, 0, 0.2, 1))).round()} FCFA',
                   style: GoogleFonts.syne(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
@@ -1335,17 +1325,17 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
                         border: Border.all(
                             color: Colors.white.withValues(alpha: 0.2)),
                       ),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Center(
-                            child: Text('K',
-                                style: GoogleFonts.syne(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                )),
-                          ),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Center(
+                                child: Text('K',
+                                    style: GoogleFonts.syne(
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    )),
+                              ),
                           // Effet shine
                           Positioned(
                             left: -120,
@@ -1476,7 +1466,7 @@ class _OnboardingHeroAnimationState extends State<OnboardingHeroAnimation>
                                 fontSize: 11, fontWeight: FontWeight.w800,
                                 color: Colors.white),
                           ),
-                          const Text(' groupes actifs',
+                          const Text(' communautés utilisent Kased',
                               style: TextStyle(
                                   fontSize: 7, color: Color(0xFFBFDBFE))),
                         ],

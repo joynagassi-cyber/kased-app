@@ -22,7 +22,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.initState();
     final authState = ref.read(authProvider);
     _nameCtrl = TextEditingController(
-      text: authState.userEmail?.split('@').first ?? '',
+      text: authState.userName ?? authState.userEmail?.split('@').first ?? '',
     );
   }
 

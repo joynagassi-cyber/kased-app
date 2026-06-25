@@ -7,15 +7,22 @@ class Membre {
   Id isarId = Isar.autoIncrement;
 
   @Index(unique: true, replace: true)
-  late String id; // UUID from InsForge
+  late String id;
 
   late String nom;
   late String prenom;
-  late DateTime dateAdhesion; // Renommé de dateInscription
+  late DateTime dateAdhesion;
   DateTime? dateNaissance;
   String? telephone;
   String? notes;
-  bool isActive = true; // Renommé de isActif
+  bool isActive = true;
+  DateTime? updatedAt;
+  DateTime createdAt = DateTime.now();
+  int version = 1;
+  String deviceId = '';
+  bool isDeleted = false;
+  DateTime? deletedAt;
+  String? deletedBy;
 
   @ignore
   String get nomComplet => '$prenom $nom'.trim();
@@ -58,6 +65,13 @@ class Membre {
     if (telephone != null) 'telephone': telephone,
     if (notes != null) 'notes': notes,
     'is_active': isActive,
+    if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
+    'created_at': createdAt.toIso8601String(),
+    'version': version,
+    'device_id': deviceId,
+    'is_deleted': isDeleted,
+    if (deletedAt != null) 'deleted_at': deletedAt!.toIso8601String(),
+    if (deletedBy != null) 'deleted_by': deletedBy,
   };
 
   static Membre fromJson(Map<String, dynamic> json) {
@@ -71,6 +85,19 @@ class Membre {
           : DateTime.parse(json['date_naissance'] as String)
       ..telephone = json['telephone'] as String?
       ..notes = json['notes'] as String?
-      ..isActive = json['is_active'] as bool? ?? true;
+      ..isActive = json['is_active'] as bool? ?? true
+      ..updatedAt = json['updated_at'] == null
+          ? null
+          : DateTime.parse(json['updated_at'] as String)
+      ..createdAt = json['created_at'] == null
+          ? DateTime.now()
+          : DateTime.parse(json['created_at'] as String)
+      ..version = (json['version'] as num?)?.toInt() ?? 1
+      ..deviceId = json['device_id'] as String? ?? ''
+      ..isDeleted = json['is_deleted'] as bool? ?? false
+      ..deletedAt = json['deleted_at'] == null
+          ? null
+          : DateTime.parse(json['deleted_at'] as String)
+      ..deletedBy = json['deleted_by'] as String?;
   }
 }

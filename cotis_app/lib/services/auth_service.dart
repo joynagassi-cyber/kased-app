@@ -21,18 +21,21 @@ class AuthService {
     connectTimeout: const Duration(seconds: 60),
     receiveTimeout: const Duration(seconds: 60),
     headers: {
-      'apikey': InsForgeConfig.anonKey,
+      // Clé anon injectée via --dart-define=INSFORGE_ANON_KEY=...
       'Content-Type': 'application/json',
     },
   ));
 
-  // Configuration OAuth2 avec personnalisation de la popup
-  // serverClientId = Web Client ID (Google Cloud Console) → nécessaire pour obtenir un idToken valide sur Android
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
+  // Configuration OAuth2 Google. serverClientId est passé via
+  // --dart-define=GOOGLE_SERVER_CLIENT_ID=... — nécessaire pour récupérer un
+  // idToken valide côté Android.
+  late final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
     signInOption: SignInOption.standard,
     forceCodeForRefreshToken: true,
-    serverClientId: '535496831713-4ol3svlekn919034dp509bbi6i9j0ndo.apps.googleusercontent.com',
+    serverClientId: InsForgeConfig.effectiveGoogleServerClientId.isEmpty
+        ? null
+        : InsForgeConfig.effectiveGoogleServerClientId,
   );
 
   // --- EMAIL / PASSWORD AUTH ---
@@ -211,7 +214,7 @@ class AuthService {
           sendTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(seconds: 30),
           headers: {
-            'apikey': InsForgeConfig.anonKey,
+            'apikey': InsForgeConfig.effectiveAnonKey,
           },
         ),
       );

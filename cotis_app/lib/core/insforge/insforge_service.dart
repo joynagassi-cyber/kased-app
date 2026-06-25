@@ -385,18 +385,35 @@ class InsForgeService {
     return _asList(response.data);
   }
 
+  // --- DELTA SYNC ---
+  /// Récupère les changements depuis la dernière synchronisation.
+  /// Si [lastSyncAt] est null, retourne une liste vide (sync initiale via getAll).
+  Future<List<Map<String, dynamic>>> getChangesSince(String? lastSyncAt) async {
+    if (lastSyncAt == null || lastSyncAt.isEmpty) return [];
+    try {
+      final response = await _dio.get(
+        '/api/database/records/changes',
+        queryParameters: {
+          'since': lastSyncAt,
+        },
+      );
+      return _asList(response.data);
+    } catch (_) {
+      // Si l'endpoint n'existe pas encore, on skip le delta pull
+      return [];
+    }
+  }
+
   // --- UPLOAD PHOTO ---
   Future<String?> uploadMembrePhoto(String filePath, String fileName) async {
     try {
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(filePath, filename: fileName),
       });
-
       final response = await _dio.post(
         '/api/storage/object/${InsForgeConfig.membersPhotosBucket}/$fileName',
         data: formData,
       );
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         return '${InsForgeConfig.baseUrl}/api/storage/object/public/${InsForgeConfig.membersPhotosBucket}/$fileName';
       }

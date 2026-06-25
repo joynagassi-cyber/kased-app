@@ -45,9 +45,9 @@ class CultesScreen extends ConsumerWidget {
           }
 
           final totalCultes = cultes.length;
-          final totalGlobalCollecte = state.cotisations
-              .where((c) => c.estPaye)
-              .fold(0.0, (sum, c) => sum + c.montant);
+           final totalGlobalCollecte = state.cotisations
+               .where((c) => c.estPaye)
+               .fold(0.0, (sum, c) => sum + c.montantPaye);
 
           return CustomScrollView(
             slivers: [
@@ -112,9 +112,9 @@ class CultesScreen extends ConsumerWidget {
                       final totalMembres = membres.length;
                       final percentage =
                           totalMembres > 0 ? payeursCount / totalMembres : 0.0;
-                      final totalCollecte = cotisations
-                          .where((c) => c.estPaye)
-                          .fold(0.0, (sum, c) => sum + c.montant);
+                       final totalCollecte = cotisations
+                           .where((c) => c.estPaye)
+                           .fold(0.0, (sum, c) => sum + c.montantPaye);
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),

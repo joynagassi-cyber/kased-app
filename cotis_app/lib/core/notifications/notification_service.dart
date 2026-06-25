@@ -65,7 +65,7 @@ class NotificationService {
           android: AndroidNotificationDetails(
             'anniversaires',
             'Anniversaires',
-            channelDescription: 'Notifications d anniversaire des membres',
+            channelDescription: 'Notifications d\'anniversaire des membres',
             importance: Importance.max,
             priority: Priority.high,
           ),
@@ -85,6 +85,53 @@ class NotificationService {
       await _plugin.cancel(id: _notificationIdFor(membreId));
     } catch (e) {
       debugPrint('Erreur lors de l\'annulation d\'anniversaire: $e');
+    }
+  }
+
+  static Future<void> showNotification({
+    required String title,
+    required String body,
+    String channelId = 'default',
+    String? channelName = 'Général',
+    int? id,
+  }) async {
+    if (!_initialized) return;
+    
+    try {
+      // Ensure channel exists if not default
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null && channelId != 'default') {
+        await androidPlugin.createNotificationChannel(
+          AndroidNotificationChannel(
+            channelId,
+            channelName ?? 'Général',
+            importance: Importance.high,
+            enableLights: true,
+          ),
+        );
+      }
+
+      await _plugin.show(
+        id: id ?? DateTime.now().hashCode.abs(),
+        title: title,
+        body: body,
+        payload: null,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            channelId,
+            channelName ?? 'Général',
+            channelDescription: 'Notifications générales',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentSound: true,
+            badgeNumber: 1,
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Erreur lors de l\'affichage de notification: $e');
     }
   }
 }

@@ -26,8 +26,8 @@ class CotisationExportService {
       final prenom = membre.prenom.replaceAll(';', ',');
       final dateCulte = culte.dateCulte.toIso8601String().substring(0, 10);
       final titreCulte = (culte.titre ?? 'Culte').replaceAll(';', ',');
-      final montantCotisation = culte.montantCotisation.toStringAsFixed(0);
-      final montantPaye = cot.estPaye ? cot.montant.toStringAsFixed(0) : '0';
+       final montantCotisation = culte.montantCotisation.toStringAsFixed(0);
+       final montantPaye = cot.estPaye ? cot.montantPaye.toStringAsFixed(0) : '0';
       
       String statutStr = 'Non Payé';
       if (cot.statut == StatutCotisation.paye) statutStr = 'Payé';

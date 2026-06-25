@@ -11,7 +11,6 @@ import 'core/notifications/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
-import 'core/insforge/insforge_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,13 +32,6 @@ Future<void> main() async {
   await runZonedGuarded(
     () async {
       await initializeDateFormatting('fr_FR', null);
-
-      // Vérification que la clé InsForge est configurée
-      assert(
-        InsForgeConfig.anonKey.isNotEmpty &&
-            InsForgeConfig.baseUrl.isNotEmpty,
-        'INSFORGE_KEY et INSFORGE_URL doivent être définies via --dart-define',
-      );
 
       // Activer Crashlytics en mode debug pour capturer les erreurs en développement
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);

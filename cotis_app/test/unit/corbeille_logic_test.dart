@@ -22,7 +22,7 @@ void main() {
       final items = [itemRecent, itemLimite, itemVieux];
 
       final toPurge = getItemsToPurge(items, now);
-      final keep = filterRecentCorbeilleItems(items, now);
+      final keep = filterRecent(items, now);
 
       expect(toPurge.length, 1);
       expect(toPurge.first.entityId, '3'); // Seul le vieux doit être purgé
@@ -40,7 +40,7 @@ void main() {
       final items = [itemRecent1, itemRecent2];
 
       expect(getItemsToPurge(items, now).isEmpty, isTrue);
-      expect(filterRecentCorbeilleItems(items, now).length, 2);
+      expect(filterRecent(items, now).length, 2);
     });
   });
 }

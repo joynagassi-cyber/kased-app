@@ -92,7 +92,7 @@ class _AddMembreScreenState extends ConsumerState<AddMembreScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        DateFormat('dd MMMM yyyy').format(_dateAdhesion),
+                        DateFormat('dd MMMM yyyy', 'fr_FR').format(_dateAdhesion),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -126,7 +126,7 @@ class _AddMembreScreenState extends ConsumerState<AddMembreScreen> {
                       subtitle: Text(
                         _dateNaissance == null
                             ? 'Aucune date sélectionnée'
-                            : DateFormat('dd MMMM yyyy').format(_dateNaissance!),
+                            : DateFormat('dd MMMM yyyy', 'fr_FR').format(_dateNaissance!),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -193,7 +193,7 @@ class _AddMembreScreenState extends ConsumerState<AddMembreScreen> {
       try {
         setState(() => _isSaving = true);
         final notifier = ref.read(appDataProvider.notifier);
-        await notifier.addMembre(
+        final newMembre = await notifier.addMembre(
               nom: _nomController.text.trim(),
               prenom: _prenomController.text.trim(),
               dateAdhesion: _dateAdhesion,
@@ -201,11 +201,42 @@ class _AddMembreScreenState extends ConsumerState<AddMembreScreen> {
               telephone: _telephoneController.text.trim().isEmpty ? null : _telephoneController.text.trim(),
               notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
             );
-        if (mounted) Navigator.pop(context);
+        
+        if (mounted) {
+          // Feedback visuel et retour
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('${newMembre.prenom} ${newMembre.nom} ajouté avec succès !'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          Navigator.pop(context);
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Erreur lors de la création: $e'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
           );
         }
       } finally {

@@ -42,7 +42,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
         final membres = state.membres.where((m) => m.isActive).toList();
         final payes = cotisations.where((c) => c.estPaye).length;
         final total = membres.length;
-        final totalCollecte = cotisations.where((c) => c.estPaye).fold(0.0, (sum, c) => sum + c.montant);
+         final totalCollecte = cotisations.where((c) => c.estPaye).fold(0.0, (sum, c) => sum + c.montantPaye);
         final membresPayesIds = cotisations.where((c) => c.estPaye).map((c) => c.membreId).toSet();
         final membresNonPayes = membres.where((m) => !membresPayesIds.contains(m.id)).toList();
         final tousPayes = membres.isNotEmpty && membresNonPayes.isEmpty;
@@ -475,7 +475,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
     BuildContext context, {
     required String title,
     required String message,
-    required Future<void> Function() onConfirm,
+    required Future<({int success, int total})> Function() onConfirm,
   }) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -497,8 +497,6 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
 
     if (confirmed != true || !context.mounted) return;
 
-    // Utiliser rootNavigator pour s'assurer qu'on ferme bien le dialog
-    // même si le widget sous-jacent a été reconstruit
     final nav = Navigator.of(context, rootNavigator: true);
     final messenger = ScaffoldMessenger.of(context);
 
@@ -515,15 +513,69 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
     );
 
     try {
-      await onConfirm();
-      nav.pop(); // Fermer le dialog
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Opération terminée ✅')),
-      );
+      final result = await onConfirm();
+      nav.pop();
+      if (result.success == result.total) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('$title : ${result.success}/${result.total} effectué'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (result.success > 0) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.info, color: Colors.black, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Partiel : ${result.success}/${result.total} réussis'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      } else {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Aucune opération n\'a abouti'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
-      nav.pop(); // Fermer le dialog
+      nav.pop();
       messenger.showSnackBar(
-        SnackBar(content: Text('Erreur: $e')),
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Erreur: $e'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }

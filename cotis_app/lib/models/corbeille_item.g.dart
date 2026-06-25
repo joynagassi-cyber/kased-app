@@ -22,20 +22,30 @@ const CorbeilleItemSchema = CollectionSchema(
       name: r'deletedAt',
       type: IsarType.dateTime,
     ),
-    r'entityId': PropertySchema(
+    r'derniereModification': PropertySchema(
       id: 1,
+      name: r'derniereModification',
+      type: IsarType.dateTime,
+    ),
+    r'entityId': PropertySchema(
+      id: 2,
       name: r'entityId',
       type: IsarType.string,
     ),
     r'entityType': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'entityType',
       type: IsarType.string,
     ),
     r'payloadJson': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'payloadJson',
       type: IsarType.string,
+    ),
+    r'updatedAt': PropertySchema(
+      id: 5,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
     )
   },
   estimateSize: _corbeilleItemEstimateSize,
@@ -71,9 +81,11 @@ void _corbeilleItemSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.deletedAt);
-  writer.writeString(offsets[1], object.entityId);
-  writer.writeString(offsets[2], object.entityType);
-  writer.writeString(offsets[3], object.payloadJson);
+  writer.writeDateTime(offsets[1], object.derniereModification);
+  writer.writeString(offsets[2], object.entityId);
+  writer.writeString(offsets[3], object.entityType);
+  writer.writeString(offsets[4], object.payloadJson);
+  writer.writeDateTime(offsets[5], object.updatedAt);
 }
 
 CorbeilleItem _corbeilleItemDeserialize(
@@ -84,10 +96,11 @@ CorbeilleItem _corbeilleItemDeserialize(
 ) {
   final object = CorbeilleItem();
   object.deletedAt = reader.readDateTime(offsets[0]);
-  object.entityId = reader.readString(offsets[1]);
-  object.entityType = reader.readString(offsets[2]);
+  object.entityId = reader.readString(offsets[2]);
+  object.entityType = reader.readString(offsets[3]);
   object.isarId = id;
-  object.payloadJson = reader.readString(offsets[3]);
+  object.payloadJson = reader.readString(offsets[4]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[5]);
   return object;
 }
 
@@ -101,11 +114,15 @@ P _corbeilleItemDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -254,6 +271,62 @@ extension CorbeilleItemQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'deletedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      derniereModificationEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'derniereModification',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      derniereModificationGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'derniereModification',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      derniereModificationLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'derniereModification',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      derniereModificationBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'derniereModification',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -725,6 +798,80 @@ extension CorbeilleItemQueryFilter
       ));
     });
   }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      updatedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'updatedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      updatedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'updatedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      updatedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      updatedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      updatedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterFilterCondition>
+      updatedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension CorbeilleItemQueryObject
@@ -745,6 +892,20 @@ extension CorbeilleItemQuerySortBy
       sortByDeletedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deletedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterSortBy>
+      sortByDerniereModification() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'derniereModification', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterSortBy>
+      sortByDerniereModificationDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'derniereModification', Sort.desc);
     });
   }
 
@@ -786,6 +947,19 @@ extension CorbeilleItemQuerySortBy
       return query.addSortBy(r'payloadJson', Sort.desc);
     });
   }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterSortBy> sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterSortBy>
+      sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
 }
 
 extension CorbeilleItemQuerySortThenBy
@@ -800,6 +974,20 @@ extension CorbeilleItemQuerySortThenBy
       thenByDeletedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deletedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterSortBy>
+      thenByDerniereModification() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'derniereModification', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterSortBy>
+      thenByDerniereModificationDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'derniereModification', Sort.desc);
     });
   }
 
@@ -853,6 +1041,19 @@ extension CorbeilleItemQuerySortThenBy
       return query.addSortBy(r'payloadJson', Sort.desc);
     });
   }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterSortBy> thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterSortBy>
+      thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
 }
 
 extension CorbeilleItemQueryWhereDistinct
@@ -860,6 +1061,13 @@ extension CorbeilleItemQueryWhereDistinct
   QueryBuilder<CorbeilleItem, CorbeilleItem, QDistinct> distinctByDeletedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'deletedAt');
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QDistinct>
+      distinctByDerniereModification() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'derniereModification');
     });
   }
 
@@ -883,6 +1091,12 @@ extension CorbeilleItemQueryWhereDistinct
       return query.addDistinctBy(r'payloadJson', caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QDistinct> distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
+    });
+  }
 }
 
 extension CorbeilleItemQueryProperty
@@ -896,6 +1110,13 @@ extension CorbeilleItemQueryProperty
   QueryBuilder<CorbeilleItem, DateTime, QQueryOperations> deletedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'deletedAt');
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, DateTime, QQueryOperations>
+      derniereModificationProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'derniereModification');
     });
   }
 
@@ -914,6 +1135,12 @@ extension CorbeilleItemQueryProperty
   QueryBuilder<CorbeilleItem, String, QQueryOperations> payloadJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'payloadJson');
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, DateTime?, QQueryOperations> updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
     });
   }
 }

@@ -74,4 +74,39 @@ abstract class LocalCache {
     required List<Culte> cultes,
     required List<Cotisation> cotisations,
   });
+
+  /// Merge cloud data into local cache.
+  /// Pour chaque entité, si la version locale est plus récente (updatedAt > cloud),
+  /// on garde la locale. Sinon, on prend la cloud.
+  Future<void> mergeFromCloud({
+    required List<Membre> cloudMembres,
+    required List<Culte> cloudCultes,
+    required List<Cotisation> cloudCotisations,
+    required Set<String> pendingMembreIds,
+    required Set<String> pendingCulteIds,
+    required Set<String> pendingCotisationIds,
+  });
+
+  // ── Mutations atomiques avec SyncOperation ────────────────────────────────
+
+  /// Sauvegarde un membre ET sa SyncOperation dans une même transaction.
+  Future<void> saveMembreWithSyncOp(Membre membre, SyncOperation op);
+
+  /// Sauvegarde un culte ET sa SyncOperation dans une même transaction.
+  Future<void> saveCulteWithSyncOp(Culte culte, SyncOperation op);
+
+  /// Sauvegarde une cotisation ET sa SyncOperation dans une même transaction.
+  Future<void> saveCotisationWithSyncOp(Cotisation cotisation, SyncOperation op);
+
+  /// Soft delete d'un membre : isDeleted=true + SyncOperation DELETE.
+  Future<void> softDeleteMembreWithSyncOp(Membre membre, SyncOperation op);
+
+  /// Soft delete d'un culte : isDeleted=true + SyncOperation DELETE des cotisations.
+  Future<void> softDeleteCulteWithSyncOp(Culte culte, List<Cotisation> cotisations, SyncOperation op);
+
+  /// Restaure un membre (isDeleted=false) + SyncOperation RESTORE.
+  Future<void> restoreMembreWithSyncOp(Membre membre, SyncOperation op);
+
+  /// Restaure un culte (isDeleted=false) + SyncOperation RESTORE.
+  Future<void> restoreCulteWithSyncOp(Culte culte, SyncOperation op);
 }

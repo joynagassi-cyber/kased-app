@@ -183,4 +183,185 @@ class IsarLocalCache implements LocalCache {
         await _isar.cultes.putAll(cultes);
         await _isar.cotisations.putAll(cotisations);
       });
+
+  /// Choisit la version la plus récente entre locale et cloud
+  Membre _pickMembre(Membre local, Membre cloud) {
+    if (local.updatedAt == null && cloud.updatedAt == null) return cloud;
+    if (local.updatedAt == null) return cloud;
+    if (cloud.updatedAt == null) return local;
+    return local.updatedAt!.isAfter(cloud.updatedAt!) ? local : cloud;
+  }
+
+  Culte _pickCulte(Culte local, Culte cloud) {
+    if (local.updatedAt == null && cloud.updatedAt == null) return cloud;
+    if (local.updatedAt == null) return cloud;
+    if (cloud.updatedAt == null) return local;
+    return local.updatedAt!.isAfter(cloud.updatedAt!) ? local : cloud;
+  }
+
+  Cotisation _pickCotisation(Cotisation local, Cotisation cloud) {
+    if (local.updatedAt == null && cloud.updatedAt == null) return cloud;
+    if (local.updatedAt == null) return cloud;
+    if (cloud.updatedAt == null) return local;
+    return local.updatedAt!.isAfter(cloud.updatedAt!) ? local : cloud;
+  }
+
+  @override
+  Future<void> mergeFromCloud({
+    required List<Membre> cloudMembres,
+    required List<Culte> cloudCultes,
+    required List<Cotisation> cloudCotisations,
+    required Set<String> pendingMembreIds,
+    required Set<String> pendingCulteIds,
+    required Set<String> pendingCotisationIds,
+  }) =>
+      _isar.writeTxn(() async {
+        // ── Membres ─────────────────────────────────────────
+        final localMembres = await _isar.membres.where().findAll();
+        final cloudMembresById = {for (final m in cloudMembres) m.id: m};
+        final localMembresById = {for (final m in localMembres) m.id: m};
+        final mergedMembres = <Membre>[];
+
+        // Fusion : cloud + local, garder le plus récent
+        final allMembreIds = {...cloudMembresById.keys, ...localMembresById.keys};
+        for (final id in allMembreIds) {
+          // Si l'entité a une opération en attente, garder la version locale
+          if (pendingMembreIds.contains(id)) {
+            if (localMembresById.containsKey(id)) {
+              mergedMembres.add(localMembresById[id]!);
+            }
+            continue;
+          }
+          final cloud = cloudMembresById[id];
+          final local = localMembresById[id];
+          
+          // Si local est supprimé et ne contient aucune opération, l'éliminer
+          if (local != null && local.isDeleted) {
+            continue;
+          }
+          
+          if (cloud != null && local != null) {
+            mergedMembres.add(_pickMembre(local, cloud));
+          } else {
+            if (cloud != null) mergedMembres.add(cloud);
+            else if (local != null && !local.isDeleted) mergedMembres.add(local);
+          }
+        }
+
+        await _isar.membres.clear();
+        await _isar.membres.putAll(mergedMembres);
+
+        // ── Cultes ──────────────────────────────────────────
+        final localCultes = await _isar.cultes.where().findAll();
+        final cloudCultesById = {for (final c in cloudCultes) c.id: c};
+        final localCultesById = {for (final c in localCultes) c.id: c};
+        final mergedCultes = <Culte>[];
+
+        final allCulteIds = {...cloudCultesById.keys, ...localCultesById.keys};
+        for (final id in allCulteIds) {
+          if (pendingCulteIds.contains(id)) {
+            if (localCultesById.containsKey(id)) {
+              mergedCultes.add(localCultesById[id]!);
+            }
+            continue;
+          }
+          final cloud = cloudCultesById[id];
+          final local = localCultesById[id];
+          
+          // Si local est supprimé et ne contient aucune opération, l'éliminer
+          if (local != null && local.isDeleted) {
+            continue;
+          }
+          
+          if (cloud != null && local != null) {
+            mergedCultes.add(_pickCulte(local, cloud));
+          } else {
+            if (cloud != null) mergedCultes.add(cloud);
+            else if (local != null && !local.isDeleted) mergedCultes.add(local);
+          }
+        }
+
+        await _isar.cultes.clear();
+        await _isar.cultes.putAll(mergedCultes);
+
+        // ── Cotisations ─────────────────────────────────────
+        final localCotisations = await _isar.cotisations.where().findAll();
+        final cloudCotisationsById = {for (final c in cloudCotisations) c.id: c};
+        final localCotisationsById = {for (final c in localCotisations) c.id: c};
+        final mergedCotisations = <Cotisation>[];
+
+        final allCotisationIds = {...cloudCotisationsById.keys, ...localCotisationsById.keys};
+        for (final id in allCotisationIds) {
+          if (pendingCotisationIds.contains(id)) {
+            if (localCotisationsById.containsKey(id)) {
+              mergedCotisations.add(localCotisationsById[id]!);
+            }
+            continue;
+          }
+          final cloud = cloudCotisationsById[id];
+          final local = localCotisationsById[id];
+          if (cloud != null && local != null) {
+            mergedCotisations.add(_pickCotisation(local, cloud));
+          } else {
+            mergedCotisations.add(cloud ?? local!);
+          }
+        }
+
+        await _isar.cotisations.clear();
+        await _isar.cotisations.putAll(mergedCotisations);
+      });
+
+  // ── Mutations atomiques avec SyncOperation ────────────────────────────────
+
+  @override
+  Future<void> saveMembreWithSyncOp(Membre membre, SyncOperation op) =>
+      _isar.writeTxn(() async {
+        await _isar.membres.put(membre);
+        await _isar.syncOperations.put(op);
+      });
+
+  @override
+  Future<void> saveCulteWithSyncOp(Culte culte, SyncOperation op) =>
+      _isar.writeTxn(() async {
+        await _isar.cultes.put(culte);
+        await _isar.syncOperations.put(op);
+      });
+
+  @override
+  Future<void> saveCotisationWithSyncOp(Cotisation cotisation, SyncOperation op) =>
+      _isar.writeTxn(() async {
+        await _isar.cotisations.put(cotisation);
+        await _isar.syncOperations.put(op);
+      });
+
+  @override
+  Future<void> softDeleteMembreWithSyncOp(Membre membre, SyncOperation op) =>
+      _isar.writeTxn(() async {
+        await _isar.membres.put(membre);
+        await _isar.syncOperations.put(op);
+      });
+
+  @override
+  Future<void> softDeleteCulteWithSyncOp(Culte culte, List<Cotisation> cotisations, SyncOperation op) =>
+      _isar.writeTxn(() async {
+        await _isar.cultes.put(culte);
+        for (final c in cotisations) {
+          await _isar.cotisations.put(c);
+        }
+        await _isar.syncOperations.put(op);
+      });
+
+  @override
+  Future<void> restoreMembreWithSyncOp(Membre membre, SyncOperation op) =>
+      _isar.writeTxn(() async {
+        await _isar.membres.put(membre);
+        await _isar.syncOperations.put(op);
+      });
+
+  @override
+  Future<void> restoreCulteWithSyncOp(Culte culte, SyncOperation op) =>
+      _isar.writeTxn(() async {
+        await _isar.cultes.put(culte);
+        await _isar.syncOperations.put(op);
+      });
 }

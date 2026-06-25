@@ -5,7 +5,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/membre.dart';
 import '../models/culte.dart';
 import '../models/cotisation.dart';
-import '../models/paiement.dart';
 import '../models/sync_operation.dart';
 import '../models/corbeille_item.dart';
 
@@ -24,7 +23,6 @@ Future<Isar> isar(IsarRef ref) async {
       MembreSchema,
       CulteSchema,
       CotisationSchema,
-      PaiementSchema,
       SyncOperationSchema,
       CorbeilleItemSchema,
     ],

@@ -14,7 +14,7 @@ Cotisation _cotisation(String culteId, StatutCotisation statut, {DateTime? dateP
     ..membreId = 'membre_1'
     ..culteId = culteId
     ..statut = statut
-    ..montant = 50.0
+    ..montantObligatoire = 50.0
     ..datePaiement = datePaiement;
 }
 

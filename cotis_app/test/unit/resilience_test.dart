@@ -91,7 +91,7 @@ void main() {
           ..membreId = 'mem1'
           ..culteId = 'c_inexistant' // ID qui n'existe pas dans cultes
           ..statut = StatutCotisation.paye
-          ..montant = 50.0,
+          ..montantObligatoire = 50.0,
       ];
 
       // Ne doit pas crasher — c1 reste nonPaye implicitement
@@ -127,16 +127,17 @@ void main() {
   });
 
   group('Résilience — Sérialisation JSON corrompue', () {
-    test('fromJson avec montant null → utilise valeur par défaut 50.0', () {
+    test('fromJson avec montant_obligatoire null → utilise valeur par défaut 50.0', () {
       final json = {
         'id': 'uuid-cot',
         'membre_id': 'uuid-m',
         'culte_id': 'uuid-c',
         'statut': 'non_paye',
-        'montant': null, // valeur null
+        'montant_obligatoire': null, // valeur null
       };
       final cot = Cotisation.fromJson(json);
-      expect(cot.montant, equals(50.0)); // valeur par défaut
+      expect(cot.montantObligatoire, equals(50.0)); // valeur par défaut
+      expect(cot.montantPaye, equals(0.0));
     });
 
     test('Culte.fromJson avec montant_cotisation null → défaut 50.0', () {
