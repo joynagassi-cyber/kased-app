@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
+import 'package:kased_app/core/sync/sync_manager.dart';
 import 'package:kased_app/models/corbeille_item.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
@@ -30,6 +31,7 @@ class TestAppData extends AppData {
   Future<AppState> build() async {
     this.api = mockApi;
     this.cache = mockCache;
+    this.syncManager = SyncManager(mockApi, mockCache);
     return initialState ?? AppState(isOffline: true);
   }
 
@@ -310,7 +312,17 @@ void main() {
         final notifier = TestAppData(
           mockApi: mockApi,
           mockCache: mockCache,
-          initialState: AppState(cotisations: [cot], isOffline: true),
+          initialState: AppState(
+            cultes: [
+              Culte()
+                ..id = 'c1'
+                ..titre = 'Culte Test'
+                ..montantCotisation = 50.0
+                ..dateCulte = DateTime.now(),
+            ],
+            cotisations: [cot],
+            isOffline: true,
+          ),
         );
         final container = ProviderContainer(
           overrides: [appDataProvider.overrideWith(() => notifier)],
@@ -495,65 +507,79 @@ void main() {
         expect(state.isLoading, isFalse);
       });
 
-      test('Sync playback error: stops execution of queue to preserve sequential transaction order', () async {
-        final op1 = SyncOperation()
-          ..isarId = 101
-          ..type = 'CREATE'
-          ..entityType = 'membre'
-          ..entityId = 'm-new'
-          ..payloadJson = jsonEncode({'nom': 'Leibniz', 'prenom': 'Gottfried'})
-          ..createdAt = DateTime(2026, 5, 20, 10, 0);
+      test(
+        'Sync playback error: retries each operation with backoff, never deletes failed ops',
+        () async {
+          final op1 = SyncOperation()
+            ..isarId = 101
+            ..type = 'CREATE'
+            ..entityType = 'membre'
+            ..entityId = 'm-new'
+            ..payloadJson = jsonEncode({'nom': 'Leibniz', 'prenom': 'Gottfried'})
+            ..createdAt = DateTime(2026, 5, 20, 10, 0);
 
-        final op2 = SyncOperation()
-          ..isarId = 102
-          ..type = 'UPDATE'
-          ..entityType = 'cotisation'
-          ..entityId = 'cot-upd'
-          ..payloadJson = jsonEncode({'statut': 'paye'})
-          ..createdAt = DateTime(2026, 5, 20, 10, 5);
+          final op2 = SyncOperation()
+            ..isarId = 102
+            ..type = 'UPDATE'
+            ..entityType = 'cotisation'
+            ..entityId = 'cot-upd'
+            ..payloadJson = jsonEncode({'statut': 'paye'})
+            ..createdAt = DateTime(2026, 5, 20, 10, 5);
 
-        when(() => mockCache.getPendingSyncOps()).thenAnswer((_) async => [op1, op2]);
+          when(() => mockCache.getPendingSyncOps()).thenAnswer((_) async => [op1, op2]);
 
-        final notifier = TestAppData(
-          mockApi: mockApi,
-          mockCache: mockCache,
-          initialState: AppState(isOffline: false), // online
-        );
-        final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
-        );
-        addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+          final notifier = TestAppData(
+            mockApi: mockApi,
+            mockCache: mockCache,
+            initialState: AppState(isOffline: false), // online
+          );
+          final container = ProviderContainer(
+            overrides: [appDataProvider.overrideWith(() => notifier)],
+          );
+          addTearDown(container.dispose);
+          await container.read(appDataProvider.future);
 
-        when(() => mockApi.createMembre(any())).thenThrow(Exception('API Temporary Server Error'));
-        when(() => mockApi.updateCotisation(any(), any())).thenThrow(Exception('API Temporary Server Error'));
-        when(() => mockApi.getAllMembres()).thenAnswer((_) async => []);
-        when(() => mockApi.getCultes(page: any(named: 'page'), pageSize: any(named: 'pageSize'))).thenAnswer((_) async => []);
-        when(() => mockApi.getCotisations()).thenAnswer((_) async => []);
-        when(() => mockApi.getDashboard()).thenAnswer((_) async => {});
-        when(() => mockCache.mergeFromCloud(
-          cloudMembres: any(named: 'cloudMembres'),
-          cloudCultes: any(named: 'cloudCultes'),
-          cloudCotisations: any(named: 'cloudCotisations'),
-          pendingMembreIds: any(named: 'pendingMembreIds'),
-          pendingCulteIds: any(named: 'pendingCulteIds'),
-          pendingCotisationIds: any(named: 'pendingCotisationIds'),
-        )).thenAnswer((invocation) async {
-          final membres = (invocation.namedArguments[#cloudMembres] as List).map((e) => e as Membre).toList();
-          when(() => mockCache.getAllMembres()).thenAnswer((_) async => membres);
-          when(() => mockCache.getAllCultes()).thenAnswer((_) async => <Culte>[]);
-          when(() => mockCache.getAllCotisations()).thenAnswer((_) async => <Cotisation>[]);
-        });
+          when(() => mockApi.createMembre(any()))
+              .thenThrow(Exception('API Temporary Server Error'));
+          when(() => mockApi.updateCotisation(any(), any()))
+              .thenThrow(Exception('API Temporary Server Error'));
+          when(() => mockApi.getAllMembres()).thenAnswer((_) async => []);
+          when(() => mockApi.getCultes(
+                page: any(named: 'page'),
+                pageSize: any(named: 'pageSize'),
+              )).thenAnswer((_) async => []);
+          when(() => mockApi.getCotisations()).thenAnswer((_) async => []);
+          when(() => mockApi.getDashboard()).thenAnswer((_) async => {});
+          when(() => mockCache.mergeFromCloud(
+                cloudMembres: any(named: 'cloudMembres'),
+                cloudCultes: any(named: 'cloudCultes'),
+                cloudCotisations: any(named: 'cloudCotisations'),
+                pendingMembreIds: any(named: 'pendingMembreIds'),
+                pendingCulteIds: any(named: 'pendingCulteIds'),
+                pendingCotisationIds: any(named: 'pendingCotisationIds'),
+              )).thenAnswer((invocation) async {
+            final membres = (invocation.namedArguments[#cloudMembres] as List)
+                .map((e) => e as Membre)
+                .toList();
+            when(() => mockCache.getAllMembres())
+                .thenAnswer((_) async => membres);
+            when(() => mockCache.getAllCultes())
+                .thenAnswer((_) async => <Culte>[]);
+            when(() => mockCache.getAllCotisations())
+                .thenAnswer((_) async => <Cotisation>[]);
+          });
 
-        await container.read(appDataProvider.notifier).syncData();
+          await container.read(appDataProvider.notifier).syncData();
 
-        verify(() => mockApi.createMembre(any())).called(1);
-        // La queue continue après l'erreur (ne s'arrête plus)
-        verify(() => mockApi.updateCotisation(any(), any())).called(1);
-        // Les ops échouées ne sont pas supprimées
-        verifyNever(() => mockCache.deleteSyncOp(101));
-        verifyNever(() => mockCache.deleteSyncOp(102));
-      });
+          // Chaque opération est retentée 5 fois (syncMaxRetries = 5)
+          verify(() => mockApi.createMembre(any())).called(greaterThanOrEqualTo(5));
+          verify(() => mockApi.updateCotisation(any(), any())).called(greaterThanOrEqualTo(5));
+          // Les ops échouées ne sont jamais supprimées de la queue
+          verifyNever(() => mockCache.deleteSyncOp(101));
+          verifyNever(() => mockCache.deleteSyncOp(102));
+        },
+        timeout: const Timeout(Duration(minutes: 2)),
+      );
     });
   });
 }

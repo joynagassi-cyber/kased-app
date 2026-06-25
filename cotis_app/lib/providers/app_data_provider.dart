@@ -106,6 +106,8 @@ class AppData extends _$AppData {
   set api(InsForgeService a) => _api = a;
   @visibleForTesting
   set cache(LocalCache c) => _cache = c;
+  @visibleForTesting
+  set syncManager(SyncManager sm) => _syncManager = sm;
 
   @override
   FutureOr<AppState> build() async {
