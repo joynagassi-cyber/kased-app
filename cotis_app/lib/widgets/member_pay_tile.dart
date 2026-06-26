@@ -9,6 +9,9 @@ class MemberPayTile extends StatelessWidget {
   final StatutCotisation statut;
   final VoidCallback onToggle;
   final VoidCallback onMarkAbsent;
+  final VoidCallback? onCustomPayment;
+  final double? montantPaye;
+  final double? montantObligatoire;
   final bool isLocked;
 
   const MemberPayTile({
@@ -17,6 +20,9 @@ class MemberPayTile extends StatelessWidget {
     required this.statut,
     required this.onToggle,
     required this.onMarkAbsent,
+    this.onCustomPayment,
+    this.montantPaye,
+    this.montantObligatoire,
     this.isLocked = false,
   });
 
@@ -91,6 +97,27 @@ class MemberPayTile extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Badge montant si un paiement personnalisé a été enregistré
+              if (montantPaye != null && montantPaye! > 0 && !isPaymentLocked)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Text(
+                    '${montantPaye!.toStringAsFixed(0)}F',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: statusColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              if (!isPaymentLocked &&
+                  statut != StatutCotisation.absent &&
+                  onCustomPayment != null)
+                IconButton(
+                  onPressed: onCustomPayment,
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Personnaliser le paiement',
+                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiary,
+                ),
               if (!isPaymentLocked && statut != StatutCotisation.absent)
                 IconButton(
                   onPressed: onMarkAbsent,

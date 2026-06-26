@@ -39,6 +39,12 @@ abstract class LocalCache {
   Future<void> saveCorbeilleItem(CorbeilleItem item);
   Future<void> purgeOldCorbeilleItems(DateTime before);
 
+  /// Supprime définitivement un élément de la corbeille (sans restauration).
+  Future<void> deleteCorbeilleItem(int isarId);
+
+  /// Vide toute la corbeille (suppression définitive de tous les éléments).
+  Future<void> deleteAllCorbeilleItems();
+
   // ── Compound / transactional writes ───────────────────────────────────────
 
   /// Restore a membre from the trash bin in one transaction.

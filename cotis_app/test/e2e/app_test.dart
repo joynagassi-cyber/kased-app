@@ -98,7 +98,11 @@ void main() {
         matching: find.byType(SpringButton),
       );
       await tester.tap(startBtn.first);
-      await tester.pump(const Duration(milliseconds: 600));
+      // La transition _buildFadeSlidePage dure 320ms. L'onboarding est encore
+      // dans le tree pendant la transition (animation infinie 12s), donc on
+      // ne peut pas utiliser pumpAndSettle. On pompe manuellement.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
 
       // 2. Vérifier qu'on est sur le login
       expect(
@@ -125,7 +129,23 @@ void main() {
         matching: find.byType(SpringButton),
       );
       await tester.tap(loginBtn.first);
-      await tester.pump(const Duration(milliseconds: 800));
+
+      // La chaîne asynchrone après le tap :
+      //   1. signInWithEmail (mock) résout sur microtask
+      //   2. setAuthenticated() enchaîne 4 await _storage.write() (microtasks)
+      //   3. state = AuthState(isAuthenticated: true) → refreshListenable fire
+      //   4. redirect() → /dashboard → transition _buildFadeSlidePage (320ms)
+      //   5. AppShell + Dashboard build
+      // pump() traite une frame + microtasks ; pump(Duration) avance l'horloge
+      // pour la transition. On alterne plusieurs fois pour épuiser toute la
+      // chaîne sans jamais appeler pumpAndSettle (bloqué par l'animation 12s).
+      await tester.pump(); // résolution mock signInWithEmail
+      await tester.pump(); // setAuthenticated storage writes
+      await tester.pump(); // state update → refreshListenable
+      await tester.pump(); // redirect déclenché
+      await tester.pump(const Duration(milliseconds: 400)); // transition 320ms
+      await tester.pump(); // build AppShell + Dashboard
+      await tester.pump(const Duration(milliseconds: 300)); // fin transitions résiduelles
 
       // 4. Vérifier qu'on est redirigé vers le Dashboard
       expect(find.text('Accueil'), findsWidgets);
@@ -146,7 +166,8 @@ void main() {
         of: find.text('Se connecter'),
         matching: find.byType(SpringButton),
       ).first);
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
 
       when(() => mockAuth.signInWithGoogle()).thenAnswer(
         (_) async => {
@@ -162,7 +183,17 @@ void main() {
         of: find.text('Continuer avec Google'),
         matching: find.byType(SpringButton),
       ).first);
-      await tester.pump(const Duration(milliseconds: 800));
+
+      // Même chaîne asynchrone que le login email :
+      // signInWithGoogle (mock) → setAuthenticated → 4 storage writes →
+      // state update → refreshListenable → redirect /dashboard → transition.
+      await tester.pump(); // résolution mock signInWithGoogle
+      await tester.pump(); // setAuthenticated storage writes
+      await tester.pump(); // state update → refreshListenable
+      await tester.pump(); // redirect déclenché
+      await tester.pump(const Duration(milliseconds: 400)); // transition 320ms
+      await tester.pump(); // build AppShell + Dashboard
+      await tester.pump(const Duration(milliseconds: 300)); // fin transitions résiduelles
 
       expect(find.text('Accueil'), findsWidgets);
     });

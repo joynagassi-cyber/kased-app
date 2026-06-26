@@ -1098,26 +1098,30 @@ class AppData extends _$AppData {
       final membre = Membre.fromJson(payload);
       membre.isActive = true;
 
-      // 1. Push cloud d'abord (pour que le sync ne ré-écrase pas)
+      // 1. Restauration locale D'ABORD (offline-first : l'UI se met à jour
+      //    immédiatement même sans réseau).
+      await _cache.restoreMembreAndDeleteCorbeilleItem(membre, isarId);
+
+      // 2. Push cloud en arrière-plan ; en cas d'échec, on file la sync op.
       try {
         await _api.updateMembre(membre.id, {'is_active': true});
       } catch (e) {
+        debugPrint('[AppData] restaurerElement membre réseau échoué, mis en file: $e');
         await _queueSyncOperation(
             'UPDATE', 'membre', membre.id, {'is_active': true});
       }
-
-      // 2. Restauration locale
-      await _cache.restoreMembreAndDeleteCorbeilleItem(membre, isarId);
     } else if (item.entityType == 'culte') {
       final culte = Culte.fromJson(payload);
+
+      // 1. Restauration locale D'ABORD.
+      await _cache.restoreCulteAndDeleteCorbeilleItem(culte, isarId);
 
       try {
         await _api.createCulte(culte.toJson());
       } catch (e) {
+        debugPrint('[AppData] restaurerElement culte réseau échoué, mis en file: $e');
         await _queueSyncOperation('CREATE', 'culte', culte.id, culte.toJson());
       }
-
-      await _cache.restoreCulteAndDeleteCorbeilleItem(culte, isarId);
     }
 
     // Recharger l'état local sans appel réseau destructif
@@ -1129,5 +1133,17 @@ class AppData extends _$AppData {
       cultes: cultes,
       cotisations: cotisations,
     ));
+  }
+
+  /// Supprime définitivement un élément de la corbeille (sans restauration).
+  /// L'entité cloud reste supprimée ; on purge juste l'archive locale.
+  Future<void> supprimerDefinitivement(int isarId) async {
+    await _cache.deleteCorbeilleItem(isarId);
+  }
+
+  /// Vide toute la corbeille : supprime définitivement tous les éléments
+  /// archivés localement. Les entités cloud restent supprimées.
+  Future<void> viderCorbeille() async {
+    await _cache.deleteAllCorbeilleItems();
   }
 }

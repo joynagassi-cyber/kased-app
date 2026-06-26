@@ -104,6 +104,14 @@ class IsarLocalCache implements LocalCache {
         () => _isar.corbeilleItems.filter().deletedAtLessThan(before).deleteAll(),
       );
 
+  @override
+  Future<void> deleteCorbeilleItem(int isarId) =>
+      _isar.writeTxn(() => _isar.corbeilleItems.delete(isarId));
+
+  @override
+  Future<void> deleteAllCorbeilleItems() =>
+      _isar.writeTxn(() => _isar.corbeilleItems.clear());
+
   // ── Compound / transactional writes ───────────────────────────────────────
 
   @override

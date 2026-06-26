@@ -52,6 +52,11 @@ final corbeilleProvider =
   return items;
 });
 
+/// Raccourci pour rafraîchir la liste corbeille après une mutation.
+void _refreshCorbeille(WidgetRef ref) {
+  ref.invalidate(corbeilleProvider);
+}
+
 // ── Écran ────────────────────────────────────────────────────────────────────
 
 class CorbeilleScreen extends ConsumerStatefulWidget {
@@ -80,22 +85,34 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
     return sorted;
   }
 
+  /// Nettoie les ids sélectionnés qui ne sont plus dans la liste affichée
+  /// (après une restauration ou suppression définitive).
+  void _purgerSelectionAbsente(List<CorbeilleItem> items) {
+    final validIds = items.map((i) => i.isarId).toSet();
+    if (_selectedIds.any((id) => !validIds.contains(id))) {
+      _selectedIds.removeWhere((id) => !validIds.contains(id));
+    }
+  }
+
   Future<void> _restaurer(int isarId) async {
     await ref.read(appDataProvider.notifier).restaurerElement(isarId);
+    _refreshCorbeille(ref);
     if (mounted) {
+      setState(() => _selectedIds.remove(isarId));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Element restaure avec succes')),
+        const SnackBar(content: Text('Élément restauré avec succès')),
       );
     }
   }
 
   Future<void> _restaurerSelection() async {
     final count = _selectedIds.length;
-    for (final id in _selectedIds) {
+    for (final id in _selectedIds.toList()) {
       await ref.read(appDataProvider.notifier).restaurerElement(id);
     }
+    _refreshCorbeille(ref);
     if (mounted) {
-      setState(() => _selectedIds.clear());
+      setState(_selectedIds.clear);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$count élément(s) restauré(s)')),
       );
@@ -106,9 +123,98 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
     for (final item in items) {
       await ref.read(appDataProvider.notifier).restaurerElement(item.isarId);
     }
+    _refreshCorbeille(ref);
     if (mounted) {
+      setState(_selectedIds.clear);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${items.length} element(s) restaure(s)')),
+        SnackBar(content: Text('${items.length} élément(s) restauré(s)')),
+      );
+    }
+  }
+
+  Future<void> _supprimerDefinitivement(int isarId, String titre) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Suppression définitive'),
+        content: Text('Supprimer définitivement « $titre » ? Cette action est irréversible.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    await ref.read(appDataProvider.notifier).supprimerDefinitivement(isarId);
+    _refreshCorbeille(ref);
+    if (mounted) {
+      setState(() => _selectedIds.remove(isarId));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Élément supprimé définitivement')),
+      );
+    }
+  }
+
+  Future<void> _viderCorbeille(List<CorbeilleItem> items) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Vider la corbeille'),
+        content: Text('Supprimer définitivement les ${items.length} élément(s) ? Cette action est irréversible.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Vider'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    await ref.read(appDataProvider.notifier).viderCorbeille();
+    _refreshCorbeille(ref);
+    if (mounted) {
+      setState(_selectedIds.clear);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Corbeille vidée')),
+      );
+    }
+  }
+
+  Future<void> _supprimerSelection(List<CorbeilleItem> items) async {
+    final selectedItems = items.where((i) => _selectedIds.contains(i.isarId)).toList();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Suppression définitive'),
+        content: Text('Supprimer définitivement les ${selectedItems.length} élément(s) sélectionné(s) ? Cette action est irréversible.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    for (final item in selectedItems) {
+      await ref.read(appDataProvider.notifier).supprimerDefinitivement(item.isarId);
+    }
+    _refreshCorbeille(ref);
+    if (mounted) {
+      setState(_selectedIds.clear);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${selectedItems.length} élément(s) supprimé(s) définitivement')),
       );
     }
   }
@@ -127,12 +233,24 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          if (_selectedIds.isNotEmpty)
+          if (_selectedIds.isNotEmpty) ...[
             IconButton(
               icon: const Icon(Icons.restore_page),
-              tooltip: 'Restaurer la selection',
+              tooltip: 'Restaurer la sélection',
               onPressed: _restaurerSelection,
             ),
+            IconButton(
+              icon: const Icon(Icons.delete_forever),
+              tooltip: 'Supprimer la sélection',
+              onPressed: () {
+                final items = _trier(
+                  ref.read(corbeilleProvider).value ?? <CorbeilleItem>[],
+                  _tri,
+                );
+                _supprimerSelection(items);
+              },
+            ),
+          ],
         ],
       ),
       body: corbeilleAsync.when(
@@ -159,7 +277,9 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
           }
 
           final items = _trier(rawItems, _tri);
-          final toutSelectionne = _selectedIds.length == items.length;
+          // Nettoyer la sélection des ids qui ne sont plus présents.
+          _purgerSelectionAbsente(items);
+          final toutSelectionne = items.isNotEmpty && _selectedIds.length == items.length;
 
           return Column(
             children: [
@@ -206,7 +326,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                           context: context,
                           builder: (ctx) => AlertDialog(
                             title: const Text('Tout restaurer'),
-                            content: Text('Restaurer les ${items.length} element(s) ?'),
+                            content: Text('Restaurer les ${items.length} élément(s) ?'),
                             actions: [
                               TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
                               FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Restaurer tout')),
@@ -215,6 +335,12 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                         );
                         if (ok == true) await _restaurerTout(items);
                       },
+                    ),
+                    // Vider la corbeille
+                    TextButton.icon(
+                      icon: Icon(Icons.delete_forever, size: 18, color: colorScheme.error),
+                      label: Text('Vider', style: TextStyle(fontSize: 12, color: colorScheme.error)),
+                      onPressed: () => _viderCorbeille(items),
                     ),
                   ],
                 ),
@@ -329,6 +455,15 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                                 color: colorScheme.primary,
                                 style: IconButton.styleFrom(
                                   backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => _supprimerDefinitivement(item.isarId, titre),
+                                icon: const Icon(Icons.delete_forever),
+                                tooltip: 'Supprimer définitivement',
+                                color: colorScheme.error,
+                                style: IconButton.styleFrom(
+                                  backgroundColor: colorScheme.errorContainer.withValues(alpha: 0.3),
                                 ),
                               ),
                             ],

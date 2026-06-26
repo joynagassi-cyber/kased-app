@@ -2,6 +2,7 @@ import 'package:kased_app/core/pdf/pdf_service.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/cotisation.dart';
+import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 import 'package:kased_app/screens/cultes/saisie_rapide_screen.dart';
 import 'package:kased_app/widgets/empty_state.dart';
@@ -442,6 +443,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       membre: membre,
                       statut: cotisation.statut,
                       isLocked: memberIsLocked,
+                      montantPaye: cotisation.montantPaye,
+                      montantObligatoire: cotisation.montantObligatoire,
                       onToggle: () {
                         if (memberIsLocked) return;
                         ref.read(appDataProvider.notifier).togglePaiement(
@@ -456,6 +459,15 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                               culteId: widget.culteId,
                             );
                       },
+                      onCustomPayment: memberIsLocked
+                          ? null
+                          : () => _showCustomPaymentDialog(
+                                context,
+                                membre: membre,
+                                culteId: widget.culteId,
+                                montantObligatoire: cotisation.montantObligatoire,
+                                montantActuel: cotisation.montantPaye,
+                              ),
                     )
                     .animate(delay: (index * 40).ms)
                     .fadeIn(duration: 300.ms, curve: Curves.easeOut)
@@ -469,6 +481,112 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
       loading: () => const Scaffold(body: CulteDetailSkeleton()),
       error: (e, _) => Scaffold(body: Center(child: Text('Erreur: $e'))),
     );
+  }
+
+  /// Boîte de dialogue pour encaisser un paiement personnalisé (montant libre
+  /// >= montant obligatoire). L'excédent est automatiquement comptabilisé
+  /// comme un don via [AppData.enregistrerPaiementPersonnel].
+  Future<void> _showCustomPaymentDialog(
+    BuildContext context, {
+    required Membre membre,
+    required String culteId,
+    required double montantObligatoire,
+    required double montantActuel,
+  }) async {
+    final controller = TextEditingController(
+      text: montantActuel > 0 ? montantActuel.toStringAsFixed(0) : '',
+    );
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Paiement — ${membre.nomComplet}'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Montant obligatoire : ${montantObligatoire.toStringAsFixed(0)} F',
+                style: Theme.of(dialogContext).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: controller,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Montant payé (F)',
+                  hintText: 'Ex. 100',
+                  prefixIcon: Icon(Icons.payments_outlined),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  final raw = value?.trim() ?? '';
+                  final montant = double.tryParse(raw);
+                  if (montant == null) return 'Montant invalide';
+                  if (montant <= 0) return 'Le montant doit être positif';
+                  if (montant < montantObligatoire) {
+                    return 'Minimum : ${montantObligatoire.toStringAsFixed(0)} F';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tout montant supérieur à l\'obligation sera enregistré comme don.',
+                style: Theme.of(dialogContext).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.pop(
+                  dialogContext,
+                  double.parse(controller.text.trim()),
+                );
+              }
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    controller.dispose();
+
+    if (result == null || !context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+            membreId: membre.id,
+            culteId: culteId,
+            montant: result,
+          );
+      final don = result - montantObligatoire;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(don > 0
+              ? 'Paiement de ${result.toStringAsFixed(0)} F enregistré (don : ${don.toStringAsFixed(0)} F).'
+              : 'Paiement de ${result.toStringAsFixed(0)} F enregistré.'),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+      );
+    }
   }
 
   Future<void> _confirmBulkAction(
