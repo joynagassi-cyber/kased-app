@@ -80,9 +80,14 @@ void main() {
 
       await tester.pumpWidget(buildApp());
 
-      // Laisser le temps à l'auth d'initialiser (pas de token → unauthenticated)
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pumpAndSettle();
+      // Laisser le temps à l'auth d'initialiser (pas de token → unauthenticated).
+      // L'initial route est /loading → auth.isLoading=true → on pump jusqu'à
+      // ce que isLoading devienne false → redirect vers /onboarding.
+      // On utilise pump() au lieu de pumpAndSettle() car l'onboarding contient
+      // une animation continue de 12s (OnboardingHeroAnimation) et un
+      // BouncingScrollBehavior global qui empêchent pumpAndSettle de se terminer.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // 1. On doit être sur l'onboarding
       expect(find.text('Bienvenue sur Kased'), findsOneWidget);
@@ -93,7 +98,7 @@ void main() {
         matching: find.byType(SpringButton),
       );
       await tester.tap(startBtn.first);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 600));
 
       // 2. Vérifier qu'on est sur le login
       expect(
@@ -120,7 +125,7 @@ void main() {
         matching: find.byType(SpringButton),
       );
       await tester.tap(loginBtn.first);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 800));
 
       // 4. Vérifier qu'on est redirigé vers le Dashboard
       expect(find.text('Accueil'), findsWidgets);
@@ -132,8 +137,8 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(buildApp());
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Bienvenue sur Kased'), findsOneWidget);
 
@@ -141,7 +146,7 @@ void main() {
         of: find.text('Se connecter'),
         matching: find.byType(SpringButton),
       ).first);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 600));
 
       when(() => mockAuth.signInWithGoogle()).thenAnswer(
         (_) async => {
@@ -157,7 +162,7 @@ void main() {
         of: find.text('Continuer avec Google'),
         matching: find.byType(SpringButton),
       ).first);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 800));
 
       expect(find.text('Accueil'), findsWidgets);
     });
