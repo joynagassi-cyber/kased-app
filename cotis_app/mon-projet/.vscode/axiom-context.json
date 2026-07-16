@@ -1,9 +1,0 @@
-{
-  "axiom-core": {
-    "version": "1.0.2",
-    "configPath": "Axiom-scaffold/config",
-    "scriptsPath": "Axiom-scaffold/scripts",
-    "skillsPath": "Axiom-scaffold/skills",
-    "docsPath": "Axiom-scaffold/docs"
-  }
-}
