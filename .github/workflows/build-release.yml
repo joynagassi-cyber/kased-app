@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: '3.32.8'               # ← adapter à votre version Flutter
+  FLUTTER_VERSION: '3.44.0'               # aligné sur l'environnement de dev (Dart 3.12) — requis par pdf ^3.12.0
   JAVA_VERSION: '21'
 
 jobs:
