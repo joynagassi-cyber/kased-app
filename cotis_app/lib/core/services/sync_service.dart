@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/sync/sync_manager.dart';
-import 'package:kased_app/core/constants.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';

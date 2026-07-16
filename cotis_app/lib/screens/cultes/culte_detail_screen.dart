@@ -1,6 +1,5 @@
 import 'package:kased_app/core/pdf/pdf_service.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
-import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/providers/app_data_provider.dart';

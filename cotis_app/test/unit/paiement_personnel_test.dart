@@ -5,7 +5,7 @@ import 'package:kased_app/providers/app_data_provider.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
-import 'package:kased_app/core/sync/sync_manager.dart';
+import 'package:kased_app/core/services/sync_service.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -23,7 +23,7 @@ class TestAppData extends AppData {
   Future<AppState> build() async {
     this.api = mockApi;
     this.cache = mockCache;
-    this.syncManager = SyncManager(mockApi, mockCache);
+    this.syncService = SyncService(mockApi, mockCache);
     return initialState ?? AppState();
   }
 }

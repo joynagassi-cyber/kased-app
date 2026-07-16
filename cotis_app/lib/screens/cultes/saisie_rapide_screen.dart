@@ -1,4 +1,6 @@
 import 'package:kased_app/core/theme/app_theme.dart';
+import 'package:kased_app/models/culte.dart';
+import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 import 'package:kased_app/widgets/paiement_personnel_dialog.dart';
 import 'package:flutter/material.dart';

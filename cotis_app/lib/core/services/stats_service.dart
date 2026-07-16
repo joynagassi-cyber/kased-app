@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
-import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 
 /// Statistiques globales du tableau de bord.

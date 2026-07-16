@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:kased_app/core/notifications/notification_service.dart';
 import 'package:kased_app/models/culte.dart';
