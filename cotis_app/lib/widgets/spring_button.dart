@@ -80,7 +80,7 @@ class _SpringButtonState extends State<SpringButton>
       child: ScaleTransition(
         scale: _scale,
         child: IgnorePointer(
-          ignoring: widget.onTap != null || widget.onLongPress != null,
+          ignoring: widget.onTap == null && widget.onLongPress == null,
           child: widget.child,
         ),
       ),

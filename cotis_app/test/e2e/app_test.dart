@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/main.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/services/auth_service.dart';
+import 'package:kased_app/core/services/stats_service.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 import 'package:kased_app/widgets/spring_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

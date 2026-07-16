@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/core/router/app_router.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:kased_app/core/services/stats_service.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 
 class FakeAuthNotifier extends Auth {

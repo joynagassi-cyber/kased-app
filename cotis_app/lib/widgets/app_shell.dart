@@ -220,61 +220,17 @@ class AppShell extends ConsumerWidget {
                         label: 'Stats',
                       ),
                       NavigationDestination(
-                        icon: Builder(
-                          builder: (context) {
-                            final springIcon = SpringNavIcon(
-                              icon: Icons.warning_amber_outlined,
-                              selectedIcon: Icons.warning_amber,
-                              isSelected: currentIndex == 4,
-                              label: 'Retards',
-                              selectedColor: colorScheme.error,
-                              unselectedColor: colorScheme.onSurfaceVariant,
-                            );
-
-                            if (retardsCount > 0) {
-                              return Badge(
-                                label: Text('$retardsCount'),
-                                backgroundColor: colorScheme.error,
-                                child: springIcon,
-                              )
-                                  .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                                  .scale(
-                                    duration: const Duration(milliseconds: 900),
-                                    begin: const Offset(1.0, 1.0),
-                                    end: const Offset(1.08, 1.08),
-                                    curve: Curves.easeInOut,
-                                  );
-                            }
-                            return springIcon;
-                          },
+                        icon: _buildRetardsNavIcon(
+                          icon: Icons.warning_amber_outlined,
+                          currentIndex: currentIndex,
+                          retardsCount: retardsCount,
+                          colorScheme: colorScheme,
                         ),
-                        selectedIcon: Builder(
-                          builder: (context) {
-                            final springIcon = SpringNavIcon(
-                              icon: Icons.warning_amber,
-                              selectedIcon: Icons.warning_amber,
-                              isSelected: currentIndex == 4,
-                              label: 'Retards',
-                              selectedColor: colorScheme.error,
-                              unselectedColor: colorScheme.onSurfaceVariant,
-                            );
-
-                            if (retardsCount > 0) {
-                              return Badge(
-                                label: Text('$retardsCount'),
-                                backgroundColor: colorScheme.error,
-                                child: springIcon,
-                              )
-                                  .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                                  .scale(
-                                    duration: const Duration(milliseconds: 900),
-                                    begin: const Offset(1.0, 1.0),
-                                    end: const Offset(1.08, 1.08),
-                                    curve: Curves.easeInOut,
-                                  );
-                            }
-                            return springIcon;
-                          },
+                        selectedIcon: _buildRetardsNavIcon(
+                          icon: Icons.warning_amber,
+                          currentIndex: currentIndex,
+                          retardsCount: retardsCount,
+                          colorScheme: colorScheme,
                         ),
                         label: 'Retards',
                       ),
@@ -289,5 +245,38 @@ class AppShell extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Construit l'icône de navigation Retards avec badge animé (évite la duplication).
+  static Widget _buildRetardsNavIcon({
+    required IconData icon,
+    required int currentIndex,
+    required int retardsCount,
+    required ColorScheme colorScheme,
+  }) {
+    final springIcon = SpringNavIcon(
+      icon: icon,
+      selectedIcon: Icons.warning_amber,
+      isSelected: currentIndex == 4,
+      label: 'Retards',
+      selectedColor: colorScheme.error,
+      unselectedColor: colorScheme.onSurfaceVariant,
+    );
+
+    if (retardsCount > 0) {
+      return Badge(
+        label: Text('$retardsCount'),
+        backgroundColor: colorScheme.error,
+        child: springIcon,
+      )
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .scale(
+            duration: const Duration(milliseconds: 900),
+            begin: const Offset(1.0, 1.0),
+            end: const Offset(1.08, 1.08),
+            curve: Curves.easeInOut,
+          );
+    }
+    return springIcon;
   }
 }

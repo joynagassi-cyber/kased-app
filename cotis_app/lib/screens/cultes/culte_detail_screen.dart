@@ -7,6 +7,9 @@ import 'package:kased_app/providers/app_data_provider.dart';
 import 'package:kased_app/screens/cultes/saisie_rapide_screen.dart';
 import 'package:kased_app/widgets/empty_state.dart';
 import 'package:kased_app/widgets/member_pay_tile.dart';
+import 'package:kased_app/widgets/paiement_personnel_dialog.dart';
+import 'package:kased_app/widgets/edit_montant_dialog.dart';
+import 'package:kased_app/widgets/confirm_action_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:kased_app/widgets/motion/skeleton_loading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -116,7 +119,18 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
               IconButton(
                 icon: const Icon(Icons.edit),
                 tooltip: 'Modifier le montant',
-                onPressed: () => _editMontant(context, culte),
+                onPressed: () async {
+                    await EditMontantDialog.show(
+                      context,
+                      currentMontant: culte.montantCotisation,
+                      onSave: (newMontant) => ref
+                          .read(appDataProvider.notifier)
+                          .updateCulte(
+                            id: culte.id,
+                            montantCotisation: newMontant,
+                          ),
+                    );
+                  },
               ),
               IconButton(
                 icon: const Icon(Icons.picture_as_pdf),
@@ -283,16 +297,22 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                     if (membresNonPayes.isNotEmpty)
                       Expanded(
                         child: SpringButton(
-                          onTap: () => _confirmBulkAction(
-                            context,
-                            title: 'Tout valider',
-                            message: 'Marquer les ${membresNonPayes.length} membres restants comme payés ?',
-                            onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
-                                  culteId: widget.culteId,
-                                  newStatut: StatutCotisation.paye,
-                                  membreIds: membresNonPayes.map((m) => m.id).toList(),
-                                ),
-                          ),
+                          onTap: () async {
+                                    final result = await ConfirmActionDialog.show(
+                                      context,
+                                      title: 'Tout valider',
+                                      message: 'Marquer les ${membresNonPayes.length} membres restants comme payés ?',
+                                      onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+                                            culteId: widget.culteId,
+                                            newStatut: StatutCotisation.paye,
+                                            membreIds: membresNonPayes.map((m) => m.id).toList(),
+                                          ),
+                                    );
+                                    if (result != null && context.mounted) {
+                                      ConfirmActionDialog.showResultSnackBar(context, result);
+                                    }
+                                  },
+
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.primary,
@@ -310,19 +330,25 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                     if (tousPayes)
                       Expanded(
                         child: SpringButton(
-                          onTap: () => _confirmBulkAction(
-                            context,
-                            title: 'Tout annuler',
-                            message: 'Supprimer tous les paiements de ce culte ?',
-                            onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
-                                  culteId: widget.culteId,
-                                  newStatut: StatutCotisation.nonPaye,
-                                  membreIds: cotisations
-                                      .where((c) => c.estPaye)
-                                      .map((c) => c.membreId)
-                                      .toList(),
-                                ),
-                          ),
+                          onTap: () async {
+                                    final result = await ConfirmActionDialog.show(
+                                      context,
+                                      title: 'Tout annuler',
+                                      message: 'Supprimer tous les paiements de ce culte ?',
+                                      onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+                                            culteId: widget.culteId,
+                                            newStatut: StatutCotisation.nonPaye,
+                                            membreIds: cotisations
+                                                .where((c) => c.estPaye)
+                                                .map((c) => c.membreId)
+                                                .toList(),
+                                          ),
+                                    );
+                                    if (result != null && context.mounted) {
+                                      ConfirmActionDialog.showResultSnackBar(context, result);
+                                    }
+                                  },
+
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.danger,
@@ -461,13 +487,11 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       },
                       onCustomPayment: memberIsLocked
                           ? null
-                          : () => _showCustomPaymentDialog(
-                                context,
+                          : () => _showCustomPayment(context,
                                 membre: membre,
                                 culteId: widget.culteId,
                                 montantObligatoire: cotisation.montantObligatoire,
-                                montantActuel: cotisation.montantPaye,
-                              ),
+                                montantActuel: cotisation.montantPaye),
                     )
                     .animate(delay: (index * 40).ms)
                     .fadeIn(duration: 300.ms, curve: Curves.easeOut)
@@ -483,87 +507,22 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
     );
   }
 
-  /// Boîte de dialogue pour encaisser un paiement personnalisé (montant libre
-  /// >= montant obligatoire). L'excédent est automatiquement comptabilisé
-  /// comme un don via [AppData.enregistrerPaiementPersonnel].
-  Future<void> _showCustomPaymentDialog(
+  /// Ouvre la boîte de dialogue de paiement personnalisé via
+  /// [PaiementPersonnelDialog], puis persiste via
+  /// [AppData.enregistrerPaiementPersonnel] et affiche le résultat.
+  Future<void> _showCustomPayment(
     BuildContext context, {
     required Membre membre,
     required String culteId,
     required double montantObligatoire,
     required double montantActuel,
   }) async {
-    final controller = TextEditingController(
-      text: montantActuel > 0 ? montantActuel.toStringAsFixed(0) : '',
+    final result = await PaiementPersonnelDialog.show(
+      context,
+      membreNom: membre.nomComplet,
+      montantObligatoire: montantObligatoire,
+      montantActuel: montantActuel,
     );
-    final formKey = GlobalKey<FormState>();
-
-    final result = await showDialog<double>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('Paiement — ${membre.nomComplet}'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Montant obligatoire : ${montantObligatoire.toStringAsFixed(0)} F',
-                style: Theme.of(dialogContext).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: controller,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Montant payé (F)',
-                  hintText: 'Ex. 100',
-                  prefixIcon: Icon(Icons.payments_outlined),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  final raw = value?.trim() ?? '';
-                  final montant = double.tryParse(raw);
-                  if (montant == null) return 'Montant invalide';
-                  if (montant <= 0) return 'Le montant doit être positif';
-                  if (montant < montantObligatoire) {
-                    return 'Minimum : ${montantObligatoire.toStringAsFixed(0)} F';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Tout montant supérieur à l\'obligation sera enregistré comme don.',
-                style: Theme.of(dialogContext).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                Navigator.pop(
-                  dialogContext,
-                  double.parse(controller.text.trim()),
-                );
-              }
-            },
-            child: const Text('Enregistrer'),
-          ),
-        ],
-      ),
-    );
-
-    controller.dispose();
 
     if (result == null || !context.mounted) return;
 
@@ -587,169 +546,6 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
         SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
       );
     }
-  }
-
-  Future<void> _confirmBulkAction(
-    BuildContext context, {
-    required String title,
-    required String message,
-    required Future<({int success, int total})> Function() onConfirm,
-  }) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Confirmer'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !context.mounted) return;
-
-    final nav = Navigator.of(context, rootNavigator: true);
-    final messenger = ScaffoldMessenger.of(context);
-
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      useRootNavigator: true,
-      builder: (_) => const AlertDialog(
-        content: SizedBox(
-          height: 90,
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ),
-    );
-
-    try {
-      final result = await onConfirm();
-      nav.pop();
-      if (result.success == result.total) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text('$title : ${result.success}/${result.total} effectué'),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else if (result.success > 0) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.info, color: Colors.black, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text('Partiel : ${result.success}/${result.total} réussis'),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      } else {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.error, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text('Aucune opération n\'a abouti'),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      nav.pop();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text('Erreur: $e'),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _editMontant(BuildContext context, Culte culte) async {
-    final controller = TextEditingController(text: culte.montantCotisation.toInt().toString());
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Modifier le montant'),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Montant (FCFA)'),
-              validator: (value) {
-                final parsed = int.tryParse((value ?? '').trim()) ?? 0;
-                if (parsed <= 0) return 'Montant invalide';
-                return null;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Annuler'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                try {
-                  await ref.read(appDataProvider.notifier).updateCulte(
-                        id: culte.id,
-                        montantCotisation: double.tryParse(controller.text.trim()) ?? culte.montantCotisation,
-                      );
-                  if (dialogContext.mounted) Navigator.pop(dialogContext);
-                } catch (e) {
-                  if (dialogContext.mounted) {
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text('Erreur: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Enregistrer'),
-            ),
-          ],
-        );
-      },
-    );
-
-    controller.dispose();
   }
 }
 

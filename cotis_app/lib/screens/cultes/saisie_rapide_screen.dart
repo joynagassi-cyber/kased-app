@@ -1,5 +1,6 @@
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/widgets/paiement_personnel_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -176,6 +177,16 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
                     child: const Text('V Payé'),
                   ),
                   const SizedBox(height: 10),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.9),
+                      minimumSize: const Size.fromHeight(56),
+                    ),
+                    icon: const Icon(Icons.payments_outlined, size: 20),
+                    onPressed: () => _customPayment(context, membre: currentMember, culte: culte),
+                    label: const Text('Montant libre'),
+                  ),
+                  const SizedBox(height: 10),
                   FilledButton.tonal(
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(56),
@@ -215,6 +226,50 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
         setState(() {
           _queueIds.removeAt(0);
         });
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e')),
+        );
+      }
+    }
+  }
+
+  /// Ouvre [PaiementPersonnelDialog] pour un montant personnalisé,
+  /// puis enregistre le paiement via [AppData.enregistrerPaiementPersonnel]
+  /// et passe au membre suivant.
+  Future<void> _customPayment(
+    BuildContext context, {
+    required Membre membre,
+    required Culte culte,
+  }) async {
+    final result = await PaiementPersonnelDialog.show(
+      context,
+      membreNom: membre.nomComplet,
+      montantObligatoire: culte.montantCotisation,
+    );
+
+    if (result == null || !context.mounted) return;
+
+    try {
+      await ref.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+            membreId: membre.id,
+            culteId: widget.culteId,
+            montant: result,
+          );
+      if (mounted) {
+        final don = result - culte.montantCotisation;
+        setState(() {
+          _queueIds.removeAt(0);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(don > 0
+                ? 'Don de ${don.toStringAsFixed(0)} F enregistré'
+                : 'Paiement de ${result.toStringAsFixed(0)} F enregistré'),
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
