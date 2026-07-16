@@ -117,6 +117,16 @@ jobs:
       - name: Flutter test
         run: flutter test test/unit/ test/widget/
 
+      - name: Install CMake 3.30.5
+        run: |
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(command -v sdkmanager || echo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager")
+          fi
+          echo "sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --install "cmake;3.30.5" > /dev/null
+          echo "CMake 3.30.5 installe"
+
       # ── 11. Build APK Release ────────────────────────────────────────────────
       - name: Build APK (release + obfuscated)
         env:
