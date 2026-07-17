@@ -126,15 +126,16 @@ jobs:
             
             # Check if it's an Android library (has com.android.library plugin)
             if grep -q 'com\.android\.library' "$build_gradle" 2>/dev/null; then
-              echo "🔧 Patching namespace for $BASENAME..."
-              # Insert namespace right after the plugins block or android block
+              echo "🔧 Patching namespace + compileSdk for $BASENAME..."
+              
+              # Add compileSdk 31 and namespace
               if grep -q '^android {' "$build_gradle"; then
-                sed -i '/^android {/a\    namespace "io.flutter.plugins.'"${BASENAME%%-*}"'"' "$build_gradle"
+                sed -i '/^android {/a\    compileSdk 31\n    namespace "io.flutter.plugins.'"${BASENAME%%-*}"'"' "$build_gradle"
               else
-                echo "    namespace \"io.flutter.plugins.\"${BASENAME%%-*}" >> "$build_gradle"
+                printf '\nandroid {\n    compileSdk 31\n    namespace "io.flutter.plugins.%s"\n}\n' "${BASENAME%%-*}" >> "$build_gradle"
               fi
               echo "✅ Patched $BASENAME"
-              grep 'namespace' "$build_gradle"
+              grep -E '(namespace|compileSdk)' "$build_gradle"
               
               # Also remove old package="" from AndroidManifest.xml if present
               MANIFEST="$DIR/src/main/AndroidManifest.xml"
