@@ -135,6 +135,14 @@ jobs:
               fi
               echo "✅ Patched $BASENAME"
               grep 'namespace' "$build_gradle"
+              
+              # Also remove old package="" from AndroidManifest.xml if present
+              MANIFEST="$DIR/src/main/AndroidManifest.xml"
+              if [ -f "$MANIFEST" ] && grep -q 'package=' "$MANIFEST"; then
+                echo "🔧 Removing old package attribute from $BASENAME AndroidManifest.xml..."
+                sed -i 's/package="[^"]*"//g' "$MANIFEST"
+                echo "✅ Cleared package attribute from $MANIFEST"
+              fi
             fi
           done
 
