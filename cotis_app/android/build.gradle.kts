@@ -51,42 +51,19 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 
-    // Forcer un namespace si manquant (necessaire pour AGP 8+)
+    // Forcer un namespace pour TOUS les com.android.library qui n'en ont pas.
+    // Cela couvre isar_flutter_libs, sqflite_darwin, etc. (AGP 8+ exige un namespace).
     plugins.withId("com.android.library") {
-        configure<com.android.build.gradle.LibraryExtension> {
-            if (namespace == null) {
-                namespace = project.group.toString().replace("-", ".") + "." + project.name
+        afterEvaluateOrNow {
+            extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.let { libExt ->
+                if (libExt.namespace.isNullOrEmpty()) {
+                    libExt.namespace = "io.flutter.plugins.${project.name}"
+                }
             }
-        }
-    }
-}
-
-// Patch isar_flutter_libs AndroidManifest.xml pour retirer l'attribut 'package'
-// (AGP 8+ interdit "package" dans les manifests de bibliothèques)
-val patchIsarManifest by tasks.registering {
-    val pubCache = file(System.getenv("LOCALAPPDATA") + "/Pub/Cache/hosted/pub.dev")
-    val manifests = fileTree(pubCache) { include("isar_flutter_libs*/android/src/main/AndroidManifest.xml") }
-    inputs.files(manifests)
-    outputs.upToDateWhen { true }
-    doLast {
-        manifests.forEach { f ->
-            val text = f.readText()
-            val patched = text.replace("""\spackage="[^"]*"""".toRegex(), "")
-            if (text != patched) {
-                f.writeText(patched)
-                logger.lifecycle("isar_flutter_libs manifest patched: ${f.name}")
-            }
-        }
-    }
-}
-
-subprojects {
-    afterEvaluateOrNow {
-        tasks.matching { it.name.startsWith("compile") }.configureEach {
-            dependsOn(rootProject.tasks.named("patchIsarManifest"))
         }
     }
 }

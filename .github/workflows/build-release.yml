@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'cotis_app/pubspec.yaml'          # déclenché quand la version change
+      - 'cotis_app/pubspec.yaml'
       - 'cotis_app/lib/**'
       - 'cotis_app/android/**'
       - '.github/workflows/build-release.yml'
-  workflow_dispatch:                       # déclenchement manuel depuis l'onglet Actions
+  workflow_dispatch:
     inputs:
       bump:
         description: 'Type de bump (patch, minor, major)'
@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: '3.44.0'               # aligné sur l'environnement de dev (Dart 3.12) — requis par pdf ^3.12.0
+  FLUTTER_VERSION: '3.44.0'
   JAVA_VERSION: '21'
 
 jobs:
@@ -113,19 +113,8 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       # ── 10. Tests unitaires ────────────────────────────────────────────────────
-      # On exclut test/e2e/ car les animations infinies font timeout avec pumpAndSettle.
       - name: Flutter test
         run: flutter test test/unit/ test/widget/
-
-      - name: Install CMake 3.30.5
-        run: |
-          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER=$(command -v sdkmanager || echo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager")
-          fi
-          echo "sdkmanager: $SDKMANAGER"
-          yes | "$SDKMANAGER" --install "cmake;3.30.5" > /dev/null
-          echo "CMake 3.30.5 installe"
 
       # ── 11. Build APK Release ────────────────────────────────────────────────
       - name: Build APK (release + obfuscated)
@@ -156,7 +145,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kased-v${{ env.APP_VERSION }}
-          path: cotis_app/build/${{ steps.apk.outputs.apk_name }}
+          path: build/${{ steps.apk.outputs.apk_name }}
           retention-days: 30
           compression-level: 9
 
@@ -167,22 +156,21 @@ jobs:
           tag_name: v${{ env.APP_VERSION }}
           name: 'Kased v${{ env.APP_VERSION }}'
           body: |
-            ## 📱 Kased — v${{ env.APP_VERSION }}
+            ## Kased v${{ env.APP_VERSION }}
 
             **APK Release** généré automatiquement depuis `${{ github.sha }}`.
 
-            ### 🔧 Build info
+            ### Build info
             - Flutter ${{ env.FLUTTER_VERSION }}
             - Commit [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             - Build ${{ github.run_number }}
 
-            ### 📦 APK
+            ### APK
             - `${{ steps.apk.outputs.apk_name }}` — installable sur Android 7+ (minSdk 24)
 
-            ### ⚠️ Notes
+            ### Notes
             - APK obfusqué (`--obfuscate` + `--split-debug-info`)
-            - Les symboles de debug sont stockés dans `build/debug-info/`
-          files: cotis_app/build/${{ steps.apk.outputs.apk_name }}
+          files: build/${{ steps.apk.outputs.apk_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
