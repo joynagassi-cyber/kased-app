@@ -117,17 +117,15 @@ jobs:
         run: flutter test test/unit/ test/widget/
 
       # ── 11. Build APK Release ────────────────────────────────────────────────
-      - name: Build APK (release + obfuscated)
+      - name: Build APK (release)
         env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN || '' }}
         run: |
           flutter build apk \
             --release \
-            --obfuscate \
-            --split-debug-info=build/debug-info \
-            --dart-define=INSFORGE_BASE_URL=${{ secrets.INSFORGE_URL }} \
-            --dart-define=INSFORGE_ANON_KEY=${{ secrets.INSFORGE_ANON_KEY }} \
-            --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID }} \
+            --dart-define=INSFORGE_BASE_URL=${{ secrets.INSFORGE_URL || 'https://placeholder.insforge.app' }} \
+            --dart-define=INSFORGE_ANON_KEY=${{ secrets.INSFORGE_ANON_KEY || 'placeholder' }} \
+            --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID || 'placeholder' }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN || '' }}
 
       # ── 12. Renommer l'APK ──────────────────────────────────────────────────

@@ -60,7 +60,8 @@ subprojects {
     plugins.withId("com.android.library") {
         afterEvaluateOrNow {
             extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.let { libExt ->
-                if (libExt.namespace.isNullOrEmpty()) {
+                val ns = libExt.namespace
+                if (ns == null || ns.isEmpty()) {
                     libExt.namespace = "io.flutter.plugins.${project.name}"
                 }
             }
