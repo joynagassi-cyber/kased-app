@@ -108,15 +108,45 @@ jobs:
       - name: Dart analyze
         run: dart analyze --fatal-infos
 
-      # ── 9. Code generation (Riverpod, Isar, etc.) ────────────────────────────
+      # ── 9. Patch prebuilt plugin namespaces ────────────────────────────────
+      - name: Patch prebuilt Android library namespaces
+        run: |
+          # Find all pub.dev prebuilt Android library plugins missing namespace
+          PUB_CACHE="$HOME/.pub-cache/hosted/pub.dev"
+          
+          for build_gradle in $(find "$PUB_CACHE" -name "build.gradle" -path "*/android/build.gradle" 2>/dev/null); do
+            DIR=$(dirname "$build_gradle")
+            BASENAME=$(basename "$(dirname "$DIR")")
+            
+            # Skip if already has namespace
+            if grep -q '^    namespace ' "$build_gradle" 2>/dev/null; then
+              echo "⏭️  $BASENAME already has namespace"
+              continue
+            fi
+            
+            # Check if it's an Android library (has com.android.library plugin)
+            if grep -q 'com\.android\.library' "$build_gradle" 2>/dev/null; then
+              echo "🔧 Patching namespace for $BASENAME..."
+              # Insert namespace right after the plugins block or android block
+              if grep -q '^android {' "$build_gradle"; then
+                sed -i '/^android {/a\    namespace "io.flutter.plugins.'"${BASENAME%%-*}"'"' "$build_gradle"
+              else
+                echo "    namespace \"io.flutter.plugins.\"${BASENAME%%-*}" >> "$build_gradle"
+              fi
+              echo "✅ Patched $BASENAME"
+              grep 'namespace' "$build_gradle"
+            fi
+          done
+
+      # ── 10. Code generation (Riverpod, Isar, etc.) ────────────────────────────
       - name: Build runner
         run: dart run build_runner build --delete-conflicting-outputs
 
-      # ── 10. Tests unitaires ────────────────────────────────────────────────────
+      # ── 11. Tests unitaires ────────────────────────────────────────────────────
       - name: Flutter test
         run: flutter test test/unit/ test/widget/
 
-      # ── 11. Build APK Release ────────────────────────────────────────────────
+      # ── 12. Build APK Release ────────────────────────────────────────────────
       - name: Build APK (release)
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN || '' }}
@@ -128,7 +158,7 @@ jobs:
             --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID || 'placeholder' }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN || '' }}
 
-      # ── 12. Renommer l'APK ──────────────────────────────────────────────────
+      # ── 13. Renommer l'APK ──────────────────────────────────────────────────
       - name: Rename APK
         id: apk
         run: |
@@ -138,7 +168,7 @@ jobs:
           echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
           echo "✅ APK renommé → $APK_NAME"
 
-      # ── 13. Upload APK (artifact CI) ────────────────────────────────────────
+      # ── 14. Upload APK (artifact CI) ────────────────────────────────────────
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -147,7 +177,7 @@ jobs:
           retention-days: 30
           compression-level: 9
 
-      # ── 14. Create GitHub Release ───────────────────────────────────────────
+      # ── 15. Create GitHub Release ───────────────────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
