@@ -108,43 +108,7 @@ jobs:
       - name: Dart analyze
         run: dart analyze --fatal-infos
 
-      # ── 9. Patch prebuilt plugin namespaces ────────────────────────────────
-      - name: Patch prebuilt Android library namespaces
-        run: |
-          PUB_CACHE="$HOME/.pub-cache/hosted/pub.dev"
-          
-          for build_gradle in $(find "$PUB_CACHE" -name "build.gradle" -path "*/android/build.gradle" 2>/dev/null); do
-            DIR=$(dirname "$build_gradle")
-            BASENAME=$(basename "$(dirname "$DIR")")
-            
-            # Skip if already has namespace
-            if grep -q '^    namespace ' "$build_gradle" 2>/dev/null; then
-              echo "⏭️  $BASENAME already has namespace"
-              continue
-            fi
-            
-            # Check if it's an Android library
-            if grep -q 'com\.android\.library' "$build_gradle" 2>/dev/null; then
-              echo "🔧 Patching $BASENAME..."
-              
-              # Add compileSdk 31 and namespace after android {
-              if grep -q '^android {' "$build_gradle"; then
-                sed -i '/^android {/a\    compileSdk 31\n    namespace "io.flutter.plugins.'"${BASENAME%%-*}"'"' "$build_gradle"
-              else
-                printf '\nandroid {\n    compileSdk 31\n    namespace "io.flutter.plugins.%s"\n}\n' "${BASENAME%%-*}" >> "$build_gradle"
-              fi
-              echo "✅ Patched $BASENAME"
-              
-              # Remove old package="" from AndroidManifest.xml
-              MANIFEST="$DIR/src/main/AndroidManifest.xml"
-              if [ -f "$MANIFEST" ] && grep -q 'package=' "$MANIFEST"; then
-                sed -i 's/package="[^"]*"//g' "$MANIFEST"
-                echo "✅ Cleared package attribute from $MANIFEST"
-              fi
-            fi
-          done
-
-      # ── 10. Code generation (Riverpod, Isar, etc.) ────────────────────────────
+      # ── 9. Code generation (Riverpod, Isar, etc.) ────────────────────────────
       - name: Build runner
         run: dart run build_runner build --delete-conflicting-outputs
 
