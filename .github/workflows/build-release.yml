@@ -108,7 +108,30 @@ jobs:
       - name: Dart analyze
         run: dart analyze --fatal-infos
 
-      # ── 9. Patch prebuilt plugin namespaces ────────────────────────────────
+      # ── 9. Create Gradle init script to patch prebuilt plugins ──────────────
+      - name: Create Gradle init script
+        run: |
+          mkdir -p $HOME/.gradle
+          cat > $HOME/.gradle/init.gradle << 'EOF'
+          allprojects {
+            // Apply to every project as soon as it's created
+          }
+          gradle.beforeProject { proj ->
+            try {
+              def android = proj.extensions.findByType(com.android.build.gradle.BaseExtension)
+              if (android != null) {
+                def current = android.compileSdkVersion?.toString()?.removePrefix("android-")?.toInteger() ?: 0
+                if (current < 31) {
+                  android.compileSdkVersion(31)
+                }
+              }
+            } catch (Exception e) {
+              // Not an Android project
+            }
+          }
+          EOF
+
+      # ── 10. Patch prebuilt plugin namespaces ────────────────────────────────
       - name: Patch prebuilt Android library namespaces
         run: |
           # Find all pub.dev prebuilt Android library plugins missing namespace
@@ -147,15 +170,15 @@ jobs:
             fi
           done
 
-      # ── 10. Code generation (Riverpod, Isar, etc.) ────────────────────────────
+      # ── 11. Code generation (Riverpod, Isar, etc.) ────────────────────────────
       - name: Build runner
         run: dart run build_runner build --delete-conflicting-outputs
 
-      # ── 11. Tests unitaires ────────────────────────────────────────────────────
+      # ── 12. Tests unitaires ────────────────────────────────────────────────────
       - name: Flutter test
         run: flutter test test/unit/ test/widget/
 
-      # ── 12. Build APK Release ────────────────────────────────────────────────
+      # ── 13. Build APK Release ────────────────────────────────────────────────
       - name: Build APK (release)
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN || '' }}
@@ -167,7 +190,7 @@ jobs:
             --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID || 'placeholder' }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN || '' }}
 
-      # ── 13. Renommer l'APK ──────────────────────────────────────────────────
+      # ── 14. Renommer l'APK ──────────────────────────────────────────────────
       - name: Rename APK
         id: apk
         run: |
@@ -177,7 +200,7 @@ jobs:
           echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
           echo "✅ APK renommé → $APK_NAME"
 
-      # ── 14. Upload APK (artifact CI) ────────────────────────────────────────
+      # ── 15. Upload APK (artifact CI) ────────────────────────────────────────
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -186,7 +209,7 @@ jobs:
           retention-days: 30
           compression-level: 9
 
-      # ── 15. Create GitHub Release ───────────────────────────────────────────
+      # ── 16. Create GitHub Release ───────────────────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
