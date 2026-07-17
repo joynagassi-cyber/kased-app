@@ -29,6 +29,18 @@ subprojects {
 
 subprojects {
     project.evaluationDependsOn(":app")
+
+    // Force namespace for prebuilt Android library plugins missing it
+    // (isar_flutter_libs, sqflite_darwin, etc.)
+    plugins.withId("com.android.library") {
+        afterEvaluate {
+            extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.let { libExt ->
+                if (libExt.namespace.isNullOrEmpty()) {
+                    libExt.namespace = "io.flutter.plugins.${this@subprojects.name}"
+                }
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
