@@ -25,18 +25,17 @@ plugins {
 
 // Set default compileSdk for ALL subprojects (including prebuilt pub.dev plugins)
 // This fixes "resource android:attr/lStar not found" in isar_flutter_libs
-gradle.beforeEvaluation {
-    allprojects {
-        try {
-            extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.let { android ->
-                val current = android.compileSdkVersion?.toString()?.removePrefix("android-")?.toIntOrNull() ?: 0
-                if (current < 31) {
-                    android.compileSdkVersion(31)
-                }
+gradle.afterProject { proj ->
+    try {
+        val android = proj.extensions.findByType(com.android.build.gradle.BaseExtension::class.java)
+        if (android != null) {
+            val current = android.compileSdkVersion?.toString()?.removePrefix("android-")?.toIntOrNull() ?: 0
+            if (current < 31) {
+                android.compileSdkVersion(31)
             }
-        } catch (_: Exception) {
-            // Not an Android project
         }
+    } catch (_: Exception) {
+        // Not an Android project
     }
 }
 
