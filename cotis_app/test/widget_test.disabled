@@ -13,19 +13,24 @@ class FakeAuth extends Auth {
   AuthState build() => state;
 }
 
+// Fournisseur d'authentification pour le test
+Auth buildAuthForTest() {
+  return FakeAuth(
+    const AuthState(
+      isAuthenticated: true,
+      isLoading: false,
+      userEmail: 'test@example.com',
+    ),
+  );
+}
+
 void main() {
   testWidgets('basic app loads without error', (WidgetTester tester) async {
     // Simple test that app can be pumped without crashing
     // Override auth provider to provide an already-authenticated state
     await tester.pumpWidget(ProviderScope(
       overrides: [
-        authProvider.overrideWith((ref) => FakeAuth(
-          const AuthState(
-            isAuthenticated: true,
-            isLoading: false,
-            userEmail: 'test@example.com',
-          ),
-        )),
+        authProvider.overrideWith(buildAuthForTest),
       ],
       child: const KasedApp(),
     ));

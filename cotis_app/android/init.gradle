@@ -1,0 +1,11 @@
+// Global init script to fix prebuilt Android library plugins that lack namespace/compileSdk.
+// This runs before any project is evaluated, so it works even for plugins from pub.dev cache.
+allprojects {
+    gradle.beforeProject { project ->
+        if (project.plugins.hasPlugin('com.android.library')) {
+            project.android {
+                compileSdk 34
+            }
+        }
+    }
+}
