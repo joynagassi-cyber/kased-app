@@ -4,15 +4,28 @@ import 'package:kased_app/main.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 
+// Fake Auth pour le test - retourne un state déjà authentifié
+class FakeAuth extends Auth {
+  final AuthState state;
+  FakeAuth(this.state);
+
+  @override
+  AuthState build() => state;
+}
+
 void main() {
   testWidgets('basic app loads without error', (WidgetTester tester) async {
     // Simple test that app can be pumped without crashing
+    // Override auth provider to provide an already-authenticated state
     await tester.pumpWidget(ProviderScope(
       overrides: [
-        authProvider.overrideWith((ref) {
-          // Simple auth state that's already loaded
-          return AppData.authenticated('test@example.com');
-        }),
+        authProvider.overrideWith((ref) => FakeAuth(
+          const AuthState(
+            isAuthenticated: true,
+            isLoading: false,
+            userEmail: 'test@example.com',
+          ),
+        )),
       ],
       child: const KasedApp(),
     ));
