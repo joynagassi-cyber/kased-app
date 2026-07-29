@@ -121,6 +121,7 @@ jobs:
         continue-on-error: true
 
       # ── 12. Build APK Release ────────────────────────────────────────────────
+      # Updated: removed problematic prebuilt plugin fix script
       - name: Build APK (release)
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN || '' }}
