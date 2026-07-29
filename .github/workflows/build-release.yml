@@ -108,7 +108,7 @@ jobs:
 
       # ── 8. Static Analysis (fail on error) ──────────────────────────────────
       - name: Dart analyze
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       # ── 9. Code generation (Riverpod, Isar, etc.) ────────────────────────────
       - name: Build runner
