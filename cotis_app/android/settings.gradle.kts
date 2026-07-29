@@ -17,9 +17,6 @@ pluginManagement {
     }
 }
 
-// Fix prebuilt plugins (Isar, etc.) that lack namespace/compileSdk.
-// Must run before subproject evaluation.
-apply(from = "fix_prebuilt_plugins.gradle.kts")
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
