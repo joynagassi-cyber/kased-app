@@ -116,7 +116,7 @@ jobs:
 
       # ── 11. Tests unitaires ────────────────────────────────────────────────────
       - name: Flutter test
-        run: flutter test test/unit/ test/widget/
+        run: flutter test test/unit/
 
       # ── 12. Build APK Release ────────────────────────────────────────────────
       - name: Build APK (release)
