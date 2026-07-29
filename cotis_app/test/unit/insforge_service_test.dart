@@ -4,7 +4,13 @@ import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockDio extends Mock implements Dio {}
-class MockResponse extends Mock implements Response {}
+class MockResponse extends Mock implements Response {
+  MockResponse() {
+    when(() => statusCode).thenReturn(200);
+    when(() => headers).thenReturn(Headers());
+    when(() => data).thenReturn(null);
+  }
+}
 
 void main() {
   late MockDio mockDio;
@@ -23,7 +29,7 @@ void main() {
       ];
       final mockResponse = MockResponse();
       when(() => mockResponse.data).thenReturn(mockData);
-      
+
       when(() => mockDio.get(
         '/api/database/records/membres',
         queryParameters: any(named: 'queryParameters'),
@@ -49,7 +55,7 @@ void main() {
     test('togglePaiement calls correct endpoint', () async {
       final mockResponse = MockResponse();
       when(() => mockResponse.data).thenReturn({'success': true});
-      
+
       when(() => mockDio.post(
         '/api/database/rpc/toggle_paiement',
         data: any(named: 'data'),
@@ -68,7 +74,7 @@ void main() {
       final mockResponse = MockResponse();
       const expectedUuid = 'new-culte-uuid';
       when(() => mockResponse.data).thenReturn(expectedUuid);
-      
+
       when(() => mockDio.post(
         '/api/database/rpc/creer_culte_avec_cotisations',
         data: any(named: 'data'),
@@ -98,7 +104,7 @@ void main() {
       ];
       final mockResponse = MockResponse();
       when(() => mockResponse.data).thenReturn(mockData);
-      
+
       when(() => mockDio.get('/api/database/records/v_dashboard'))
           .thenAnswer((_) async => mockResponse);
 
