@@ -7,6 +7,8 @@ on:
       - 'cotis_app/pubspec.yaml'
       - 'cotis_app/lib/**'
       - 'cotis_app/android/**'
+      - 'cotis_app/test/**'
+      - 'cotis_app/*.md'
       - '.github/workflows/build-release.yml'
   workflow_dispatch:
     inputs:
