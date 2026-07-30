@@ -107,20 +107,29 @@ jobs:
         run: flutter pub get
       - name: Patch isar_flutter_libs namespace for AGP compatibility
         run: |
-          echo "Patching isar_flutter_libs namespace..."
+          echo "=== Starting isar_flutter_libs namespace patch ==="
           ISAR_GRADLE=$(find ~ -path "*isar_flutter_libs*/android/build.gradle" -type f 2>/dev/null | head -1)
+          echo "Found at: $ISAR_GRADLE"
           if [ -n "$ISAR_GRADLE" ]; then
-            echo "Found at: $ISAR_GRADLE"
-            if ! grep -q "namespace" "$ISAR_GRADLE"; then
-              sed -i "/^android {/a\    namespace = 'com.kasedapp'" "$ISAR_GRADLE"
-              echo "Namespace added successfully."
+            echo "File exists, checking content..."
+            head -20 "$ISAR_GRADLE"
+            if grep -q "namespace" "$ISAR_GRADLE"; then
+              echo "Namespace already found in file, skipping patch."
             else
-              echo "Namespace already present, skipping."
+              echo "Namespace not found, adding it..."
+              echo "Before patch:"
+              grep -n "android {" "$ISAR_GRADLE"
+              sed -i "/^android {/a\    namespace = 'com.kasedapp'" "$ISAR_GRADLE"
+              echo "After patch:"
+              grep -A2 -B2 "namespace" "$ISAR_GRADLE"
+              echo "Namespace added successfully to $ISAR_GRADLE"
             fi
           else
             echo "ERROR: Could not find isar_flutter_libs build.gradle"
+            find ~ -path "*isar_flutter*" -type f 2>/dev/null | head -10
             exit 1
           fi
+          echo "=== Patching completed ==="
 
 
       - name: Dart analyze
