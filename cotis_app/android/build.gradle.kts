@@ -16,20 +16,22 @@ allprojects {
     }
 }
 
+// Configure default namespace for all Android projects after they are evaluated
+gradle.projectsEvaluated {
+    subprojects {
+        if (plugins.hasPlugin("com.android.library") || plugins.hasPlugin("com.android.application")) {
+            android {
+                namespace = "com.kasedapp"
+            }
+        }
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
         .get()
 rootProject.layout.buildDirectory.value(newBuildDir)
-
-// Define default namespace for all Android subprojects that don't have one explicitly
-subprojects {
-    if (project.plugins.hasPlugin("com.android.library") || project.plugins.hasPlugin("com.android.application")) {
-        android {
-            namespace = "com.kasedapp"
-        }
-    }
-}
 
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
