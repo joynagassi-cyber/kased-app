@@ -119,7 +119,23 @@ jobs:
               echo "Namespace not found, adding it..."
               echo "Before patch:"
               grep -n "android {" "$ISAR_GRADLE"
+            echo "Before sed:"
+
+            head -10 ""
+
               sed -i "/^android {/a\    namespace = 'com.kasedapp'" "$ISAR_GRADLE"
+            echo "After sed:"
+
+            head -15 ""
+
+            if grep -q "namespace" ""; then
+
+                echo "Namespace confirmed present:"
+
+                grep -n namespace ""
+
+            fi
+
               echo "After patch:"
               grep -A2 -B2 "namespace" "$ISAR_GRADLE"
               echo "Namespace added successfully to $ISAR_GRADLE"
