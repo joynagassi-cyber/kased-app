@@ -16,17 +16,6 @@ allprojects {
     }
 }
 
-// Configure default namespace for all Android projects after they are evaluated
-gradle.projectsEvaluated {
-    subprojects {
-        if (plugins.hasPlugin("com.android.library") || plugins.hasPlugin("com.android.application")) {
-            android {
-                namespace = "com.kasedapp"
-            }
-        }
-    }
-}
-
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
