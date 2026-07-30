@@ -105,6 +105,23 @@ jobs:
       # ── 7. Dependencies ──────────────────────────────────────────────────────
       - name: Pub get
         run: flutter pub get
+      - name: Patch isar_flutter_libs namespace for AGP compatibility
+        run: |
+          echo "Patching isar_flutter_libs namespace..."
+          ISAR_GRADLE=$(find ~ -path "*isar_flutter_libs*/android/build.gradle" -type f 2>/dev/null | head -1)
+          if [ -n "$ISAR_GRADLE" ]; then
+            echo "Found at: $ISAR_GRADLE"
+            if ! grep -q "namespace" "$ISAR_GRADLE"; then
+              sed -i "/^android {/a\    namespace = 'com.kasedapp'" "$ISAR_GRADLE"
+              echo "Namespace added successfully."
+            else
+              echo "Namespace already present, skipping."
+            fi
+          else
+            echo "ERROR: Could not find isar_flutter_libs build.gradle"
+            exit 1
+          fi
+
 
       - name: Dart analyze
         run: dart analyze
