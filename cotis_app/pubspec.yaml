@@ -18,8 +18,8 @@ dependencies:
   go_router: ^17.2.3
   
   # Base de données locale
-  isar: ^3.5.0
-  isar_flutter_libs: ^3.5.0
+  isar: ^3.1.0
+  isar_flutter_libs: ^3.1.0
   path_provider: any
   path_provider_android: any
   

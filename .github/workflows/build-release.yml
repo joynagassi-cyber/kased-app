@@ -106,11 +106,6 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
-      - name: Upgrade all packages to latest versions
-        run: flutter pub upgrade
-
-
-      # ── 8. Static Analysis (fail on error) ──────────────────────────────────
       - name: Dart analyze
         run: dart analyze
 
