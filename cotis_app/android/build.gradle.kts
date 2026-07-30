@@ -16,17 +16,6 @@ allprojects {
     }
 }
 
-// Configure namespace for all subprojects to fix AGP 8+ compatibility
-subprojects {
-    // Only set namespace if not already set (to avoid overriding app's namespace)
-    if (!project.extensions.hasProperty("android") || !project.android::namespace.get().isNotEmpty()) {
-        // Set a default namespace for all other modules (like isar_flutter_libs)
-        project.android {
-            namespace = "com.kasedapp.plugins"
-        }
-    }
-}
-
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
