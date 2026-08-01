@@ -31,6 +31,11 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Skip Kotlin metadata version check for plugins compiled with newer Kotlin versions
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xskip-metadata-version-check"
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
