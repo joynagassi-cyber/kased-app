@@ -107,27 +107,34 @@ jobs:
         run: flutter pub get
       - name: Patch isar_flutter_libs namespace for AGP compatibility
         run: |
-          echo "Starting isar_flutter_libs namespace patch..."
+          echo "Starting isar_flutter_libs AGP 8.x compatibility patches..."
+          # Find the isar_flutter_libs build.gradle
           ISAR_GRADLE=$(find ~ -path "*isar_flutter_libs*/android/build.gradle" -type f 2>/dev/null | head -1)
           if [ -z "$ISAR_GRADLE" ]; then
             echo "ERROR: Could not find isar_flutter_libs build.gradle"
             exit 1
           fi
-          echo "Found at: $ISAR_GRADLE"
-          if grep -q "namespace" "$ISAR_GRADLE"; then
-            echo "Namespace already present, skipping patch."
-          else
+          echo "Found build.gradle at: $ISAR_GRADLE"
+          if ! grep -q "namespace" "$ISAR_GRADLE"; then
             echo "Adding namespace to $ISAR_GRADLE..."
-            # Use sed to insert namespace line after "android {" line
-            sed -i '/^android {/a\    namespace = "com.kasedapp"' "$ISAR_GRADLE"
-            echo "Namespace added successfully."
-            # Verify
-            if grep -q "namespace" "$ISAR_GRADLE"; then
-              echo "Verification: namespace confirmed present."
+            sed -i '/^android {/a\    namespace = "dev.isar.isar_flutter_libs"' "$ISAR_GRADLE"
+            echo "Namespace added."
+          else
+            echo "Namespace already present, skipping."
+          fi
+          # Find and patch AndroidManifest.xml - remove deprecated package attribute
+          ISAR_MANIFEST=$(find ~ -path "*isar_flutter_libs*/android/src/main/AndroidManifest.xml" -type f 2>/dev/null | head -1)
+          if [ -n "$ISAR_MANIFEST" ]; then
+            echo "Found AndroidManifest.xml at: $ISAR_MANIFEST"
+            if grep -q 'package=' "$ISAR_MANIFEST"; then
+              echo "Removing deprecated package attribute from AndroidManifest.xml..."
+              sed -i 's/package="[^"]*"//g' "$ISAR_MANIFEST"
+              echo "Manifest patched successfully."
             else
-              echo "ERROR: namespace not found after sed!"
-              exit 1
+              echo "No package attribute found, skipping manifest patch."
             fi
+          else
+            echo "WARNING: AndroidManifest.xml not found for isar_flutter_libs"
           fi
           echo "Patch completed successfully."
 
