@@ -60,9 +60,8 @@ jobs:
 
       - name: Install Android SDK Platform 33
         run: |
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager "platforms;android-33" 2>/dev/null || \
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "platforms;android-33"
-          echo "✅ Android SDK Platform 33 installé"
+          sdkmanager "platforms;android-33" <<< "y" || true
+          echo "✅ Android SDK Platform 33 prêt"
 
       # ── 3. Extraire la version depuis pubspec.yaml ───────────────────────────
       - name: Extract version
