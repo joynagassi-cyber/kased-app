@@ -122,17 +122,22 @@ jobs:
           echo "Found build.gradle at: $ISAR_GRADLE"
           if ! grep -q "namespace" "$ISAR_GRADLE"; then
             echo "Adding namespace to $ISAR_GRADLE..."
-            sed -i '/^android {/a\    namespace = "dev.isar.isar_flutter_libs"\n    compileSdk = 36' "$ISAR_GRADLE"
-            echo "Namespace and compileSdk added."
+            sed -i '/^android {/a\    namespace = "dev.isar.isar_flutter_libs"' "$ISAR_GRADLE"
+            echo "Namespace added."
           else
             echo "Namespace already present, skipping."
           fi
+          # compileSdk 36 must REPLACE the plugin's own compileSdkVersion line:
+          # that line runs AFTER any inserted compileSdk = 36 and would override
+          # it (last assignment wins in Groovy), leaving isar on SDK 30 where the
+          # SDK 35+ attribute android:attr/lStar does not exist.
+          sed -i 's/^[[:space:]]*compileSdkVersion[[:space:]]*[0-9]*/    compileSdk = 36/' "$ISAR_GRADLE"
           if ! grep -q "compileSdk" "$ISAR_GRADLE"; then
             echo "Adding compileSdk 36 to prevent lStar resource errors..."
             sed -i '/^android {/a\    compileSdk = 36' "$ISAR_GRADLE"
             echo "compileSdk added."
           else
-            echo "compileSdk already present."
+            echo "compileSdk ensured at 36."
           fi
           # Find and patch AndroidManifest.xml - remove deprecated package attribute
           ISAR_MANIFEST=$(find ~ -path "*isar_flutter_libs*/android/src/main/AndroidManifest.xml" -type f 2>/dev/null | head -1)

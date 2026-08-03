@@ -36,23 +36,12 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     kotlinOptions.freeCompilerArgs += "-Xskip-metadata-version-check"
 }
 
-// Force a recent compileSdk on every Android library module (Flutter plugins).
-// Older plugins (e.g. isar_flutter_libs 3.1.0) link against a lower compileSdk
-// but merge resources from SDK 35+ AARs (android:attr/lStar), which fails with
-// "resource android:attr/lStar not found" unless compileSdk is at least 35.
-//
-// NOTE: use pluginManager.withPlugin (NOT afterEvaluate). afterEvaluate throws
-// "Cannot run Project.afterEvaluate(Action) when the project is already evaluated"
-// when combined with the evaluationDependsOn(":app") block above, because some
-// subprojects are already evaluated by then. withPlugin fires when the plugin is
-// applied (or immediately if it already is), so it is safe in both cases.
-subprojects {
-    pluginManager.withPlugin("com.android.library") {
-        extensions.configure(com.android.build.gradle.LibraryExtension::class.java) {
-            compileSdk = 36
-        }
-    }
-}
+// NOTE: compileSdk for library modules (Flutter plugins) is forced to 36 by the
+// CI workflow patch (see .github/workflows/build-release.yml), which edits the
+// plugin's own build.gradle so its compileSdkVersion line cannot override it.
+// An afterEvaluate/projectsEvaluated override here is NOT reliable: plugin build
+// files run after plugin application, and AGP has already finalized the DSL by
+// the time the whole graph is evaluated.
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
