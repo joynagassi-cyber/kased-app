@@ -78,14 +78,4 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.multidex:multidex:2.0.1")
-
-    // Force older versions compatible with AGP 8.3.1 (bundled by Flutter 3.44.0)
-    // core-ktx 1.18.0 and activity 1.12.4 require AGP 8.9.1+
-    configurations.all {
-        resolutionStrategy {
-            force("androidx.core:core-ktx:1.15.0")
-            force("androidx.activity:activity:1.8.2")
-            force("androidx.appcompat:appcompat:1.7.0")
-        }
-    }
 }
