@@ -58,10 +58,10 @@ jobs:
       - name: Flutter doctor
         run: flutter doctor -v
 
-      - name: Install Android SDK Platform 33
+      - name: Install Android SDK Platform 36
         run: |
-          sdkmanager "platforms;android-33" <<< "y" || true
-          echo "✅ Android SDK Platform 33 prêt"
+          sdkmanager "platforms;android-36" <<< "y" || true
+          echo "✅ Android SDK Platform 36 prêt"
 
       # ── 3. Extraire la version depuis pubspec.yaml ───────────────────────────
       - name: Extract version
@@ -122,14 +122,14 @@ jobs:
           echo "Found build.gradle at: $ISAR_GRADLE"
           if ! grep -q "namespace" "$ISAR_GRADLE"; then
             echo "Adding namespace to $ISAR_GRADLE..."
-            sed -i '/^android {/a\    namespace = "dev.isar.isar_flutter_libs"\n    compileSdk = 33' "$ISAR_GRADLE"
+            sed -i '/^android {/a\    namespace = "dev.isar.isar_flutter_libs"\n    compileSdk = 36' "$ISAR_GRADLE"
             echo "Namespace and compileSdk added."
           else
             echo "Namespace already present, skipping."
           fi
           if ! grep -q "compileSdk" "$ISAR_GRADLE"; then
-            echo "Adding compileSdk 33 to prevent lStar resource errors..."
-            sed -i '/^android {/a\    compileSdk = 33' "$ISAR_GRADLE"
+            echo "Adding compileSdk 36 to prevent lStar resource errors..."
+            sed -i '/^android {/a\    compileSdk = 36' "$ISAR_GRADLE"
             echo "compileSdk added."
           else
             echo "compileSdk already present."

@@ -36,6 +36,22 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     kotlinOptions.freeCompilerArgs += "-Xskip-metadata-version-check"
 }
 
+// Force a recent compileSdk on every Android library module (Flutter plugins).
+// Older plugins (e.g. isar_flutter_libs 3.1.0) link against a lower compileSdk
+// but merge resources from SDK 35+ AARs (android:attr/lStar), which fails with
+// "resource android:attr/lStar not found" unless compileSdk is at least 35.
+subprojects {
+    afterEvaluate {
+        if (plugins.hasPlugin("com.android.library")) {
+            val libExtension =
+                extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)
+            if (libExtension != null) {
+                libExtension.compileSdk = 36
+            }
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
