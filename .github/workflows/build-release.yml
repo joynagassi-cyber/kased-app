@@ -30,6 +30,8 @@ jobs:
     name: Analyze → Build → Release
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: cotis_app
@@ -192,11 +194,14 @@ jobs:
           echo "✅ APK renommé → $APK_NAME"
 
       # ── 14. Upload APK (artifact CI) ────────────────────────────────────────
+      # NOTE: actions/upload-artifact and softprops/action-gh-release run at the
+      # repo ROOT, not in cotis_app/ — the working-directory default only applies
+      # to `run` steps. Prefix the artifact path with cotis_app/ accordingly.
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: kased-v${{ env.APP_VERSION }}
-          path: build/${{ steps.apk.outputs.apk_name }}
+          path: cotis_app/build/${{ steps.apk.outputs.apk_name }}
           retention-days: 30
           compression-level: 9
 
@@ -221,7 +226,7 @@ jobs:
 
             ### Notes
             - APK obfusqué (`--obfuscate` + `--split-debug-info`)
-          files: build/${{ steps.apk.outputs.apk_name }}
+          files: cotis_app/build/${{ steps.apk.outputs.apk_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
