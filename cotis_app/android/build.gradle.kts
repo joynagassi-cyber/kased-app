@@ -40,14 +40,16 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 // Older plugins (e.g. isar_flutter_libs 3.1.0) link against a lower compileSdk
 // but merge resources from SDK 35+ AARs (android:attr/lStar), which fails with
 // "resource android:attr/lStar not found" unless compileSdk is at least 35.
+//
+// NOTE: use pluginManager.withPlugin (NOT afterEvaluate). afterEvaluate throws
+// "Cannot run Project.afterEvaluate(Action) when the project is already evaluated"
+// when combined with the evaluationDependsOn(":app") block above, because some
+// subprojects are already evaluated by then. withPlugin fires when the plugin is
+// applied (or immediately if it already is), so it is safe in both cases.
 subprojects {
-    afterEvaluate {
-        if (plugins.hasPlugin("com.android.library")) {
-            val libExtension =
-                extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)
-            if (libExtension != null) {
-                libExtension.compileSdk = 36
-            }
+    pluginManager.withPlugin("com.android.library") {
+        extensions.configure(com.android.build.gradle.LibraryExtension::class.java) {
+            compileSdk = 36
         }
     }
 }
