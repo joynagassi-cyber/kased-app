@@ -15,26 +15,35 @@ import 'providers/theme_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase初始化
-  await Firebase.initializeApp();
+  // Firebase est OPTIONNEL au démarrage : si son initialisation échoue
+  // (config absente/invalide, Google Play Services indisponible...),
+  // l'application doit quand même se lancer. Un échec ici ne doit JAMAIS
+  // provoquer un crash bloquant au lancement.
+  var firebaseReady = false;
+  try {
+    await Firebase.initializeApp();
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    firebaseReady = true;
+  } catch (e) {
+    debugPrint('[FIREBASE] Initialisation échouée (ignorée, l\'app continue) : $e');
+  }
 
-  // Passer les erreurs Flutter à Crashlytics
-  FlutterError.onError = (errorDetails) {
-    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-  };
+  // Passer les erreurs Flutter à Crashlytics (si Firebase est disponible)
+  if (firebaseReady) {
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
 
-  // Passer les erreurs non capturées à Crashlytics
-  ui.PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+    // Passer les erreurs non capturées à Crashlytics
+    ui.PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
 
   await runZonedGuarded(
     () async {
       await initializeDateFormatting('fr_FR', null);
-
-      // Activer Crashlytics en mode debug pour capturer les erreurs en développement
-      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
 
       try {
         await NotificationService.init().timeout(
@@ -45,7 +54,9 @@ Future<void> main() async {
         );
       } catch (e, stack) {
         debugPrint('[WARN] NotificationService.init() échoué : $e');
-        FirebaseCrashlytics.instance.recordError(e, stack);
+        if (firebaseReady) {
+          FirebaseCrashlytics.instance.recordError(e, stack);
+        }
       }
 
       runApp(
@@ -57,7 +68,9 @@ Future<void> main() async {
     (Object error, StackTrace stack) {
       debugPrint('══ ZONE ERROR (non géré) ══');
       debugPrint('Exception : $error');
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      if (firebaseReady) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      }
     },
   );
 }
