@@ -79,8 +79,14 @@ class _SpringButtonState extends State<SpringButton>
       behavior: HitTestBehavior.opaque,
       child: ScaleTransition(
         scale: _scale,
+        // Le child ne doit JAMAIS recevoir les taps lui-même : s'il contient
+        // un bouton activé (onPressed non null), son InkWell gagne la gesture
+        // arena de Flutter et bloque le onTap de SpringButton — les boutons
+        // apparaissent alors "bloqués". IgnorePointer rend le contenu
+        // transparent au hit-test : c'est le GestureDetector de SpringButton
+        // qui reçoit tous les taps (comportement opaque ci-dessus).
         child: IgnorePointer(
-          ignoring: widget.onTap == null && widget.onLongPress == null,
+          ignoring: true,
           child: widget.child,
         ),
       ),
