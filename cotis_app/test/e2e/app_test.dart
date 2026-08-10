@@ -85,23 +85,25 @@ void main() {
       // L'initial route est /loading → auth.isLoading=true → on pump jusqu'à
       // ce que isLoading devienne false → redirect vers /onboarding.
       // On utilise pump() au lieu de pumpAndSettle() car l'onboarding contient
-      // une animation continue de 12s (OnboardingHeroAnimation) et un
+      // des animations ambiantes continues (héros page 1 et 3) et un
       // BouncingScrollBehavior global qui empêchent pumpAndSettle de se terminer.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      // 1. On doit être sur l'onboarding
-      expect(find.text('Bienvenue sur Kased'), findsOneWidget);
+      // 1. On doit être sur l'onboarding (page 1 du micro-onboarding)
+      expect(find.text('Collectez en un geste'), findsOneWidget);
 
-      // Aller au login
-      final startBtn = find.ancestor(
-        of: find.text('Se connecter'),
-        matching: find.byType(SpringButton),
-      );
-      await tester.tap(startBtn.first);
+      // Naviguer jusqu'à la page 3 (2× Continuer) pour atteindre le lien login
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Aller au login via le TextButton de la dernière page
+      await tester.tap(find.textContaining('Se connecter'));
       // La transition _buildFadeSlidePage dure 320ms. L'onboarding est encore
-      // dans le tree pendant la transition (animation infinie 12s), donc on
-      // ne peut pas utiliser pumpAndSettle. On pompe manuellement.
+      // dans le tree pendant la transition (animations ambiantes continues),
+      // donc on ne peut pas utiliser pumpAndSettle. On pompe manuellement.
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -161,12 +163,14 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Bienvenue sur Kased'), findsOneWidget);
+      expect(find.text('Collectez en un geste'), findsOneWidget);
 
-      await tester.tap(find.ancestor(
-        of: find.text('Se connecter'),
-        matching: find.byType(SpringButton),
-      ).first);
+      // Naviguer jusqu'à la page 3 puis aller au login
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.textContaining('Se connecter'));
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 400));
 

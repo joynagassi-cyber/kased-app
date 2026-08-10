@@ -1,10 +1,86 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '../widgets/onboarding_hero_animation.dart';
-import 'package:kased_app/widgets/spring_button.dart';
+import 'dart:math' as math;
 
-class OnboardingScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../widgets/onboarding/collecte_hero.dart';
+import '../widgets/onboarding/confetti_hero.dart';
+import '../widgets/onboarding/suivi_hero.dart';
+import '../widgets/spring_button.dart';
+
+/// Micro-onboarding de bienvenue en 3 pages. Chaque page propose une
+/// animation unique et une action unique :
+///   1. Collectez en un geste      → taper la pile de pièces
+///   2. Chaque cotisation est suivie → taper chaque barre du graphique
+///   3. Une transparence totale    → taper « Créer mon compte » (confettis)
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with SingleTickerProviderStateMixin {
+  final _pageCtrl = PageController();
+  late final AnimationController _celebrateCtrl;
+  int _page = 0;
+  bool _celebrating = false;
+
+  static const _titles = [
+    'Collectez en un geste',
+    'Chaque cotisation est suivie',
+    'Une transparence totale',
+  ];
+
+  static const _subtitles = [
+    'Tapez la pile de pièces et regardez la cagnotte de la communauté se '
+        'remplir en temps réel.',
+    'Visualisez les montants mois par mois. Tapez chaque barre pour '
+        'valider le suivi.',
+    'Chaque virement est visible par tous. Célébrez et rejoignez la '
+        'communauté Kased !',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _celebrateCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+    _celebrateCtrl.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        context.go('/signup');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _celebrateCtrl.dispose();
+    _pageCtrl.dispose();
+    super.dispose();
+  }
+
+  void _next() {
+    if (_celebrating || _page >= 2) return;
+    HapticFeedback.lightImpact();
+    _pageCtrl.animateToPage(
+      _page + 1,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _celebrate() {
+    if (_celebrating) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _celebrating = true);
+    _celebrateCtrl.forward(from: 0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +92,7 @@ class OnboardingScreen extends StatelessWidget {
       backgroundColor: colorScheme.surface,
       body: Stack(
         children: [
+          // Fond
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -24,8 +101,8 @@ class OnboardingScreen extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     colorScheme.surface,
-                    isDark 
-                        ? colorScheme.primary.withValues(alpha: 0.1) 
+                    isDark
+                        ? colorScheme.primary.withValues(alpha: 0.10)
                         : colorScheme.primary.withValues(alpha: 0.05),
                     colorScheme.surface,
                   ],
@@ -34,11 +111,11 @@ class OnboardingScreen extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -100,
-            right: -100,
+            top: -120,
+            right: -110,
             child: Container(
-              width: 300,
-              height: 300,
+              width: 320,
+              height: 320,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: colorScheme.primary.withValues(alpha: 0.05),
@@ -48,132 +125,359 @@ class OnboardingScreen extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
-                 const Expanded(
-                  flex: 55,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 8, bottom: 4),
-                    child: OnboardingHeroAnimation(),
+                _buildTopBar(colorScheme),
+                Expanded(
+                  child: PageView(
+                    controller: _pageCtrl,
+                    physics: _celebrating
+                        ? const NeverScrollableScrollPhysics()
+                        : const BouncingScrollPhysics(),
+                    onPageChanged: (i) => setState(() => _page = i),
+                  children: [
+                    _KeepAlivePage(child: _buildPage(0)),
+                    _KeepAlivePage(child: _buildPage(1)),
+                    _KeepAlivePage(child: _buildPage(2)),
+                  ],
                   ),
                 ),
-                Expanded(
-                  flex: 45,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          'Bienvenue sur Kased',
-                          style: theme.textTheme.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: colorScheme.onSurface,
-                            letterSpacing: -0.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Simplifiez la gestion des cotisations de votre '
-                          'communauté avec une expérience fluide et sécurisée.',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            height: 1.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const Spacer(),
-                        SpringButton(
-                          onTap: () => context.go('/signup'),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 58,
-                            child: ElevatedButton(
-                              onPressed: () {}, // Géré par SpringButton
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: colorScheme.primary,
-                                foregroundColor: colorScheme.onPrimary,
-                                elevation: 4,
-                                shadowColor: colorScheme.primary.withValues(alpha: 0.5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              child: const Text(
-                                'Commencer l\'aventure',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        SpringButton(
-                          onTap: () => context.go('/login'),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 58,
-                            child: OutlinedButton(
-                              onPressed: () {}, // Géré par SpringButton
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(
-                                  color: colorScheme.outline,
-                                  width: 1.5,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              child: Text(
-                                'Se connecter',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SpringButton(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Mode invité activé'),
-                              ),
-                            );
-                          },
-                          child: TextButton(
-                            onPressed: () {}, // Géré par SpringButton
-                            style: TextButton.styleFrom(
-                              foregroundColor: colorScheme.onSurfaceVariant,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('Explorer en tant qu\'invité'),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 16,
-                                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
+                _buildBottomBar(colorScheme),
+              ],
+            ),
+          ),
+          // Flash blanc rapide au moment de la célébration
+          AnimatedBuilder(
+            animation: _celebrateCtrl,
+            builder: (context, _) {
+              if (!_celebrating) return const SizedBox.shrink();
+              final flash = (1 - _celebrateCtrl.value * 1.6).clamp(0.0, 0.9);
+              return Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(color: Colors.white.withValues(alpha: flash)),
+                ),
+              );
+            },
+          ),
+          // Confettis plein écran
+          AnimatedBuilder(
+            animation: _celebrateCtrl,
+            builder: (context, _) {
+              if (!_celebrating) return const SizedBox.shrink();
+              return Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _ConfettiPainter(progress: _celebrateCtrl.value),
                   ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 12, 0),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2962FF), Color(0xFF7C4DFF)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
+            ),
+            child: Center(
+              child: Text(
+                'K',
+                style: GoogleFonts.syne(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: () => context.go('/signup'),
+            child: Text(
+              'Passer',
+              style: GoogleFonts.dmSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildPage(int i) {
+    final Widget hero = switch (i) {
+      0 => CollecteHero(active: _page == 0),
+      1 => const SuiviHero(),
+      _ => ConfettiHero(active: _page == 2, celebrating: _celebrating),
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: hero,
+              ),
+            ),
+          ),
+          Text(
+            _titles[i],
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _subtitles[i],
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(ColorScheme colorScheme) {
+    final isLast = _page == 2;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Points de progression
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(3, (i) {
+              final activeDot = i == _page;
+              return GestureDetector(
+                onTap: () {
+                  if (_celebrating) return;
+                  _pageCtrl.animateToPage(
+                    i,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutCubic,
+                  );
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: activeDot ? 26 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    gradient: activeDot
+                        ? const LinearGradient(
+                            colors: [Color(0xFF2962FF), Color(0xFF7C4DFF)],
+                          )
+                        : null,
+                    color: activeDot
+                        ? null
+                        : colorScheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 20),
+          // Action principale
+          SpringButton(
+            onTap: isLast ? _celebrate : _next,
+            child: SizedBox(
+              width: double.infinity,
+              height: 58,
+              child: ElevatedButton(
+                onPressed: () {}, // Géré par SpringButton
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(isLast ? 'Créer mon compte' : 'Continuer'),
+                    const SizedBox(width: 8),
+                    Icon(
+                      isLast
+                          ? Icons.auto_awesome_rounded
+                          : Icons.arrow_forward_rounded,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Lien secondaire selon la page
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: isLast
+                ? TextButton(
+                    key: const ValueKey('login'),
+                    onPressed: () => context.go('/login'),
+                    child: Text(
+                      'J\'ai déjà un compte — Se connecter',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  )
+                : const SizedBox(
+                    key: ValueKey('none'),
+                    height: 40,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KeepAlivePage extends StatefulWidget {
+  final Widget child;
+
+  const _KeepAlivePage({required this.child});
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+}
+
+class _ConfettiPiece {
+  const _ConfettiPiece({
+    required this.x,
+    required this.delay,
+    required this.speed,
+    required this.size,
+    required this.sway,
+    required this.rotSpeed,
+    required this.color,
+    required this.isCircle,
+  });
+
+  final double x;
+  final double delay;
+  final double speed;
+  final double size;
+  final double sway;
+  final double rotSpeed;
+  final Color color;
+  final bool isCircle;
+}
+
+class _ConfettiPainter extends CustomPainter {
+  _ConfettiPainter({required this.progress});
+
+  final double progress;
+
+  static const _colors = [
+    Color(0xFF2962FF),
+    Color(0xFF7C4DFF),
+    Color(0xFF10B981),
+    Color(0xFFF59E0B),
+    Color(0xFFEC4899),
+  ];
+
+  static final List<_ConfettiPiece> _pieces = _generate();
+
+  static List<_ConfettiPiece> _generate() {
+    final rng = math.Random(42);
+    return List.generate(90, (i) {
+      return _ConfettiPiece(
+        x: rng.nextDouble(),
+        delay: rng.nextDouble() * 0.25,
+        speed: 0.7 + rng.nextDouble() * 0.6,
+        size: 5 + rng.nextDouble() * 6,
+        sway: 18 + rng.nextDouble() * 26,
+        rotSpeed: (rng.nextDouble() - 0.5) * 12,
+        color: _colors[rng.nextInt(_colors.length)],
+        isCircle: rng.nextDouble() > 0.55,
+      );
+    });
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
+    for (final p in _pieces) {
+      final e = ((progress - p.delay) * p.speed).clamp(0.0, 1.0);
+      final t = Curves.easeOutCubic.transform(e);
+      final y = -20 + (size.height + 60) * t;
+      final x = p.x * size.width + math.sin(e * math.pi * 5) * p.sway;
+      final opacity = (1 - e).clamp(0.0, 1.0);
+      final paint = Paint()
+        ..color = p.color.withValues(alpha: opacity * 0.95);
+
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(p.rotSpeed * e * math.pi);
+      if (p.isCircle) {
+        canvas.drawCircle(Offset.zero, p.size / 2, paint);
+      } else {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: Offset.zero,
+              width: p.size,
+              height: p.size * 0.55,
+            ),
+            const Radius.circular(1.5),
+          ),
+          paint,
+        );
+      }
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConfettiPainter old) => old.progress != progress;
 }
