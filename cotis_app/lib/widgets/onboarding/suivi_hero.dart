@@ -146,7 +146,7 @@ class _SuiviHeroState extends State<SuiviHero> {
                               ],
                             ),
                           )
-                        : SizedBox.shrink(key: const ValueKey('pending')),
+                        : const SizedBox.shrink(key: ValueKey('pending')),
                   ),
                 ),
               ),

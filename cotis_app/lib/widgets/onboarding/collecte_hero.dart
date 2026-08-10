@@ -113,7 +113,11 @@ class _CollecteHeroState extends State<CollecteHero>
         children: [
           _buildGlow(context),
           _buildJar(context),
-          _buildPile(context),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _collect,
+            child: _buildPile(context),
+          ),
           _buildCounterChip(context),
           if (_goalShown) _buildGoalChip(),
           ..._flights.map(_buildFlight),
@@ -302,15 +306,15 @@ class _CollecteHeroState extends State<CollecteHero>
                   children: [
                     Transform.rotate(
                       angle: -0.14,
-                      child: _JarCoin(36, offset: const Offset(0, 8)),
+                      child: const _JarCoin(36, offset: Offset(0, 8)),
                     ),
                     Transform.rotate(
                       angle: 0.08,
-                      child: _JarCoin(38),
+                      child: const _JarCoin(38),
                     ),
                     Transform.rotate(
                       angle: -0.06,
-                      child: _JarCoin(34, offset: const Offset(0, 6)),
+                      child: const _JarCoin(34, offset: Offset(0, 6)),
                     ),
                   ],
                 ),

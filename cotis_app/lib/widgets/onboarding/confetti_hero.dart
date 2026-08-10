@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Page 3 du micro-onboarding — « Une transparence totale ».
 ///
