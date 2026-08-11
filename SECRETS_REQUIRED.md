@@ -13,9 +13,9 @@ Pour que le workflow de build et release fonctionne correctement, vous devez con
 
 | Nom | Description | Requis | Exemple/Valeur |
 |-----|-------------|--------|----------------|
-| `INSFORGE_URL` | URL de votre instance InsForge/PostgREST | ⚠️ Optionnel | `https://votre-instance.insforge.app` |
-| `INSFORGE_ANON_KEY` | Key d'anoncé pour l'API InsForge | ⚠️ Optionnel | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
-| `GOOGLE_WEB_CLIENT_ID` | ID du client web Google OAuth | ⚠️ Optionnel | `1234567890-abcd1234567890.apps.googleusercontent.com` |
+| `INSFORGE_URL` | URL de votre instance InsForge/PostgREST | ✅ Requis (sinon le build échoue) | `https://votre-instance.insforge.app` |
+| `INSFORGE_ANON_KEY` | Clé anon pour l'API InsForge — sans elle, l'inscription email répond « No token provided » | ✅ Requis (sinon le build échoue) | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+| `GOOGLE_WEB_CLIENT_ID` | ID du client **Web** Google OAuth (utilisé comme `GOOGLE_SERVER_CLIENT_ID`) — sans lui (ou avec une valeur invalide), Google Sign-In échoue avec `ApiException 10` | ✅ Requis (sinon le build échoue) | `1234567890-abcd1234567890.apps.googleusercontent.com` |
 | `SENTRY_DSN` | URL DSN pour Sentry (tracking d'erreurs) | ❌ Optionnel | `https://key@o123.ingest.sentry.io/123` |
 | `UPLOAD_KEYSTORE_B64` | Keystore Android encodé en base64 (pour signer l'APK production) | ❌ Optionnel | `MIIG...` (output de `base64 keystore.jks`) |
 | `KEY_ALIAS` | Alias de la key dans le keystore | ❌ Si `UPLOAD_KEYSTORE_B64` est set | `my-key-alias` |

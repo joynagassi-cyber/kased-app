@@ -8,6 +8,7 @@ import '../widgets/motion/motion_aware.dart';
 import '../widgets/motion/animated_appear.dart';
 import 'package:kased_app/widgets/spring_button.dart';
 import '../widgets/custom_google_signin_button.dart';
+import '../widgets/google_auth_error.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -72,79 +73,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } on Exception catch (error) {
       if (!mounted) return;
       final errMsg = error.toString();
-
-      if (errMsg.contains('ACCOUNT_EXISTS_WITH_PASSWORD')) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Compte déjà existant'),
-            content: const Text(
-              'Un compte utilisant cette adresse email a été créé avec un mot de passe. '
-              'Veuillez vous connecter avec votre adresse email et votre mot de passe.',
-            ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  context.go('/login');
-                },
-                child: const Text('Se connecter'),
-              ),
-            ],
+      if (!showGoogleAuthError(context, errMsg)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: ${errMsg.replaceAll('Exception: ', '')}'),
+            backgroundColor: AppColors.danger,
           ),
         );
-        return;
       }
-
-      if (errMsg.contains('GOOGLE_TIMEOUT')) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Connexion Google lente'),
-            content: const Text(
-              'La connexion Google a pris trop de temps. Cela peut arriver la première fois. '
-              'Vérifiez votre connexion internet et réessayez.',
-            ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Réessayer'),
-              ),
-            ],
-          ),
-        );
-        return;
-      }
-
-      if (errMsg.contains('BRIDGE_TIMEOUT')) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Serveur lent'),
-            content: const Text(
-              'Le serveur d\'authentification met trop de temps à répondre. '
-              'Vérifiez votre connexion et réessayez dans quelques secondes.',
-            ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur: ${errMsg.replaceAll('Exception: ', '')}'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
     }
   }
 

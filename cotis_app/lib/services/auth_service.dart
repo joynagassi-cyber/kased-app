@@ -1,6 +1,7 @@
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../core/insforge/insforge_config.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -21,27 +22,59 @@ class AuthService {
     connectTimeout: const Duration(seconds: 60),
     receiveTimeout: const Duration(seconds: 60),
     headers: {
-      // Clé anon injectée via --dart-define=INSFORGE_ANON_KEY=...
       'Content-Type': 'application/json',
+      // 🔴 CRITIQUE : InsForge exige la clé anon sur CHAQUE requête.
+      // Sans le header `apikey`, /api/auth/users répond HTTP 401
+      // "No token provided" — c'est exactement l'erreur affichée à
+      // l'inscription par email dans l'application.
+      if (InsForgeConfig.anonKey.isNotEmpty)
+        'apikey': InsForgeConfig.anonKey,
+      if (InsForgeConfig.anonKey.isNotEmpty)
+        'Authorization': 'Bearer ${InsForgeConfig.anonKey}',
     },
   ));
 
-  // Configuration OAuth2 Google. serverClientId est passé via
-  // --dart-define=GOOGLE_SERVER_CLIENT_ID=... — nécessaire pour récupérer un
-  // idToken valide côté Android.
+  /// Web Client ID Google — utilisé uniquement s'il est réellement défini.
+  ///
+  /// Un `serverClientId` invalide (ex: "placeholder" injecté par le CI quand
+  /// le secret GitHub est absent) fait échouer le sign-in natif Android avec
+  /// `ApiException: 10` (DEVELOPER_ERROR / sign_in_failed) — l'erreur exacte
+  /// rencontrée sur les écrans de connexion/inscription.
+  static String? get _googleServerClientId {
+    final id = InsForgeConfig.effectiveGoogleServerClientId.trim();
+    if (id.isEmpty ||
+        id == 'placeholder' ||
+        !id.contains('apps.googleusercontent.com')) {
+      return null;
+    }
+    return id;
+  }
+
+  // Configuration OAuth2 Google. Le bridge InsForge n'a besoin QUE de
+  // l'idToken : on ne force donc pas de refresh code (forceCodeForRefreshToken
+  // exigerait un serverClientId valide et n'apporte rien ici).
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
     signInOption: SignInOption.standard,
-    forceCodeForRefreshToken: true,
-    serverClientId: InsForgeConfig.effectiveGoogleServerClientId.isEmpty
-        ? null
-        : InsForgeConfig.effectiveGoogleServerClientId,
+    forceCodeForRefreshToken: false,
+    serverClientId: _googleServerClientId,
   );
+
+  /// Vérifie que la clé anon InsForge est disponible avant un appel API.
+  void _requireAnonKey() {
+    if (InsForgeConfig.anonKey.isEmpty) {
+      throw Exception(
+        'Clé API InsForge manquante. Reconstruisez l\'application avec '
+        '--dart-define=INSFORGE_ANON_KEY=<votre clé anon>.',
+      );
+    }
+  }
 
   // --- EMAIL / PASSWORD AUTH ---
 
   Future<Map<String, dynamic>?> signInWithEmail(String email, String password) async {
     try {
+      _requireAnonKey();
       // Pour mobile, on précise client_type pour obtenir un refresh_token
       final response = await _dio.post('/api/auth/sessions?client_type=mobile', data: {
         'email': email,
@@ -63,7 +96,7 @@ class AuthService {
     } catch (e) {
       debugPrint('Erreur lors de la connexion Email: $e');
       if (e is DioException) {
-        if (e.type == DioExceptionType.connectionTimeout || 
+        if (e.type == DioExceptionType.connectionTimeout ||
             e.type == DioExceptionType.receiveTimeout) {
           throw Exception('Le serveur met trop de temps à répondre. Veuillez vérifier votre connexion ou réessayer plus tard.');
         }
@@ -86,6 +119,7 @@ class AuthService {
     required String name,
   }) async {
     try {
+      _requireAnonKey();
       final response = await _dio.post('/api/auth/users?client_type=mobile', data: {
         'email': email,
         'password': password,
@@ -106,7 +140,7 @@ class AuthService {
     } catch (e) {
       debugPrint('Erreur lors de l\'inscription: $e');
       if (e is DioException) {
-        if (e.type == DioExceptionType.connectionTimeout || 
+        if (e.type == DioExceptionType.connectionTimeout ||
             e.type == DioExceptionType.receiveTimeout) {
           throw Exception('Le serveur met trop de temps à répondre (timeout). Votre compte a peut-être été créé avec succès en arrière-plan. Veuillez essayer de vous connecter avec cet email, ou vérifier vos emails si une confirmation est requise.');
         }
@@ -128,6 +162,7 @@ class AuthService {
     required String name,
   }) async {
     try {
+      _requireAnonKey();
       final response = await _dio.put(
         '/api/auth/profile',
         data: {'name': name},
@@ -144,6 +179,7 @@ class AuthService {
 
   Future<Map<String, dynamic>?> refreshToken(String token) async {
     try {
+      _requireAnonKey();
       final response = await _dio.post('/api/auth/refresh?client_type=mobile', data: {
         'refreshToken': token,
       });
@@ -168,6 +204,9 @@ class AuthService {
     bool forceAccountSelection = false,
   }) async {
     try {
+      // La clé anon est nécessaire pour la suite du flux (bridge).
+      _requireAnonKey();
+
       if (forceAccountSelection) {
         debugPrint('[AUTH] Forçage de la sélection de compte...');
         await _googleSignIn.signOut();
@@ -232,10 +271,36 @@ class AuthService {
         };
       }
 
-      debugPrint('[AUTH] ERREUR BRIDGE : Status \${response.statusCode}');
-      throw Exception('Erreur serveur bridge (\${response.statusCode})');
+      debugPrint('[AUTH] ERREUR BRIDGE : Status ${response.statusCode}');
+      throw Exception('Erreur serveur bridge (${response.statusCode})');
     } catch (error) {
       debugPrint('[AUTH] CRITICAL ERROR : $error');
+
+      // Erreurs natives Google Sign-In (Android) → messages lisibles.
+      if (error is PlatformException) {
+        final code = error.code;
+        final details = error.details?.toString() ?? '';
+        final message = error.message ?? '';
+        debugPrint('[AUTH] PlatformException Google : code=$code details=$details');
+        await _googleSignIn.signOut();
+        if (code == 'sign_in_failed' ||
+            details.contains('ApiException: 10') ||
+            details.contains('DEVELOPER_ERROR')) {
+          throw Exception(
+            'GOOGLE_CONFIG_ERROR: la connexion Google a échoué côté configuration. '
+            'L\'empreinte SHA-1 de l\'APK et le Web Client ID doivent être enregistrés '
+            'dans Google Cloud / Firebase pour com.kasedapp.',
+          );
+        }
+        if (message.toLowerCase().contains('network') ||
+            code.toLowerCase().contains('network')) {
+          throw Exception(
+            'GOOGLE_NETWORK_ERROR: connexion réseau indisponible pour Google Sign-In.',
+          );
+        }
+        // Autre erreur plateforme : on la remonte telle quelle mais plus lisible.
+        throw Exception('Erreur Google ($code) : ${message.isEmpty ? details : message}');
+      }
 
       // Identifier et reclassifier les erreurs pour de meilleurs messages UI
       if (error is Exception) {
@@ -251,8 +316,20 @@ class AuthService {
       }
 
       if (error is DioException) {
-        debugPrint('[AUTH] DIO DATA : \${error.response?.data}');
-        debugPrint('[AUTH] DIO STATUS : \${error.response?.statusCode}');
+        debugPrint('[AUTH] DIO DATA : ${error.response?.data}');
+        debugPrint('[AUTH] DIO STATUS : ${error.response?.statusCode}');
+
+        // Le bridge google-auth-bridge n'existe plus (déploiement Deno
+        // supprimé) → HTTP 404 DEPLOYMENT_NOT_FOUND.
+        if (error.response?.statusCode == 404 &&
+            error.requestOptions.uri.toString().contains('google-auth-bridge')) {
+          await _googleSignIn.signOut();
+          throw Exception(
+            'GOOGLE_BRIDGE_MISSING: la fonction serveur "google-auth-bridge" '
+            'n\'est plus disponible (HTTP 404). Redéployez-la sur InsForge '
+            'pour restaurer la connexion Google.',
+          );
+        }
 
         final responseData = error.response?.data;
         if (responseData is Map && responseData['error'] == 'ACCOUNT_EXISTS_WITH_PASSWORD') {

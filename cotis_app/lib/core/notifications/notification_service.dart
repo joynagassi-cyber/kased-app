@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  static AndroidFlutterLocalNotificationsPlugin? _androidPlugin;
   static bool _initialized = false;
 
   static Future<void> init() async {
@@ -18,14 +19,35 @@ class NotificationService {
       const ios = DarwinInitializationSettings();
       const settings = InitializationSettings(android: android, iOS: ios);
       
+      // `initialize` peut retourner null sur certaines plateformes : seul un
+      // `false` explicite est un échec. (Avant, un null désactivait
+      // silencieusement TOUTES les notifications.)
       final result = await _plugin.initialize(settings: settings);
-      if (result != true) {
+      if (result == false) {
         debugPrint('Échec de l\'initialisation des notifications');
         return;
       }
 
-      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-      await androidPlugin?.requestNotificationsPermission();
+      _androidPlugin =
+          _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+
+      // 🔴 CORRECTION 1 : définir le fuseau horaire LOCAL.
+      // Sans `tz.setLocalLocation(...)`, tz.local reste UTC et les
+      // notifications planifiées (anniversaires) partent à la mauvaise
+      // heure sur l'appareil.
+      if (_androidPlugin != null) {
+        try {
+          final timeZoneName = await _androidPlugin!.getTimeZoneName();
+          if (timeZoneName != null && timeZoneName.isNotEmpty) {
+            tz.setLocalLocation(tz.getLocation(timeZoneName));
+          }
+        } catch (e) {
+          debugPrint('Impossible de détecter le fuseau horaire: $e');
+        }
+      }
+
+      // Android 13+ : permission runtime POST_NOTIFICATIONS obligatoire.
+      await _androidPlugin?.requestNotificationsPermission();
       
       _initialized = true;
       debugPrint('Service de notifications initialisé avec succès');
@@ -55,6 +77,18 @@ class NotificationService {
 
       final age = prochainAnniversaire.year - birth.year;
 
+      // 🔴 CORRECTION 2 : depuis Android 14 (targetSdk 34+), la permission
+      // d'alarme EXACTE (SCHEDULE_EXACT_ALARM) est refusée par défaut pour
+      // les nouvelles installations. Appeler zonedSchedule en mode
+      // `exactAllowWhileIdle` sans cette permission lève une
+      // PlatformException → AUCUNE notification n'est planifiée.
+      // On bascule automatiquement sur le mode inexact si nécessaire
+      // (la notification part avec un léger décalage, mais elle part).
+      final canExact = await _androidPlugin?.canScheduleExactNotifications() ?? false;
+      final scheduleMode = canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle;
+
       await _plugin.cancel(id: _notificationIdFor(membre.id));
       await _plugin.zonedSchedule(
         id: _notificationIdFor(membre.id),
@@ -70,7 +104,7 @@ class NotificationService {
             priority: Priority.high,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: scheduleMode,
         matchDateTimeComponents: DateTimeComponents.dateAndTime,
       );
     } catch (e) {
@@ -99,9 +133,8 @@ class NotificationService {
     
     try {
       // Ensure channel exists if not default
-      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-      if (androidPlugin != null && channelId != 'default') {
-        await androidPlugin.createNotificationChannel(
+      if (_androidPlugin != null && channelId != 'default') {
+        await _androidPlugin!.createNotificationChannel(
           AndroidNotificationChannel(
             channelId,
             channelName ?? 'Général',

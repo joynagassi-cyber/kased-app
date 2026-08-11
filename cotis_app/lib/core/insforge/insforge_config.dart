@@ -23,26 +23,13 @@ class InsForgeConfig {
 
   static const String membersPhotosBucket = 'membres-photos';
 
-  // ── Valide à l'exécution que la clé est disponible ──────────────────────────
-  static String get effectiveAnonKey {
-    // En release, la clé doit être passée via --dart-define.
-    if (const bool.fromEnvironment('dart.vm.product') && anonKey.isEmpty) {
-      throw StateError(
-        'INSFORGE_ANON_KEY doit être défini via --dart-define en mode release.',
-      );
-    }
-    // En debug, on tolère l'absence pour le développement local.
-    return anonKey;
-  }
+  // ── Accès aux clés (retourne la valeur brute, jamais de throw) ──────────────
+  // Les appels API vérifient eux-mêmes la présence de la clé et affichent un
+  // message d'erreur clair à l'utilisateur si elle manque (au lieu d'un
+  // StateError cryptique au runtime).
+  static String get effectiveAnonKey => anonKey;
 
-  static String get effectiveGoogleServerClientId {
-    if (const bool.fromEnvironment('dart.vm.product') && googleServerClientId.isEmpty) {
-      throw StateError(
-        'GOOGLE_SERVER_CLIENT_ID doit être défini via --dart-define en mode release.',
-      );
-    }
-    return googleServerClientId;
-  }
+  static String get effectiveGoogleServerClientId => googleServerClientId;
 
   static Map<String, String> buildHeaders(String? token) {
     final activeKey = token ?? effectiveAnonKey;
