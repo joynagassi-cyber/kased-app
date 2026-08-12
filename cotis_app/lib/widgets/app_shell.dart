@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/widgets/app_drawer.dart';
 import 'package:kased_app/widgets/spring_nav_icon.dart';
@@ -122,9 +121,11 @@ class AppShell extends ConsumerWidget {
                     ),
                   ),
                   child: NavigationBar(
-                        backgroundColor: Colors.transparent,
-                        surfaceTintColor: Colors.transparent,
-                        indicatorColor: animatedIndicatorColor,
+                    backgroundColor: Colors.transparent,
+                    surfaceTintColor: Colors.transparent,
+                    indicatorColor: isDark
+                        ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+                        : colorScheme.primaryContainer.withValues(alpha: 0.5),
                     selectedIndex: currentIndex,
                     onDestinationSelected: (i) {
                       switch (i) {
@@ -269,8 +270,7 @@ class AppShell extends ConsumerWidget {
         label: Text('$retardsCount'),
         backgroundColor: colorScheme.error,
         child: springIcon,
-      )
-
+      );
     }
     return springIcon;
   }

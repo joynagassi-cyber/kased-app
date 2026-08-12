@@ -9,7 +9,6 @@ import 'package:kased_app/widgets/empty_state.dart';
 import 'package:kased_app/widgets/kased_avatar.dart';
 import 'package:kased_app/widgets/kased_card.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:kased_app/widgets/spring_button.dart';
 import 'package:kased_app/widgets/motion/skeleton_loading.dart';
 
@@ -67,7 +66,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
           if (membres.isEmpty) {
             return const EmptyState(
               icon: Icons.people_outline,
-              titre: 'Aucun membre enregistré',
+              titre: 'Aucun membre enregistrÃ©',
               sousTitre: 'Appuyez sur le bouton + pour ajouter un membre.',
             );
           }
@@ -215,7 +214,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                           const Icon(Icons.check_circle, color: Colors.white, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text('${membre.nomComplet} supprimé avec succès'),
+                            child: Text('${membre.nomComplet} supprimÃ© avec succÃ¨s'),
                           ),
                         ],
                       ),
@@ -266,7 +265,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
             TextField(
               controller: prenomController,
               decoration: const InputDecoration(
-                labelText: 'Prénom',
+                labelText: 'PrÃ©nom',
                 border: OutlineInputBorder(),
               ),
               autofocus: true,
@@ -304,7 +303,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                           Icon(Icons.check_circle, color: Colors.white, size: 20),
                           SizedBox(width: 8),
                           Expanded(
-                            child: Text('Membre modifié avec succès'),
+                            child: Text('Membre modifiÃ© avec succÃ¨s'),
                           ),
                         ],
                       ),

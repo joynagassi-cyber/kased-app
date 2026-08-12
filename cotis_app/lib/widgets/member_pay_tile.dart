@@ -34,9 +34,7 @@ class MemberPayTile extends StatelessWidget {
     final cardBgColor = isDark ? AppColors.surfaceDark : AppColors.surface;
     final cardBorderColor = isDark ? AppColors.borderDark : AppColors.border;
 
-    // Déterminer la couleur et le texte selon le statut
     final (Color statusColor, String statusText, IconData statusIcon) = _getStatusInfo();
-
     final isPaymentLocked = isLocked && statut == StatutCotisation.paye;
 
     return Container(
@@ -44,7 +42,14 @@ class MemberPayTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardBgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cardBorderColor),
+        border: Border.all(color: cardBorderColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withAlpha(25),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -54,7 +59,6 @@ class MemberPayTile extends StatelessWidget {
               width: statut == StatutCotisation.paye ? 8.0 : 6.0,
             ),
           ),
-          borderRadius: BorderRadius.circular(16),
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -70,18 +74,15 @@ class MemberPayTile extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-              isPaymentLocked ? 'Payé - Verrouillé' : statusText,
-              key: ValueKey(isPaymentLocked ? 'locked' : statusText),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isPaymentLocked ? Colors.grey : statusColor,
-                fontWeight: FontWeight.w500,
-              ),
+            isPaymentLocked ? 'Payé - Verrouillé' : statusText,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isPaymentLocked ? Colors.grey : statusColor,
+              fontWeight: FontWeight.w500,
             ),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Badge montant si un paiement personnalisé a été enregistré
               if (montantPaye != null && montantPaye! > 0 && !isPaymentLocked)
                 Padding(
                   padding: const EdgeInsets.only(right: 4),
@@ -93,9 +94,7 @@ class MemberPayTile extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (!isPaymentLocked &&
-                  statut != StatutCotisation.absent &&
-                  onCustomPayment != null)
+              if (!isPaymentLocked && statut != StatutCotisation.absent && onCustomPayment != null)
                 IconButton(
                   onPressed: onCustomPayment,
                   icon: const Icon(Icons.edit),
@@ -116,11 +115,9 @@ class MemberPayTile extends StatelessWidget {
                 )
               else
                 IconButton(
-                    key: ValueKey(statut),
-                    onPressed: onToggle,
-                    icon: Icon(statusIcon),
-                    color: statusColor,
-                  ),
+                  onPressed: onToggle,
+                  icon: Icon(statusIcon),
+                  color: statusColor,
                 ),
             ],
           ),
@@ -142,4 +139,3 @@ class MemberPayTile extends StatelessWidget {
     }
   }
 }
-

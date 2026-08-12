@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
-import 'package:kased_app/core/animation_constants.dart';
 
 class SpringButton extends StatefulWidget {
   final Widget child;
@@ -46,14 +44,8 @@ class _SpringButtonState extends State<SpringButton> {
       onTapCancel: widget.onTap != null ? _onTapCancel : null,
       onLongPress: widget.onLongPress,
       behavior: HitTestBehavior.opaque,
-      child: ScaleTransition(
-        scale: _scale,
-        // Le child ne doit JAMAIS recevoir les taps lui-même : s'il contient
-        // un bouton activé (onPressed non null), son InkWell gagne la gesture
-        // arena de Flutter et bloque le onTap de SpringButton — les boutons
-        // apparaissent alors "bloqués". IgnorePointer rend le contenu
-        // transparent au hit-test : c'est le GestureDetector de SpringButton
-        // qui reçoit tous les taps (comportement opaque ci-dessus).
+      child: Container(
+        color: _isPressed ? Colors.black.withAlpha(15) : Colors.transparent,
         child: IgnorePointer(
           ignoring: true,
           child: widget.child,
