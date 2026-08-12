@@ -34,7 +34,9 @@ class MemberPayTile extends StatelessWidget {
     final cardBgColor = isDark ? AppColors.surfaceDark : AppColors.surface;
     final cardBorderColor = isDark ? AppColors.borderDark : AppColors.border;
 
+    // Déterminer la couleur et le texte selon le statut
     final (Color statusColor, String statusText, IconData statusIcon) = _getStatusInfo();
+
     final isPaymentLocked = isLocked && statut == StatutCotisation.paye;
 
     return Container(
@@ -42,16 +44,11 @@ class MemberPayTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardBgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cardBorderColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: statusColor.withAlpha(25),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: cardBorderColor),
       ),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutBack,
         decoration: BoxDecoration(
           border: Border(
             left: BorderSide(
@@ -59,6 +56,7 @@ class MemberPayTile extends StatelessWidget {
               width: statut == StatutCotisation.paye ? 8.0 : 6.0,
             ),
           ),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -73,16 +71,33 @@ class MemberPayTile extends StatelessWidget {
               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
             ),
           ),
-          subtitle: Text(
-            isPaymentLocked ? 'Payé - Verrouillé' : statusText,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: isPaymentLocked ? Colors.grey : statusColor,
-              fontWeight: FontWeight.w500,
+          subtitle: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.0, -0.2),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: Text(
+              isPaymentLocked ? 'Payé - Verrouillé' : statusText,
+              key: ValueKey(isPaymentLocked ? 'locked' : statusText),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isPaymentLocked ? Colors.grey : statusColor,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Badge montant si un paiement personnalisé a été enregistré
               if (montantPaye != null && montantPaye! > 0 && !isPaymentLocked)
                 Padding(
                   padding: const EdgeInsets.only(right: 4),
@@ -94,7 +109,9 @@ class MemberPayTile extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (!isPaymentLocked && statut != StatutCotisation.absent && onCustomPayment != null)
+              if (!isPaymentLocked &&
+                  statut != StatutCotisation.absent &&
+                  onCustomPayment != null)
                 IconButton(
                   onPressed: onCustomPayment,
                   icon: const Icon(Icons.edit),
@@ -114,10 +131,31 @@ class MemberPayTile extends StatelessWidget {
                   child: Icon(Icons.lock_outline, color: Colors.grey),
                 )
               else
-                IconButton(
-                  onPressed: onToggle,
-                  icon: Icon(statusIcon),
-                  color: statusColor,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  transitionBuilder: (child, animation) {
+                    return ScaleTransition(
+                      scale: CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.elasticOut,
+                      ),
+                      child: RotationTransition(
+                        turns: Tween<double>(begin: 0.0, end: 0.05).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.elasticOut,
+                          ),
+                        ),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: IconButton(
+                    key: ValueKey(statut),
+                    onPressed: onToggle,
+                    icon: Icon(statusIcon),
+                    color: statusColor,
+                  ),
                 ),
             ],
           ),
@@ -139,3 +177,4 @@ class MemberPayTile extends StatelessWidget {
     }
   }
 }
+

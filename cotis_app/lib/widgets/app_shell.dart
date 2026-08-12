@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/widgets/app_drawer.dart';
 import 'package:kased_app/widgets/spring_nav_icon.dart';
@@ -46,33 +47,13 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          // Offline banner
-          if (ref.watch(appDataProvider).value?.isOffline ?? false)
-            Container(
-              color: AppColors.warning,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: const Row(
-                children: [
-                  Icon(Icons.wifi_off, color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Hors ligne - Les données seront synchronisées automatiquement',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          Column(
-            children: [
-              AppBar(
-                backgroundColor: appBarBg,
-                foregroundColor: appBarFg,
-                elevation: 0,
-                scrolledUnderElevation: 0,
-                surfaceTintColor: Colors.transparent,
-                leading: Builder(
+      appBar: AppBar(
+        backgroundColor: appBarBg,
+        foregroundColor: appBarFg,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: Builder(
           builder: (context) => IconButton(
             icon: Icon(
               Icons.menu_rounded,
@@ -95,11 +76,7 @@ class AppShell extends ConsumerWidget {
           ),
         ],
       ),
-            ],
-          ),
-          child,
-        ],
-      ),
+      body: child,
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -144,12 +121,19 @@ class AppShell extends ConsumerWidget {
                       width: 1.5,
                     ),
                   ),
-                  child: NavigationBar(
-                    backgroundColor: Colors.transparent,
-                    surfaceTintColor: Colors.transparent,
-                    indicatorColor: isDark
-                        ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                        : colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  child: TweenAnimationBuilder<Color?>(
+                    tween: ColorTween(
+                      end: isDark
+                          ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+                          : colorScheme.primaryContainer.withValues(alpha: 0.5),
+                    ),
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOut,
+                    builder: (context, animatedIndicatorColor, _) {
+                      return NavigationBar(
+                        backgroundColor: Colors.transparent,
+                        surfaceTintColor: Colors.transparent,
+                        indicatorColor: animatedIndicatorColor,
                     selectedIndex: currentIndex,
                     onDestinationSelected: (i) {
                       switch (i) {
@@ -263,6 +247,8 @@ class AppShell extends ConsumerWidget {
                         label: 'Retards',
                       ),
                     ],
+                  );
+                    },
                   ),
                 ),
               ),
@@ -294,7 +280,14 @@ class AppShell extends ConsumerWidget {
         label: Text('$retardsCount'),
         backgroundColor: colorScheme.error,
         child: springIcon,
-      );
+      )
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .scale(
+            duration: const Duration(milliseconds: 900),
+            begin: const Offset(1.0, 1.0),
+            end: const Offset(1.08, 1.08),
+            curve: Curves.easeInOut,
+          );
     }
     return springIcon;
   }

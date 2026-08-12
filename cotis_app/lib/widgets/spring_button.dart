@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
+import 'package:kased_app/core/animation_constants.dart';
 
 class SpringButton extends StatefulWidget {
   final Widget child;
@@ -19,22 +21,53 @@ class SpringButton extends StatefulWidget {
   State<SpringButton> createState() => _SpringButtonState();
 }
 
-class _SpringButtonState extends State<SpringButton> {
-  bool _isPressed = false;
+class _SpringButtonState extends State<SpringButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
 
-  void _onTapDown(_) {
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this);
+    _scale = _controller.drive(
+      Tween<double>(begin: 1.0, end: 0.93),
+    );
+  }
+
+  void _onTapDown(TapDownDetails _) {
     if (widget.enableHaptic) {
       HapticFeedback.lightImpact();
     }
-    setState(() => _isPressed = true);
+    _controller.animateTo(
+      1.0,
+      duration: AppAnimDurations.fast,
+      curve: Curves.easeOut,
+    );
   }
 
-  void _onTapUp(_) {
-    setState(() => _isPressed = false);
+  void _onTapUp(TapUpDetails _) {
+    _springBack();
     widget.onTap?.call();
   }
 
-  void _onTapCancel() => setState(() => _isPressed = false);
+  void _onTapCancel() => _springBack();
+
+  void _springBack() {
+    final simulation = SpringSimulation(
+      AppSprings.button,
+      _controller.value,
+      0.0,
+      -8.0,
+    );
+    _controller.animateWith(simulation);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +77,14 @@ class _SpringButtonState extends State<SpringButton> {
       onTapCancel: widget.onTap != null ? _onTapCancel : null,
       onLongPress: widget.onLongPress,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        color: _isPressed ? Colors.black.withAlpha(15) : Colors.transparent,
+      child: ScaleTransition(
+        scale: _scale,
+        // Le child ne doit JAMAIS recevoir les taps lui-même : s'il contient
+        // un bouton activé (onPressed non null), son InkWell gagne la gesture
+        // arena de Flutter et bloque le onTap de SpringButton — les boutons
+        // apparaissent alors "bloqués". IgnorePointer rend le contenu
+        // transparent au hit-test : c'est le GestureDetector de SpringButton
+        // qui reçoit tous les taps (comportement opaque ci-dessus).
         child: IgnorePointer(
           ignoring: true,
           child: widget.child,
