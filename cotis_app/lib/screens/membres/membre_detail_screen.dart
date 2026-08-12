@@ -182,6 +182,32 @@ class MembreDetailScreen extends ConsumerWidget {
                 ),
               ),
 
+              // ── Paiement en avance Section ─────────────────────
+              if (currentMembre.montantEnAvance > 0)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.schedule, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        'En avance: ${currentMembre.montantEnAvance.toStringAsFixed(0)} F',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => _showAvanceDialog(context, ref, currentMembre),
+                        child: const Text('Ajouter'),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+              
               // ── Historique Section ─────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
@@ -280,6 +306,63 @@ class MembreDetailScreen extends ConsumerWidget {
     );
   }
 }
+
+  Future<void> _showAvanceDialog(BuildContext context, WidgetRef ref, Membre membre) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Paiement en avance'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Montant en FCFA',
+            hintText: 'Ex: 500',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          FilledButton(
+            onPressed: () {
+              final montant = double.tryParse(controller.text.trim());
+              if (montant != null && montant > 0) {
+                Navigator.pop(ctx, controller.text.trim());
+              }
+            },
+            child: const Text('Valider'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    
+    if (result == null || !context.mounted) return;
+    
+    final montant = double.tryParse(result) ?? 0.0;
+    if (montant <= 0) return;
+    
+    try {
+      await ref.read(appDataProvider.notifier).ajouterPaiementAvance(
+        membreId: membre.id,
+        montant: montant,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gloire à Dieu ! ${montant.toStringAsFixed(0)} F ajoutés en avance'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e')),
+        );
+      }
+    }
+  }
 
 class _HistoriqueItem {
   final DateTime? date;

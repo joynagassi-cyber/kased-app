@@ -94,6 +94,16 @@ class NotificationCoordinator {
     }
   }
 
+  /// Affiche une notification de paiement par avance.
+  static void notifierPaiementAvance(double montant, String membreNom) {
+    unawaited(NotificationService.showNotification(
+      title: 'Gloire à Dieu',
+      body: '$membreNom a payé ${montant.toStringAsFixed(0)} F en avance',
+      channelId: 'paiements',
+      channelName: 'Paiements',
+    ));
+  }
+
   /// Récupère le nom complet d un membre a partir de l etat global.
   static String getMembreNom(AppState state, String membreId) {
     final membre = state.membres.firstWhere(

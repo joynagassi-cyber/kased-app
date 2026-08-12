@@ -62,33 +62,38 @@ const MembreSchema = CollectionSchema(
       name: r'isDeleted',
       type: IsarType.bool,
     ),
-    r'nom': PropertySchema(
+    r'montantEnAvance': PropertySchema(
       id: 9,
+      name: r'montantEnAvance',
+      type: IsarType.double,
+    ),
+    r'nom': PropertySchema(
+      id: 10,
       name: r'nom',
       type: IsarType.string,
     ),
     r'notes': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'notes',
       type: IsarType.string,
     ),
     r'prenom': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'prenom',
       type: IsarType.string,
     ),
     r'telephone': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'telephone',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'version': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'version',
       type: IsarType.long,
     )
@@ -167,12 +172,13 @@ void _membreSerialize(
   writer.writeString(offsets[6], object.id);
   writer.writeBool(offsets[7], object.isActive);
   writer.writeBool(offsets[8], object.isDeleted);
-  writer.writeString(offsets[9], object.nom);
-  writer.writeString(offsets[10], object.notes);
-  writer.writeString(offsets[11], object.prenom);
-  writer.writeString(offsets[12], object.telephone);
-  writer.writeDateTime(offsets[13], object.updatedAt);
-  writer.writeLong(offsets[14], object.version);
+  writer.writeDouble(offsets[9], object.montantEnAvance);
+  writer.writeString(offsets[10], object.nom);
+  writer.writeString(offsets[11], object.notes);
+  writer.writeString(offsets[12], object.prenom);
+  writer.writeString(offsets[13], object.telephone);
+  writer.writeDateTime(offsets[14], object.updatedAt);
+  writer.writeLong(offsets[15], object.version);
 }
 
 Membre _membreDeserialize(
@@ -192,12 +198,13 @@ Membre _membreDeserialize(
   object.isActive = reader.readBool(offsets[7]);
   object.isDeleted = reader.readBool(offsets[8]);
   object.isarId = id;
-  object.nom = reader.readString(offsets[9]);
-  object.notes = reader.readStringOrNull(offsets[10]);
-  object.prenom = reader.readString(offsets[11]);
-  object.telephone = reader.readStringOrNull(offsets[12]);
-  object.updatedAt = reader.readDateTimeOrNull(offsets[13]);
-  object.version = reader.readLong(offsets[14]);
+  object.montantEnAvance = reader.readDouble(offsets[9]);
+  object.nom = reader.readString(offsets[10]);
+  object.notes = reader.readStringOrNull(offsets[11]);
+  object.prenom = reader.readString(offsets[12]);
+  object.telephone = reader.readStringOrNull(offsets[13]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[14]);
+  object.version = reader.readLong(offsets[15]);
   return object;
 }
 
@@ -227,16 +234,18 @@ P _membreDeserializeProp<P>(
     case 8:
       return (reader.readBool(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 10:
-      return (reader.readStringOrNull(offset)) as P;
-    case 11:
       return (reader.readString(offset)) as P;
-    case 12:
+    case 11:
       return (reader.readStringOrNull(offset)) as P;
+    case 12:
+      return (reader.readString(offset)) as P;
     case 13:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 14:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 15:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1148,6 +1157,69 @@ extension MembreQueryFilter on QueryBuilder<Membre, Membre, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Membre, Membre, QAfterFilterCondition> montantEnAvanceEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'montantEnAvance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterFilterCondition>
+      montantEnAvanceGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'montantEnAvance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterFilterCondition> montantEnAvanceLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'montantEnAvance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterFilterCondition> montantEnAvanceBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'montantEnAvance',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Membre, Membre, QAfterFilterCondition> nomEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1934,6 +2006,18 @@ extension MembreQuerySortBy on QueryBuilder<Membre, Membre, QSortBy> {
     });
   }
 
+  QueryBuilder<Membre, Membre, QAfterSortBy> sortByMontantEnAvance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'montantEnAvance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterSortBy> sortByMontantEnAvanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'montantEnAvance', Sort.desc);
+    });
+  }
+
   QueryBuilder<Membre, Membre, QAfterSortBy> sortByNom() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nom', Sort.asc);
@@ -2128,6 +2212,18 @@ extension MembreQuerySortThenBy on QueryBuilder<Membre, Membre, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Membre, Membre, QAfterSortBy> thenByMontantEnAvance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'montantEnAvance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterSortBy> thenByMontantEnAvanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'montantEnAvance', Sort.desc);
+    });
+  }
+
   QueryBuilder<Membre, Membre, QAfterSortBy> thenByNom() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nom', Sort.asc);
@@ -2259,6 +2355,12 @@ extension MembreQueryWhereDistinct on QueryBuilder<Membre, Membre, QDistinct> {
     });
   }
 
+  QueryBuilder<Membre, Membre, QDistinct> distinctByMontantEnAvance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'montantEnAvance');
+    });
+  }
+
   QueryBuilder<Membre, Membre, QDistinct> distinctByNom(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2358,6 +2460,12 @@ extension MembreQueryProperty on QueryBuilder<Membre, Membre, QQueryProperty> {
   QueryBuilder<Membre, bool, QQueryOperations> isDeletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isDeleted');
+    });
+  }
+
+  QueryBuilder<Membre, double, QQueryOperations> montantEnAvanceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'montantEnAvance');
     });
   }
 

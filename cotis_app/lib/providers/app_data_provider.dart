@@ -376,6 +376,71 @@ class AppData extends _$AppData {
     }
   }
 
+  /// Ajoute un paiement par avance pour un membre.
+  /// Le montant est ajouté au solde en avance du membre.
+  /// Ce solde sera consommé automatiquement lors des prochains cultes.
+  Future<void> ajouterPaiementAvance({
+    required String membreId,
+    required double montant,
+    String? notes,
+  }) async {
+    final current = state.value;
+    if (current == null) return;
+
+    final existing = current.membres.firstWhere(
+      (m) => m.id == membreId,
+      orElse: () => throw Exception('Membre introuvable'),
+    );
+    final deviceId = await DeviceService.getDeviceId();
+    final now = DateTime.now();
+
+    final updated = Membre()
+      ..id = existing.id
+      ..nom = existing.nom
+      ..prenom = existing.prenom
+      ..dateAdhesion = existing.dateAdhesion
+      ..dateNaissance = existing.dateNaissance
+      ..montantEnAvance = existing.montantEnAvance + montant
+      ..telephone = existing.telephone
+      ..notes = notes ?? existing.notes
+      ..isActive = existing.isActive
+      ..deviceId = deviceId
+      ..createdAt = existing.createdAt
+      ..version = existing.version + 1
+      ..updatedAt = now;
+
+    final syncOp = SyncOperation()
+      ..operationId = UuidUtils.generate()
+      ..type = 'UPDATE'
+      ..entityType = 'membre'
+      ..entityId = membreId
+      ..payloadJson = jsonEncode(updated.toJson())
+      ..createdAt = now
+      ..deviceId = deviceId;
+
+    // 1. Sauvegarde locale atomique
+    await _cache.saveMembreWithSyncOp(updated, syncOp);
+
+    final membres = [
+      ...current.membres.where((m) => m.id != membreId),
+      updated,
+    ]..sort((a, b) => a.nom.compareTo(b.nom));
+
+    state = AsyncValue.data(current.copyWith(membres: membres));
+
+    // 2. Réseau
+    try {
+      await _api.updateMembre(membreId, updated.toJson());
+    } catch (e) {
+      debugPrint('[AppData] ajouterPaiementAvance réseau échoué: $e');
+      await _syncService.queueSyncOperation(
+          'UPDATE', 'membre', membreId, updated.toJson());
+    }
+    
+    // Notification
+    NotificationCoordinator.notifierPaiementAvance(montant, updated.nomComplet);
+  }
+
   Future<void> deleteMembre(String id) async {
     final current = state.value;
     if (current == null) return;

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
+import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 
 /// Statistiques globales du tableau de bord.
@@ -21,7 +22,7 @@ class DashboardStats {
   });
 }
 
-/// Données d'un membre en retard de paiement.
+/// Données d un membre en retard de paiement.
 class MembreRetard {
   final Membre membre;
   final int nombreRetards;
@@ -39,39 +40,44 @@ class MembreRetard {
 }
 
 /// Service de calcul et chargement des statistiques.
-///
-/// Fonctions pures de calcul sur [AppState] + appels API.
-/// Ne gère pas d'état — délègue au provider.
 class StatsService {
-  /// Calcule les statistiques localement à partir des données [AppState].
-  /// Fonctionne en offline et est toujours à jour après un togglePaiement.
   DashboardStats getDashboardStats(AppState state) {
     final membres = state.membres;
     final cultes = state.cultes;
     final cotisations = state.cotisations;
 
-    // Collecte cumulée de tous les cultes (montant effectivement payé)
     final totalCollecte = cotisations
         .where((c) => c.estPaye)
         .fold<double>(0, (sum, c) => sum + c.montantPaye);
 
-    // Membres en retard = ont au moins une cotisation non payée sur un culte passé
     final now = DateTime.now();
     final cultesPassesIds =
         cultes.where((c) => !c.isDeleted && c.dateCulte.isBefore(now)).map((c) => c.id).toSet();
 
-    final membresEnRetardIds = cotisations
-        .where((c) =>
-            cultesPassesIds.contains(c.culteId) && c.estEnRetard)
-        .map((c) => c.membreId)
-        .toSet();
-
-    // Total dû = somme du montant restant à payer (obligatoire - payé) sur cultes passés
-    final totalDu = cotisations
-        .where((c) =>
-            cultesPassesIds.contains(c.culteId) && c.estEnRetard)
-        .fold<double>(
-            0, (sum, c) => sum + (c.montantObligatoire - c.montantPaye));
+    final membresById = {for (final m in membres) m.id: m};
+    final membresEnRetardIds = <String>{};
+    double totalDu = 0.0;
+    
+    for (final cot in cotisations.where((c) =>
+        cultesPassesIds.contains(c.culteId) && c.estEnRetard)) {
+      final membre = membresById[cot.membreId];
+      if (membre == null) {
+        membresEnRetardIds.add(cot.membreId);
+        totalDu += (cot.montantObligatoire - cot.montantPaye);
+        continue;
+      }
+      
+      if (membre.montantEnAvance > 0) {
+        membresEnRetardIds.add(cot.membreId);
+        final reste = (cot.montantObligatoire - cot.montantPaye) - membre.montantEnAvance;
+        if (reste > 0) {
+          totalDu += reste;
+        }
+      } else {
+        membresEnRetardIds.add(cot.membreId);
+        totalDu += (cot.montantObligatoire - cot.montantPaye);
+      }
+    }
 
     return DashboardStats(
       totalMembres: membres.where((m) => m.isActive && !m.isDeleted).length,
@@ -82,8 +88,6 @@ class StatsService {
     );
   }
 
-  /// Calcule les membres en retard localement depuis [AppState].
-  /// Fonctionne parfaitement en offline et en online.
   List<Map<String, dynamic>> getRetardsMembresLocally(AppState state) {
     final membres = state.membres;
     final cultes = state.cultes;
@@ -96,7 +100,6 @@ class StatsService {
     final result = <Map<String, dynamic>>[];
 
     for (final membre in membres.where((m) => m.isActive && !m.isDeleted)) {
-      // Cotisations non payées sur cultes passés
       final retardsCotisations = cotisations
           .where((c) =>
               c.membreId == membre.id &&
@@ -104,39 +107,79 @@ class StatsService {
               c.estEnRetard)
           .toList();
 
-      if (retardsCotisations.isEmpty) continue;
+      final montantEnAvance = membre.montantEnAvance;
+      
+      if (montantEnAvance > 0 && retardsCotisations.isNotEmpty) {
+        double avanceRestante = montantEnAvance;
+        final cotisationsNonCouvertes = <Cotisation>[];
+        
+        for (final cot in retardsCotisations) {
+          if (avanceRestante >= cot.montantObligatoire) {
+            avanceRestante -= cot.montantObligatoire;
+          } else if (avanceRestante > 0) {
+            avanceRestante = 0;
+          } else {
+            cotisationsNonCouvertes.add(cot);
+          }
+        }
+        
+        if (cotisationsNonCouvertes.isEmpty) continue;
+        
+        final payedCotisations = cotisations
+            .where((c) =>
+                c.membreId == membre.id && c.estPaye && c.datePaiement != null)
+            .toList()
+          ..sort((a, b) => b.datePaiement!.compareTo(a.datePaiement!));
 
-      // Dernier paiement effectué
-      final payedCotisations = cotisations
-          .where((c) =>
-              c.membreId == membre.id && c.estPaye && c.datePaiement != null)
-          .toList()
-        ..sort((a, b) => b.datePaiement!.compareTo(a.datePaiement!));
+        final dernierPaiement = payedCotisations.isNotEmpty
+            ? payedCotisations.first.datePaiement
+            : null;
 
-      final dernierPaiement = payedCotisations.isNotEmpty
-          ? payedCotisations.first.datePaiement
-          : null;
+        final montantDu = cotisationsNonCouvertes.fold<double>(
+            0, (sum, c) => sum + (c.montantObligatoire - c.montantPaye));
 
-      final montantDu = retardsCotisations.fold<double>(
-          0, (sum, c) => sum + (c.montantObligatoire - c.montantPaye));
+        result.add({
+          'membre_id': membre.id,
+          'nom': membre.nom,
+          'prenom': membre.prenom,
+          'cultes_en_retard': cotisationsNonCouvertes.length,
+          'montant_du_fcfa': montantDu,
+          'dernier_paiement': dernierPaiement?.toIso8601String(),
+          'montant_en_avance': membre.montantEnAvance,
+        });
+      } else {
+        if (retardsCotisations.isEmpty) continue;
 
-      result.add({
-        'membre_id': membre.id,
-        'nom': membre.nom,
-        'prenom': membre.prenom,
-        'cultes_en_retard': retardsCotisations.length,
-        'montant_du_fcfa': montantDu,
-        'dernier_paiement': dernierPaiement?.toIso8601String(),
-      });
+        final payedCotisations = cotisations
+            .where((c) =>
+                c.membreId == membre.id && c.estPaye && c.datePaiement != null)
+            .toList()
+          ..sort((a, b) => b.datePaiement!.compareTo(a.datePaiement!));
+
+        final dernierPaiement = payedCotisations.isNotEmpty
+            ? payedCotisations.first.datePaiement
+            : null;
+
+        final montantDu = retardsCotisations.fold<double>(
+            0, (sum, c) => sum + (c.montantObligatoire - c.montantPaye));
+
+        result.add({
+          'membre_id': membre.id,
+          'nom': membre.nom,
+          'prenom': membre.prenom,
+          'cultes_en_retard': retardsCotisations.length,
+          'montant_du_fcfa': montantDu,
+          'dernier_paiement': dernierPaiement?.toIso8601String(),
+          'montant_en_avance': membre.montantEnAvance,
+        });
+      }
     }
 
-    // Trier par montant dû décroissant
     result.sort((a, b) => (b['montant_du_fcfa'] as double)
         .compareTo(a['montant_du_fcfa'] as double));
     return result;
   }
 
-  /// Récupère les données dashboard depuis l'API et les retourne.
   Future<Map<String, dynamic>> fetchDashboard(InsForgeService api) async {
     try {
       return await api.getDashboard();
@@ -146,7 +189,6 @@ class StatsService {
     }
   }
 
-  /// Charge la liste des membres en retard depuis l'API.
   Future<List<Map<String, dynamic>>> loadRetardsMembres(
       InsForgeService api) async {
     try {
@@ -156,7 +198,6 @@ class StatsService {
     }
   }
 
-  /// Charge la liste des membres à jour depuis l'API.
   Future<List<Map<String, dynamic>>> loadMembresAJour(
       InsForgeService api) async {
     try {
