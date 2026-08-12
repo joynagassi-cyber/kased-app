@@ -27,6 +27,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
   String _searchQuery = '';
   String _filter = 'Tous';
   bool _celebrationShown = false;
+  bool _selectionMode = false;
+  final Set<String> _selectedMembres = {};
 
   @override
   Widget build(BuildContext context) {
@@ -171,6 +173,23 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                   }
                 },
               ),
+              IconButton(
+                icon: Icon(_selectionMode ? Icons.close : Icons.select_all),
+                tooltip: _selectionMode ? 'Quitter la sélection' : 'Sélectionner plusieurs',
+                onPressed: () {
+                  setState(() => _selectionMode = !_selectionMode);
+                  if (!_selectionMode) _selectedMembres.clear();
+                },
+              ),
+              if (_selectionMode && _selectedMembres.isNotEmpty)
+                Badge(
+                  label: Text('${_selectedMembres.length}'),
+                  child: IconButton(
+                    icon: const Icon(Icons.check_circle),
+                    tooltip: 'Valider la sélection',
+                    onPressed: () => _validerSelection(),
+                  ),
+                ),
               IconButton(
                 icon: const Icon(Icons.sync),
                 onPressed: () => ref.read(appDataProvider.notifier).syncData(),
@@ -520,6 +539,38 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
       loading: () => const Scaffold(body: CulteDetailSkeleton()),
       error: (e, _) => Scaffold(body: Center(child: Text('Erreur: $e'))),
     );
+  }
+
+  /// Valide en masse les membres sélectionnés
+  Future<void> _validerSelection() async {
+    if (_selectedMembres.isEmpty) return;
+    
+    try {
+      final result = await ConfirmActionDialog.show(
+        context,
+        title: 'Valider la sélection',
+        message: 'Marquer ${_selectedMembres.length} membre(s) comme payés ?',
+        onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+              culteId: widget.culteId,
+              newStatut: StatutCotisation.paye,
+              membreIds: _selectedMembres.toList(),
+            ),
+      );
+      
+      if (result != null && context.mounted) {
+        ConfirmActionDialog.showResultSnackBar(context, result);
+        setState(() {
+          _selectedMembres.clear();
+          _selectionMode = false;
+        });
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e')),
+        );
+      }
+    }
   }
 
   /// Ouvre la boîte de dialogue de paiement personnalisé via
