@@ -7,6 +7,7 @@ import '../core/theme/motion_tokens.dart';
 import '../widgets/motion/motion_aware.dart';
 import '../widgets/motion/animated_appear.dart';
 import 'package:kased_app/widgets/spring_button.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../widgets/custom_google_signin_button.dart';
 import '../widgets/google_auth_error.dart';
 
@@ -22,6 +23,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocus = FocusNode();
+  bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _emailFocus.requestFocus());
+  }
 
   @override
   void dispose() {
@@ -231,6 +240,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                     const SizedBox(height: 16),
                                     TextFormField(
                                       controller: _emailController,
+                                      focusNode: _emailFocus,
                                       keyboardType: TextInputType.emailAddress,
                                       style: TextStyle(fontWeight: FontWeight.w500, color: colorScheme.onSurface),
                                       decoration: const InputDecoration(
@@ -242,13 +252,30 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                     const SizedBox(height: 16),
                                     TextFormField(
                                       controller: _passwordController,
-                                      obscureText: true,
+                                      obscureText: _obscurePassword,
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
                                       style: TextStyle(fontWeight: FontWeight.w500, color: colorScheme.onSurface),
-                                      decoration: const InputDecoration(
+                                      decoration: InputDecoration(
                                         labelText: 'Mot de passe',
-                                        prefixIcon: Icon(Icons.lock_outline, size: 20),
+                                        prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                        ),
+                                        helperText: 'Minimum 6 caractères',
+                                        helperStyle: TextStyle(
+                                          fontSize: 12,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
                                       ),
-                                      validator: (value) => (value == null || value.length < 6) ? 'Min 6 caractères' : null,
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) return 'Requis';
+                                        if (value.length < 6) return 'Minimum 6 caractères';
+                                        return null;
+                                      },
                                     ),
                                   ],
                                 ),
@@ -345,6 +372,28 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                             fontWeight: FontWeight.bold,
                                             decoration: TextDecoration.underline,
                                           ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              AnimatedAppear(
+                                delay: MotionStagger.standard * 6,
+                                reduceMotion: reduceMotion,
+                                child: Center(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.lock_outline, size: 14, color: colorScheme.onSurfaceVariant),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Vos donnees sont chiffrees et stockees en securite',
+                                        style: GoogleFonts.dmSans(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                     ],

@@ -19,6 +19,7 @@ import '../../screens/profile/profile_screen.dart';
 import '../../screens/corbeille/corbeille_screen.dart';
 import '../../widgets/app_shell.dart';
 import '../../models/membre.dart';
+import '../../core/preferences/app_prefs.dart';
 
 part 'app_router.g.dart';
 
@@ -42,7 +43,11 @@ GoRouter router(RouterRef ref) {
 
       // Auth résolue : quitter /loading vers la bonne destination
       if (loc == '/loading') {
-        if (!auth.isAuthenticated) return '/onboarding';
+        if (!auth.isAuthenticated) {
+          // Si l'utilisateur a déjà vu l'onboarding, aller直接 au login
+          if (AppPrefs.hasSeenOnboarding) return '/login';
+          return '/onboarding';
+        }
         return '/dashboard';
       }
 

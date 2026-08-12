@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class CustomGoogleSignInButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -19,11 +20,11 @@ class CustomGoogleSignInButton extends StatelessWidget {
       height: 56,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E6F3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: const Color(0xFF0E1631).withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -33,7 +34,7 @@ class CustomGoogleSignInButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: isLoading ? null : onPressed,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -45,27 +46,15 @@ class CustomGoogleSignInButton extends StatelessWidget {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2962FF)),
                     ),
                   )
                 else ...[
-                  // Logo Google personnalisé
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.network(
-                      'https://developers.google.com/identity/images/g-logo.png',
-                      width: 24,
-                      height: 24,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 24,
-                          height: 24,
-                          color: Colors.grey.shade200,
-                          child: const Icon(Icons.account_circle, size: 20, color: Colors.grey),
-                        );
-                      },
-                    ),
+                  SvgPicture.asset(
+                    'assets/icons/google_logo.svg',
+                    width: 24,
+                    height: 24,
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(width: 12),
                   Flexible(
@@ -74,8 +63,8 @@ class CustomGoogleSignInButton extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0E1631),
                       ),
                     ),
                   ),
@@ -99,23 +88,23 @@ class GoogleConsentInfo extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: const Color(0xFFE3F2FD),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: const Color(0xFF90CAF9)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+              const Icon(Icons.info_outline, size: 20, color: Color(0xFF1565C0)),
               const SizedBox(width: 8),
               Text(
                 'Informations de connexion',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.blue.shade700,
+                  color: const Color(0xFF1565C0),
                 ),
               ),
             ],
@@ -123,7 +112,7 @@ class GoogleConsentInfo extends StatelessWidget {
           const SizedBox(height: 12),
           const Text(
             'En vous connectant avec Google, vous acceptez que Kased accède à :',
-            style: TextStyle(fontSize: 14, color: Colors.black87),
+            style: TextStyle(fontSize: 14, color: Color(0xFF0E1631)),
           ),
           const SizedBox(height: 8),
           _buildPermissionItem('Votre adresse email'),
@@ -131,9 +120,9 @@ class GoogleConsentInfo extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Ces informations sont utilisées uniquement pour votre identification dans l\'application.',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: Color(0xFF4A5578),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -147,12 +136,12 @@ class GoogleConsentInfo extends StatelessWidget {
       padding: const EdgeInsets.only(left: 16, bottom: 4),
       child: Row(
         children: [
-          Icon(Icons.check_circle, color: Colors.green.shade600, size: 16),
+          const Icon(Icons.check_circle, size: 16, color: Color(0xFF059669)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF0E1631)),
             ),
           ),
         ],

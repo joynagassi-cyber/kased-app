@@ -8,12 +8,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 import 'core/notifications/notification_service.dart';
+import 'core/preferences/app_prefs.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialiser les préférences légères AVANT toute utilisation
+  await AppPrefs.init();
 
   // Firebase est OPTIONNEL au démarrage : si son initialisation échoue
   // (config absente/invalide, Google Play Services indisponible...),
