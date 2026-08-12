@@ -37,8 +37,8 @@ class NotificationService {
       // heure sur l'appareil.
       if (_androidPlugin != null) {
         try {
-          final timeZoneName = await _androidPlugin!.getTimeZoneName();
-          if (timeZoneName != null && timeZoneName.isNotEmpty) {
+          final timeZoneName = DateTime.now().timeZoneName.split(" ").last;
+          if (timeZoneName.isNotEmpty) {
             tz.setLocalLocation(tz.getLocation(timeZoneName));
           }
         } catch (e) {

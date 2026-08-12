@@ -247,7 +247,7 @@ class AuthService {
       debugPrint('[AUTH] Étape 3 : Validation du token via le bridge InsForge...');
 
       final response = await _dio.post(
-        'https://pu74z8pe.functions.insforge.app/google-auth-bridge',
+        InsForgeConfig.googleAuthBridgeUrl,
         data: {'idToken': idToken},
         options: Options(
           sendTimeout: const Duration(seconds: 30),

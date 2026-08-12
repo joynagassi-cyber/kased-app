@@ -21,6 +21,11 @@ class InsForgeConfig {
     defaultValue: '',
   );
 
+  static const String googleAuthBridgeUrl = String.fromEnvironment(
+    'GOOGLE_AUTH_BRIDGE_URL',
+    defaultValue: 'https://pu74z8pe.function2.insforge.app/google-auth-bridge',
+  );
+
   static const String membersPhotosBucket = 'membres-photos';
 
   // ── Accès aux clés (retourne la valeur brute, jamais de throw) ──────────────

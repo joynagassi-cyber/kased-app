@@ -206,7 +206,8 @@ jobs:
             --dart-define=INSFORGE_BASE_URL=${{ secrets.INSFORGE_URL }} \
             --dart-define=INSFORGE_ANON_KEY=${{ secrets.INSFORGE_ANON_KEY }} \
             --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID }} \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN || '' }}
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN || '' }} \
+            --dart-define=GOOGLE_AUTH_BRIDGE_URL=${{ secrets.GOOGLE_AUTH_BRIDGE_URL }}
 
       # ── 13. Renommer l'APK ───────────────────────────────────────────────────
       - name: Rename APK
