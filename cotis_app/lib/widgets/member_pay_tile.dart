@@ -46,9 +46,7 @@ class MemberPayTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: cardBorderColor),
       ),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutBack,
+      child: Container(
         decoration: BoxDecoration(
           border: Border(
             left: BorderSide(
@@ -71,21 +69,7 @@ class MemberPayTile extends StatelessWidget {
               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
             ),
           ),
-          subtitle: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.0, -0.2),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              );
-            },
-            child: Text(
+          subtitle: Text(
               isPaymentLocked ? 'Payé - Verrouillé' : statusText,
               key: ValueKey(isPaymentLocked ? 'locked' : statusText),
               style: theme.textTheme.bodySmall?.copyWith(
@@ -131,26 +115,7 @@ class MemberPayTile extends StatelessWidget {
                   child: Icon(Icons.lock_outline, color: Colors.grey),
                 )
               else
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  transitionBuilder: (child, animation) {
-                    return ScaleTransition(
-                      scale: CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.elasticOut,
-                      ),
-                      child: RotationTransition(
-                        turns: Tween<double>(begin: 0.0, end: 0.05).animate(
-                          CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.elasticOut,
-                          ),
-                        ),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: IconButton(
+                IconButton(
                     key: ValueKey(statut),
                     onPressed: onToggle,
                     icon: Icon(statusIcon),

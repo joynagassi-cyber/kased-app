@@ -21,53 +21,22 @@ class SpringButton extends StatefulWidget {
   State<SpringButton> createState() => _SpringButtonState();
 }
 
-class _SpringButtonState extends State<SpringButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scale;
+class _SpringButtonState extends State<SpringButton> {
+  bool _isPressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this);
-    _scale = _controller.drive(
-      Tween<double>(begin: 1.0, end: 0.93),
-    );
-  }
-
-  void _onTapDown(TapDownDetails _) {
+  void _onTapDown(_) {
     if (widget.enableHaptic) {
       HapticFeedback.lightImpact();
     }
-    _controller.animateTo(
-      1.0,
-      duration: AppAnimDurations.fast,
-      curve: Curves.easeOut,
-    );
+    setState(() => _isPressed = true);
   }
 
-  void _onTapUp(TapUpDetails _) {
-    _springBack();
+  void _onTapUp(_) {
+    setState(() => _isPressed = false);
     widget.onTap?.call();
   }
 
-  void _onTapCancel() => _springBack();
-
-  void _springBack() {
-    final simulation = SpringSimulation(
-      AppSprings.button,
-      _controller.value,
-      0.0,
-      -8.0,
-    );
-    _controller.animateWith(simulation);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  void _onTapCancel() => setState(() => _isPressed = false);
 
   @override
   Widget build(BuildContext context) {

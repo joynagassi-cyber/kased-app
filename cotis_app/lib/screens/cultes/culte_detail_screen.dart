@@ -526,10 +526,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                 culteId: widget.culteId,
                                 montantObligatoire: cotisation.montantObligatoire,
                                 montantActuel: cotisation.montantPaye),
-                    )
-                    .animate(delay: (index * 40).ms)
-                    .fadeIn(duration: 300.ms, curve: Curves.easeOut)
-                    .slideX(begin: 0.1, end: 0.0, duration: 300.ms, curve: Curves.easeOut);
+                    );
                   }).toList();
                 }()),
             ],

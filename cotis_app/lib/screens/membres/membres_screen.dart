@@ -172,7 +172,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                     ),
                   ),
                 ),
-              ).animate(delay: (index * 40).ms).fadeIn(duration: 400.ms, curve: Curves.easeOutCubic).slideX(begin: 0.1, end: 0.0, duration: 400.ms, curve: Curves.easeOutCubic);
+
             },
           );
         },

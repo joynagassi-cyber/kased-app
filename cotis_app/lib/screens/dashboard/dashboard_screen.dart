@@ -439,21 +439,7 @@ class _HeaderStat extends StatelessWidget {
         const SizedBox(height: 4),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 450),
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 0.5),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              ),
-            );
-          },
+          transitionBuilder: (child, animation) => child,
           child: Text(
             value,
             key: ValueKey(value),

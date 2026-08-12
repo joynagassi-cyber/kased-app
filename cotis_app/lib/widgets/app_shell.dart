@@ -121,16 +121,7 @@ class AppShell extends ConsumerWidget {
                       width: 1.5,
                     ),
                   ),
-                  child: TweenAnimationBuilder<Color?>(
-                    tween: ColorTween(
-                      end: isDark
-                          ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                          : colorScheme.primaryContainer.withValues(alpha: 0.5),
-                    ),
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeInOut,
-                    builder: (context, animatedIndicatorColor, _) {
-                      return NavigationBar(
+                  child: NavigationBar(
                         backgroundColor: Colors.transparent,
                         surfaceTintColor: Colors.transparent,
                         indicatorColor: animatedIndicatorColor,
@@ -247,8 +238,6 @@ class AppShell extends ConsumerWidget {
                         label: 'Retards',
                       ),
                     ],
-                  );
-                    },
                   ),
                 ),
               ),
@@ -281,13 +270,7 @@ class AppShell extends ConsumerWidget {
         backgroundColor: colorScheme.error,
         child: springIcon,
       )
-          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .scale(
-            duration: const Duration(milliseconds: 900),
-            begin: const Offset(1.0, 1.0),
-            end: const Offset(1.08, 1.08),
-            curve: Curves.easeInOut,
-          );
+
     }
     return springIcon;
   }
