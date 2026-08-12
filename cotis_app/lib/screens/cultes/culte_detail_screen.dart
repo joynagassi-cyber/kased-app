@@ -12,7 +12,6 @@ import 'package:kased_app/widgets/confirm_action_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:kased_app/widgets/motion/skeleton_loading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:kased_app/widgets/spring_button.dart';
 
 class CulteDetailScreen extends ConsumerStatefulWidget {
@@ -487,7 +486,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                   }
 
                   return filteredMembres.asMap().entries.map((entry) {
-                    final index = entry.key;
+                    // final index = entry.key;
                     final membre = entry.value;
                     final cotisation = cotisations.firstWhere(
                       (c) => c.membreId == membre.id,
