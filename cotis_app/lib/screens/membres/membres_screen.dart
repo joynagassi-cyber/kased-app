@@ -171,10 +171,8 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                     ),
                   ),
                 ),
-
+              );
             },
-          );
-        },
         loading: () => const MembresListSkeleton(),
         error: (e, _) => Center(child: Text('Erreur: $e')),
       ),
