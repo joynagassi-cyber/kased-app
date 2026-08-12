@@ -58,7 +58,7 @@ class StatsService {
     // Membres en retard = ont au moins une cotisation non payée sur un culte passé
     final now = DateTime.now();
     final cultesPassesIds =
-        cultes.where((c) => c.dateCulte.isBefore(now)).map((c) => c.id).toSet();
+        cultes.where((c) => !c.isDeleted && c.dateCulte.isBefore(now)).map((c) => c.id).toSet();
 
     final membresEnRetardIds = cotisations
         .where((c) =>
@@ -74,8 +74,8 @@ class StatsService {
             0, (sum, c) => sum + (c.montantObligatoire - c.montantPaye));
 
     return DashboardStats(
-      totalMembres: membres.where((m) => m.isActive).length,
-      totalCultes: cultes.length,
+      totalMembres: membres.where((m) => m.isActive && !m.isDeleted).length,
+      totalCultes: cultes.where((c) => !c.isDeleted).length,
       totalCollecte: totalCollecte,
       membresEnRetard: membresEnRetardIds.length,
       totalDu: totalDu,
@@ -91,11 +91,11 @@ class StatsService {
 
     final now = DateTime.now();
     final cultesPassesIds =
-        cultes.where((c) => c.dateCulte.isBefore(now)).map((c) => c.id).toSet();
+        cultes.where((c) => !c.isDeleted && c.dateCulte.isBefore(now)).map((c) => c.id).toSet();
 
     final result = <Map<String, dynamic>>[];
 
-    for (final membre in membres.where((m) => m.isActive)) {
+    for (final membre in membres.where((m) => m.isActive && !m.isDeleted)) {
       // Cotisations non payées sur cultes passés
       final retardsCotisations = cotisations
           .where((c) =>

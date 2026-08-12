@@ -17,6 +17,7 @@ class RetardsScreen extends ConsumerWidget {
     // après un togglePaiement/marquerAbsent car appDataProvider est invalidé.
     final appDataAsync = ref.watch(appDataProvider);
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return appDataAsync.when(
       data: (state) {
@@ -25,6 +26,7 @@ class RetardsScreen extends ConsumerWidget {
             ref.read(appDataProvider.notifier).getRetardsMembresLocally();
 
         return Scaffold(
+          backgroundColor: colorScheme.surface,
           appBar: AppBar(
             title: const Text('Membres en Retard'),
             actions: [

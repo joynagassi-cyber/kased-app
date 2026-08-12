@@ -352,9 +352,19 @@ class CultesScreen extends ConsumerWidget {
                           );
                       if (dialogContext.mounted) {
                         Navigator.pop(dialogContext);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Gloire à Dieu ! Culte créé avec succès'),
+                              backgroundColor: Color(0xFF059669),
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        }
                       }
                     } catch (e) {
                       if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
                           SnackBar(content: Text('Erreur: $e')),
                         );

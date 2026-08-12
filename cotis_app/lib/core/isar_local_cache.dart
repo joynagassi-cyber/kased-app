@@ -30,6 +30,16 @@ class IsarLocalCache implements LocalCache {
   Future<List<SyncOperation>> getPendingSyncOps() =>
       _isar.syncOperations.where().sortByCreatedAt().findAll();
 
+  @override
+  bool getPendingSyncOpsSync() {
+    try {
+      // Use a synchronous check via the Isar instance
+      return _isar.syncOperations.countSync() > 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── Individual writes ──────────────────────────────────────────────────────
 
   @override

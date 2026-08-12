@@ -93,6 +93,9 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                       foregroundColor: AppColors.textInverse,
                       icon: Icons.delete,
                       label: 'Supprimer',
+                      spacing: 16,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     SlidableAction(
                       onPressed: (context) =>
@@ -101,6 +104,9 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                       foregroundColor: AppColors.textInverse,
                       icon: Icons.edit,
                       label: 'Modifier',
+                      spacing: 16,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ],
                 ),
@@ -119,7 +125,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                         ),
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       child: Row(
                         children: [
                           Hero(

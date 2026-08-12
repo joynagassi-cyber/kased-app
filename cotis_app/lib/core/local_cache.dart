@@ -14,6 +14,7 @@ abstract class LocalCache {
   Future<List<Culte>> getAllCultes(); // sorted by dateCulte desc
   Future<List<Cotisation>> getAllCotisations();
   Future<List<SyncOperation>> getPendingSyncOps(); // sorted by createdAt asc
+  bool getPendingSyncOpsSync(); // synchronous version for connectivity listener
 
   // ── Individual writes ──────────────────────────────────────────────────────
 

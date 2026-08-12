@@ -63,6 +63,18 @@ class AppShell extends ConsumerWidget {
             tooltip: 'Menu',
           ),
         ),
+        actions: [
+          // Accessible corbeille button - large touch target for elderly users
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Corbeille',
+            style: IconButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              padding: const EdgeInsets.all(12),
+            ),
+            onPressed: () => context.go('/corbeille'),
+          ),
+        ],
       ),
       body: child,
       bottomNavigationBar: SafeArea(

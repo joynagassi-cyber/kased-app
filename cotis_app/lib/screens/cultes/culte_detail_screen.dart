@@ -61,7 +61,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Tout le monde a payé ! 🌟 Célébration !',
+                        'Tout le monde a payé ! 🌟 Gloire à Dieu !',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -297,18 +297,26 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       Expanded(
                         child: SpringButton(
                           onTap: () async {
-                                    final result = await ConfirmActionDialog.show(
-                                      context,
-                                      title: 'Tout valider',
-                                      message: 'Marquer les ${membresNonPayes.length} membres restants comme payés ?',
-                                      onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
-                                            culteId: widget.culteId,
-                                            newStatut: StatutCotisation.paye,
-                                            membreIds: membresNonPayes.map((m) => m.id).toList(),
-                                          ),
-                                    );
-                                    if (result != null && context.mounted) {
-                                      ConfirmActionDialog.showResultSnackBar(context, result);
+                                    try {
+                                      final result = await ConfirmActionDialog.show(
+                                        context,
+                                        title: 'Tout valider',
+                                        message: 'Marquer les ${membresNonPayes.length} membres restants comme payés ?',
+                                        onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+                                              culteId: widget.culteId,
+                                              newStatut: StatutCotisation.paye,
+                                              membreIds: membresNonPayes.map((m) => m.id).toList(),
+                                            ),
+                                      );
+                                      if (result != null && context.mounted) {
+                                        ConfirmActionDialog.showResultSnackBar(context, result);
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Erreur: $e')),
+                                        );
+                                      }
                                     }
                                   },
 
@@ -330,21 +338,29 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       Expanded(
                         child: SpringButton(
                           onTap: () async {
-                                    final result = await ConfirmActionDialog.show(
-                                      context,
-                                      title: 'Tout annuler',
-                                      message: 'Supprimer tous les paiements de ce culte ?',
-                                      onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
-                                            culteId: widget.culteId,
-                                            newStatut: StatutCotisation.nonPaye,
-                                            membreIds: cotisations
-                                                .where((c) => c.estPaye)
-                                                .map((c) => c.membreId)
-                                                .toList(),
-                                          ),
-                                    );
-                                    if (result != null && context.mounted) {
-                                      ConfirmActionDialog.showResultSnackBar(context, result);
+                                    try {
+                                      final result = await ConfirmActionDialog.show(
+                                        context,
+                                        title: 'Tout annuler',
+                                        message: 'Supprimer tous les paiements de ce culte ?',
+                                        onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+                                              culteId: widget.culteId,
+                                              newStatut: StatutCotisation.nonPaye,
+                                              membreIds: cotisations
+                                                  .where((c) => c.estPaye)
+                                                  .map((c) => c.membreId)
+                                                  .toList(),
+                                            ),
+                                      );
+                                      if (result != null && context.mounted) {
+                                        ConfirmActionDialog.showResultSnackBar(context, result);
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Erreur: $e')),
+                                        );
+                                      }
                                     }
                                   },
 

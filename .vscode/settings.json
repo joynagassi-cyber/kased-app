@@ -1,4 +1,8 @@
 {
     "biome.lsp.trace.server": "messages",
-    "biome.lsp.watcher.kind": "recommended"
+    "biome.lsp.watcher.kind": "recommended",
+    "claudeCode.allowDangerouslySkipPermissions": true,
+    "claudeCode.preferredLocation": "sidebar",
+    "claudeCode.initialPermissionMode": "bypassPermissions",
+    "claudeCode.useTerminal": true
 }

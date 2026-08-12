@@ -2,6 +2,7 @@
     "recommendations": [
         "abusaidm.html-snippets",
         "lyn-inc.html-speed-viewer",
-        "biomejs.biome"
+        "biomejs.biome",
+        "anthropic.claude-code"
     ]
 }

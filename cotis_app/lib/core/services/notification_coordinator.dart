@@ -4,13 +4,20 @@ import 'package:intl/intl.dart';
 import 'package:kased_app/core/notifications/notification_service.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
+import 'package:kased_app/providers/notifications_provider.dart';
+import 'package:kased_app/providers/app_data_provider.dart';
 
 /// Coordinateur des notifications locales.
 ///
-/// Centralise tous les appels à [NotificationService] pour éviter
-/// de les disperser dans le provider ou les services.
+/// Centralise tous les appels a [NotificationService] et [NotificationsProvider]
+/// pour eviter de les disperser dans le provider ou les services.
 class NotificationCoordinator {
-  /// Planifie les notifications d'anniversaire pour une liste de membres.
+  /// Initialisation: charge les notifications depuis Isar au demarrage.
+  static Future<void> init(ref) async {
+    unawaited(ref.read(notificationsProvider.notifier).chargerDepuisIsar());
+  }
+
+  /// Planifie les notifications d anniversaire pour une liste de membres.
   static void planifierAnniversairesMembres(List<Membre> membres) {
     for (final membre in membres) {
       if (membre.dateNaissance != null) {
@@ -19,51 +26,80 @@ class NotificationCoordinator {
     }
   }
 
-  /// Planifie ou met à jour la notification d'anniversaire d'un membre.
+  /// Planifie ou met a jour la notification d anniversaire d un membre.
   static void planifierAnniversaireMembre(Membre membre) {
     if (membre.dateNaissance != null) {
       unawaited(NotificationService.planifierAnniversaire(membre));
     }
   }
 
-  /// Annule la notification d'anniversaire d'un membre.
+  /// Annule la notification d anniversaire d un membre.
   static void annulerAnniversaireMembre(String membreId) {
     unawaited(NotificationService.annulerAnniversaire(membreId));
   }
 
-  /// Affiche une notification de création de membre.
+  /// Affiche une notification de creation de membre.
   static void notifierCreationMembre(Membre membre) {
     unawaited(NotificationService.showNotification(
-      title: 'Nouveau membre ajouté',
-      body: '${membre.prenom} ${membre.nom} a été ajouté',
+      title: 'Gloire a Dieu',
+      body: '${membre.prenom} ${membre.nom} a ete ajoute a la communaute',
+    ));
+    unawaited(NotificationService.showNotification(
+      title: 'Nouveau membre',
+      body: '${membre.prenom} ${membre.nom} vient d etre ajoute',
+      channelId: 'membres',
+      channelName: 'Membres',
     ));
   }
 
-  /// Affiche une notification de création de culte.
+  /// Affiche une notification de creation de culte.
   static void notifierCreationCulte(Culte culte) {
     final titreCulte = culte.titre != null ? ' : ${culte.titre}' : '';
     unawaited(NotificationService.showNotification(
-      title: 'Nouveau culte${titreCulte.isNotEmpty ? titreCulte : ''}',
-      body: 'Culte du ${DateFormat('dd/MM/yyyy').format(culte.dateCulte)} ajouté',
+      title: 'Gloire a Dieu',
+      body: 'Nouveau culte${titreCulte.isNotEmpty ? titreCulte : ''} - ${DateFormat('dd/MM/yyyy').format(culte.dateCulte)}',
     ));
   }
 
-  /// Affiche une notification de don enregistré.
-  static void notifierDonEnregistre(double montantDon, String membreId) {
+  /// Affiche une notification de don enregistre avec le NOM du membre.
+  static void notifierDonEnregistre(double montantDon, String membreId, {String? membreNom}) {
+    final nomAffichage = membreNom ?? membreId;
     unawaited(NotificationService.showNotification(
-      title: 'Don enregistré',
-      body:
-          'Un don de ${montantDon.toStringAsFixed(0)}F a été enregistré pour le membre $membreId.',
+      title: 'Don enregistre',
+      body: '$nomAffichage a fait un don de ${montantDon.toStringAsFixed(0)} F',
+      channelId: 'paiements',
+      channelName: 'Paiements',
     ));
   }
 
-  /// Affiche une notification de mise à jour de paiements (bulk).
+  /// Affiche une notification de paiement personnalise avec le NOM du membre.
+  static void notifierPaiementPersonnalise(String membreNom, double montant, String culteTitre) {
+    unawaited(NotificationService.showNotification(
+      title: 'Paiement enregistre',
+      body: '$membreNom - ${montant.toStringAsFixed(0)} F',
+      channelId: 'paiements',
+      channelName: 'Paiements',
+    ));
+  }
+
+  /// Affiche une notification de mise a jour de paiements (bulk).
   static void notifierPaiementsEnMasse(int success, String actionText) {
     if (success > 0) {
       unawaited(NotificationService.showNotification(
-        title: 'Paiements mis à jour',
+        title: 'Gloire a Dieu',
         body: '$success paiement(s) $actionText',
+        channelId: 'paiements',
+        channelName: 'Paiements',
       ));
     }
+  }
+
+  /// Récupère le nom complet d un membre a partir de l etat global.
+  static String getMembreNom(AppState state, String membreId) {
+    final membre = state.membres.firstWhere(
+      (m) => m.id == membreId,
+      orElse: () => Membre()..nom = membreId,
+    );
+    return membre.nomComplet;
   }
 }

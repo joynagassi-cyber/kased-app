@@ -6,6 +6,7 @@ part 'app_notification.g.dart';
 class AppNotification {
   Id isarId = Isar.autoIncrement;
 
+  @Index(unique: true, replace: true)
   late String id;
   late String titre;
   late String message;

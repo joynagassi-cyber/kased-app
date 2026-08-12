@@ -16,6 +16,7 @@ import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/sync_operation.dart';
+import 'package:kased_app/models/corbeille_item.dart';
 import 'package:kased_app/providers/isar_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -128,6 +129,7 @@ class AppData extends _$AppData {
       if (_syncService.shouldSync()) syncData();
     });
 
+    // Charger les notifications depuis Isar
     return initialState;
   }
 
@@ -260,6 +262,37 @@ class AppData extends _$AppData {
     ));
 
     // Notification anniversaire et création
+    // Créer des cotisations pour tous les cultes existants
+    final membreCreatedAt = newMembre.createdAt;
+    final existingCultes = (state.value?.cultes ?? []).where((c) => !c.isDeleted).toList();
+    for (final culte in existingCultes) {
+      final culteDate = culte.dateCulte;
+      final statut = culteDate.isBefore(membreCreatedAt)
+          ? StatutCotisation.enAvance  // culte déjà passé, membre rejoint après
+          : StatutCotisation.nonPaye;   // culte à venir
+      final newCot = Cotisation()
+        ..id = UuidUtils.generate()
+        ..membreId = newMembre.id
+        ..culteId = culte.id
+        ..montantObligatoire = culte.montantCotisation
+        ..montantPaye = 0.0
+        ..montantDon = 0.0
+        ..statut = statut
+        ..deviceId = await DeviceService.getDeviceId()
+        ..createdAt = newMembre.createdAt;
+      await _cache.saveCotisation(newCot);
+      final syncDeviceId = await DeviceService.getDeviceId();
+      final cotSyncOp = SyncOperation()
+        ..operationId = UuidUtils.generate()
+        ..type = 'CREATE'
+        ..entityType = 'cotisation'
+        ..entityId = newCot.id
+        ..payloadJson = jsonEncode(newCot.toJson())
+        ..createdAt = newMembre.createdAt
+        ..deviceId = syncDeviceId;
+      await _cache.saveSyncOp(cotSyncOp);
+    }
+
     NotificationCoordinator.planifierAnniversaireMembre(newMembre);
     NotificationCoordinator.notifierCreationMembre(newMembre);
 
@@ -366,13 +399,23 @@ class AppData extends _$AppData {
         ..createdAt = now
         ..deviceId = deviceId;
 
+      // Sauvegarder dans la corbeille
+      final corbeilleItem = CorbeilleItem()
+        ..entityId = id
+        ..entityType = 'membre'
+        ..payloadJson = jsonEncode(existing.toJson())
+        ..deletedAt = now
+        ..updatedAt = existing.updatedAt;
+      await _cache.saveCorbeilleItem(corbeilleItem);
+
       await _cache.softDeleteMembreWithSyncOp(existing, syncOp);
 
       NotificationCoordinator.annulerAnniversaireMembre(id);
 
       state = AsyncValue.data(current.copyWith(
         membres: current.membres.where((m) => m.id != id).toList(),
-        cotisations: current.cotisations.where((c) => c.membreId != id).toList(),
+        // Cotisations are KEPT — they belong to the culte, not the member
+        // cotisations: current.cotisations.where((c) => c.membreId != id).toList(),
       ));
 
       await loadDashboard();
@@ -590,12 +633,21 @@ class AppData extends _$AppData {
         ..createdAt = now
         ..deviceId = deviceId;
 
+      // Sauvegarder dans la corbeille
+      final culteCorbeilleItem = CorbeilleItem()
+        ..entityId = id
+        ..entityType = 'culte'
+        ..payloadJson = jsonEncode(existing.toJson())
+        ..deletedAt = now
+        ..updatedAt = existing.updatedAt;
+      await _cache.saveCorbeilleItem(culteCorbeilleItem);
+
       await _cache.softDeleteCulteWithSyncOp(existing, cotisations, syncOp);
 
       state = AsyncValue.data(current.copyWith(
         cultes: current.cultes.where((c) => c.id != id).toList(),
-        cotisations:
-            current.cotisations.where((c) => c.culteId != id).toList(),
+        // Cotisations are KEPT — historical payment data must be preserved
+        // cotisations: current.cotisations.where((c) => c.culteId != id).toList(),
       ));
 
       await loadDashboard();
@@ -706,7 +758,8 @@ class AppData extends _$AppData {
 
     // Notification de don
     if (montantDon > 0) {
-      NotificationCoordinator.notifierDonEnregistre(montantDon, membreId);
+      final membreNom = previousState.membres.firstWhere((m) => m.id == membreId, orElse: () => Membre()..nom = membreId).nomComplet;
+      NotificationCoordinator.notifierDonEnregistre(montantDon, membreId, membreNom: membreNom);
     }
 
     // Synchroniser avec le serveur

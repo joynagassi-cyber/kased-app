@@ -120,7 +120,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   ),
                                   onTap: () {
                                     if (!n.isLue) {
-                                      ref.read(notificationsProvider.notifier).marquerLue(i);
+                                      ref.read(notificationsProvider.notifier).marquerLue(notifs[i].id);
                                     }
                                   },
                                 );

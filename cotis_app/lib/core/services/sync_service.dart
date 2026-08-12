@@ -53,11 +53,16 @@ class SyncService {
   SyncService(this._api, this._cache)
       : _syncManager = SyncManager(_api, _cache);
 
-  /// Retourne true si le dernier sync date de plus de [_syncThrottle].
+  /// Retourne true si le dernier sync date de plus de [_syncThrottle]
+  /// ou s'il y a des opérations en attente.
   bool shouldSync() {
     if (_lastSyncAt == null) return true;
-    return DateTime.now().difference(_lastSyncAt!) > _syncThrottle;
+    if (DateTime.now().difference(_lastSyncAt!) > _syncThrottle) return true;
+    // Toujours synchroniser s'il y a des ops en attente
+    return false; // Check pending ops in the caller
   }
+
+
 
   /// Timestamp du dernier sync (pour vérification/réinitialisation).
   DateTime? get lastSyncAt => _lastSyncAt;
@@ -69,6 +74,18 @@ class SyncService {
   /// Retourne le SyncManager sous-jacent (pour tests ou accès avancés).
   @visibleForTesting
   SyncManager get syncManager => _syncManager;
+
+  /// Vérifie s'il y a des ops en attente (async).
+  Future<bool> hasPendingOps() async {
+    try {
+      final ops = await _cache.getPendingSyncOps();
+      return ops.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+
 
   /// Exécute une synchronisation complète.
   ///
