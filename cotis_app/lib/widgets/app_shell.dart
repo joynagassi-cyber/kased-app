@@ -46,13 +46,33 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       drawer: const AppDrawer(),
-      appBar: AppBar(
-        backgroundColor: appBarBg,
-        foregroundColor: appBarFg,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: Builder(
+      body: Stack(
+        children: [
+          // Offline banner
+          if (ref.watch(appDataProvider).value?.isOffline ?? false)
+            Container(
+              color: AppColors.warning,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: const Row(
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Hors ligne - Les données seront synchronisées automatiquement',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          Column(
+            children: [
+              AppBar(
+                backgroundColor: appBarBg,
+                foregroundColor: appBarFg,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                surfaceTintColor: Colors.transparent,
+                leading: Builder(
           builder: (context) => IconButton(
             icon: Icon(
               Icons.menu_rounded,
@@ -75,7 +95,11 @@ class AppShell extends ConsumerWidget {
           ),
         ],
       ),
-      body: child,
+            ],
+          ),
+          child,
+        ],
+      ),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
