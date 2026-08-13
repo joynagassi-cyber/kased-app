@@ -9,9 +9,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 import 'core/notifications/notification_service.dart';
 import 'core/preferences/app_prefs.dart';
+import 'core/services/onesignal_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
+import 'widgets/onesignal_verification_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +65,22 @@ Future<void> main() async {
         }
       }
 
+      // OneSignal (push multi-utilisateurs) — initialisation non bloquante :
+      // un échec ne doit jamais empêcher le démarrage de l'application.
+      try {
+        await OneSignalService.instance.initialize().timeout(
+              const Duration(seconds: 5),
+              onTimeout: () {
+                debugPrint('[WARN] OneSignal initialize timeout — ignoré');
+              },
+            );
+      } catch (e, stack) {
+        debugPrint('[ONESIGNAL] Initialisation échouée (ignorée) : $e');
+        if (firebaseReady) {
+          FirebaseCrashlytics.instance.recordError(e, stack);
+        }
+      }
+
       runApp(
         const ProviderScope(
           child: KasedApp(),
@@ -97,7 +115,7 @@ class KasedApp extends ConsumerWidget {
       builder: (context, child) {
         return ScrollConfiguration(
           behavior: const _BouncingScrollBehavior(),
-          child: child!,
+          child: OneSignalVerificationGate(child: child!),
         );
       },
     );

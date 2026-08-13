@@ -28,6 +28,10 @@ class InsForgeConfig {
 
   static const String membersPhotosBucket = 'membres-photos';
 
+  /// Base URL des fonctions serveur InsForge (déploiement des bridges).
+  static const String functionsBaseUrl =
+      'https://pu74z8pe.functions.insforge.app';
+
   // ── Accès aux clés (retourne la valeur brute, jamais de throw) ──────────────
   // Les appels API vérifient eux-mêmes la présence de la clé et affichent un
   // message d'erreur clair à l'utilisateur si elle manque (au lieu d'un
