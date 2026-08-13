@@ -107,11 +107,13 @@ module.exports = async function(request) {
     const userId = authData.user.id;
 
     // 4. Profile Management (Upsert)
-    await fetch(`${baseUrl}/api/profiles`, {
+    // Filet de sécurité : le trigger auth.users → profiles crée déjà la ligne.
+    await fetch(`${baseUrl}/api/database/records/profiles`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
+        'apikey': accessToken,
         'Prefer': 'resolution=merge-duplicates'
       },
       body: JSON.stringify([{
@@ -123,7 +125,7 @@ module.exports = async function(request) {
     return new Response(JSON.stringify({
       ...authData,
       role: 'authenticated',
-      source: 'google-bridge-v5'
+      source: 'google-bridge-v6'
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }

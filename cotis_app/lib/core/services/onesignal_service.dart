@@ -45,9 +45,17 @@ class OneSignalService {
   ///
   /// C'est ce qui permet d'envoyer des notifications ciblées à un utilisateur
   /// précis (multi-utilisateurs) depuis le dashboard OneSignal ou l'API REST.
+  /// Le tag `user_email` sert de ciblage de repli côté serveur quand la liste
+  /// des profils est indisponible (fonction push-notify).
   Future<void> login(String externalId) async {
     if (!_initialized) return;
     await OneSignal.login(externalId);
+    if (externalId.contains('@')) {
+      await OneSignal.User.addTagWithKey(
+        'user_email',
+        externalId.trim().toLowerCase(),
+      );
+    }
   }
 
   /// Dissocie l'appareil de l'utilisateur (déconnexion).

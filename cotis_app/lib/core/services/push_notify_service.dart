@@ -35,11 +35,6 @@ class PushNotifyService {
     String? token,
     String? extra,
   }) async {
-    if (actorEmail == null || actorEmail.isEmpty) {
-      debugPrint('[PushNotify] Pas d\'email acteur, envoi ignoré.');
-      return;
-    }
-
     try {
       final dio = Dio(
         BaseOptions(
@@ -54,7 +49,8 @@ class PushNotifyService {
         _endpoint,
         data: {
           'event': event,
-          'actorEmail': actorEmail,
+          if (actorEmail != null && actorEmail.isNotEmpty)
+            'actorEmail': actorEmail,
           if (actorName != null && actorName.isNotEmpty) 'actorName': actorName,
           'entityLabel': entityLabel,
           if (extra != null && extra.isNotEmpty) 'extra': extra,
