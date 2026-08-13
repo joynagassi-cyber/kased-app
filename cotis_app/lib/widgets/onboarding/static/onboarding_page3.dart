@@ -9,8 +9,7 @@ class OnboardingPage3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = scheme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return SizedBox(
       width: 320,
