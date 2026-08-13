@@ -11,5 +11,8 @@
         "API_BASE_URL": "https://pu74z8pe.us-east.insforge.app"
       }
     }
+  },
+  "enabledPlugins": {
+    "context-engineering@context-engineering-marketplace": true
   }
 }

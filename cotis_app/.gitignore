@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ── Secrets (jamais commités) ──────────────────────────────────────────────
+app/google-services.json
+app/client_secret_*.json
+upload-keystore.jks
+key.properties

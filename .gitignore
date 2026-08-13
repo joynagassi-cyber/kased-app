@@ -35,3 +35,11 @@ _temp/
 .roo
 .trae
 .windsurf
+cotis_app/android/app/google-services.json
+
+# ── Secrets (jamais commités) ──────────────────────────────────────────────
+cotis_app/android/app/google-services.json
+cotis_app/android/app/client_secret_*.json
+cotis_app/android/upload-keystore.jks
+cotis_app/android/key.properties
+cotis_app/.env.local

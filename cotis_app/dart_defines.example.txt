@@ -14,7 +14,17 @@
 # ── InsForge ──────────────────────────────────────────────────────────────
 INSFORGE_BASE_URL=
 INSFORGE_ANON_KEY=
+INSFORGE_URL=
 
 # ── Google OAuth (Web Client ID) ──────────────────────────────────────────
 # Console Google Cloud → APIs & Services → Credentials → Web application
 GOOGLE_SERVER_CLIENT_ID=
+GOOGLE_WEB_CLIENT_ID=
+
+# ── Google Auth Bridge ────────────────────────────────────────────────────
+# URL de la fonction Deno InsForge qui valide le token Google côté serveur
+GOOGLE_AUTH_BRIDGE_URL=
+
+# ── Firebase (google-services.json encodé en base64) ─────────────────────
+# Pour générer : base64 -w0 cotis_app/android/app/google-services.json
+GOOGLE_SERVICES_JSON_B64=
