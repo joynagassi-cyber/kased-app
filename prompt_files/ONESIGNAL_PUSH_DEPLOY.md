@@ -78,7 +78,7 @@ Après déploiement, remplacer `<ANON_KEY>`, `<TOKEN>` et `<REST_KEY>` par les v
 
 ### Test 1 — La fonction répond (sans envoyer)
 ```bash
-curl -X POST "https://pu74z8pe.functions.insforge.app/push-notify" \
+curl -X POST "https://pu74z8pe.function2.insforge.app/push-notify" \
   -H "Content-Type: application/json" \
   -H "apikey: <ANON_KEY>" \
   -H "Authorization: Bearer <TOKEN>" \

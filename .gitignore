@@ -16,6 +16,10 @@ cotis_app/android/app/client_secret_*.json
 # ── Fichiers temporaires de prototypage / build ─────────────────────────
 _temp/
 *.stackdump
+
+# ── Preview tooling (static prototype preview) ───────────────────────────
+node_modules/
+dist/
   
 # Agnes agent workspace  
 .agnes/  

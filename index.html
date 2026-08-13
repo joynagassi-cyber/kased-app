@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kased Onboarding Preview</title>
+    <title>Kased — Onboarding v2 (prototype)</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1246C8;
+            --primary: #2962FF;
             --background: #F7F8FC;
-            --surface: #FFFFFF;
             --text-primary: #0E1631;
             --text-secondary: #4A5578;
-            --border: #E2E6F3;
+            --green: #00C853;
+            --ink-chip: rgba(14, 22, 49, 0.07);
         }
+
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -37,104 +39,626 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
 
-        .content {
-            padding: 32px 24px;
-            height: 100%;
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 12px 0 20px;
+        }
+
+        .k-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--primary);
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .skip {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 10px 12px;
+            cursor: pointer;
+        }
+
+        .slides {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 20px 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(40px);
+            transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .slide.active { opacity: 1; pointer-events: auto; transform: translateX(0); }
+        .slide.exit-left { transform: translateX(-40px); }
+
+        .hero {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero svg { width: 100%; height: 100%; max-height: 320px; display: block; cursor: pointer; }
+
+        .chip-top, .chip-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .chip-top { top: 10px; }
+        .chip-bottom { bottom: 16px; }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 13px;
+            border-radius: 20px;
+            background: var(--ink-chip);
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+        .chip.green { background: var(--green); color: #fff; }
+
+        .text-block { text-align: center; margin-bottom: 20px; }
+        .text-block h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 27px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+        }
+        .text-block p {
+            font-size: 14.5px;
+            color: var(--text-secondary);
+            margin: 10px 0 0;
+            line-height: 1.55;
+        }
+
+        .bottom-bar {
+            padding: 4px 24px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .spacer { flex-grow: 1; }
-
-        .hero-container {
-            height: 300px;
-            width: 100%;
-            background-color: var(--surface);
-            border-radius: 32px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 32px;
+        .dots { display: flex; gap: 8px; margin-bottom: 20px; }
+        .dot {
+            width: 8px; height: 8px; border-radius: 4px;
+            background: rgba(75, 90, 120, 0.4);
+            cursor: pointer;
+            transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.25s;
         }
-
-        .hero-icon {
-            font-size: 100px;
-            color: var(--primary);
-        }
-
-        h1 {
-            font-family: 'Syne', sans-serif;
-            font-size: 32px;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin: 0;
-            text-align: center;
-        }
-
-        p {
-            font-size: 16px;
-            color: var(--text-secondary);
-            text-align: center;
-            margin: 16px 0 0 0;
-            line-height: 1.6;
-        }
+        .dot.active { width: 26px; background: var(--primary); }
 
         .btn {
             width: 100%;
-            height: 56px;
+            height: 58px;
             border-radius: 16px;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
             cursor: pointer;
             border: none;
-            margin-bottom: 16px;
-            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.12s ease, opacity 0.2s;
         }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary { background: var(--primary); color: #fff; }
 
-        .btn:hover { opacity: 0.9; }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-outlined {
-            background-color: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-        }
-
-        .btn-text {
+        .secondary-link {
             background: none;
             border: none;
-            color: var(--text-secondary);
+            color: var(--primary);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 12px;
             cursor: pointer;
-            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            height: 44px;
+        }
+        .secondary-link.visible { opacity: 1; }
+
+        .stamp-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 88px;
+            height: 88px;
+            margin: -44px 0 0 -44px;
+            border-radius: 50%;
+            background: var(--green);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 52px;
+            font-weight: 800;
+            transform: scale(0);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .stamp-overlay.pop { animation: stampPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes stampPop {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
+        .toast {
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: #0F172A;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+            white-space: nowrap;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
 
-    <div class="phone-frame">
-        <div class="content">
-            <div class="spacer" style="flex-grow: 2;"></div>
-            
-            <div class="hero-container">
-                <div class="hero-icon">⛪</div>
+<div class="phone-frame">
+    <div class="top-bar">
+        <div class="k-logo">K</div>
+        <button class="skip" onclick="toast('Passer → /signup (mock)')">Passer</button>
+    </div>
+
+    <div class="slides" id="slides">
+        <!-- PAGE 1 — Cagnotte -->
+        <div class="slide active" data-slide="0">
+            <div class="hero">
+                <svg id="svg-0" viewBox="0 0 320 300"></svg>
+                <div class="chip-top"></div>
+                <div class="chip-bottom"></div>
             </div>
-            
-            <h1>Bienvenue sur Kased</h1>
-            <p>Simplifiez la gestion des cotisations de votre communauté avec Kased.</p>
-            
-            <div class="spacer" style="flex-grow: 2;"></div>
-            
-            <button class="btn btn-primary" onclick="console.log('Get Started clicked')">Get Started</button>
-            <button class="btn btn-outlined" onclick="console.log('Sign In clicked')">Sign In</button>
-            <button class="btn-text" onclick="console.log('Guest clicked')">Continue as Guest</button>
+            <div class="text-block">
+                <h1>Une cagnotte commune</h1>
+                <p>Chaque membre verse dans le même pot. Tapez la pièce pour cotiser.</p>
+            </div>
+        </div>
+        <!-- PAGE 2 — Visibilité -->
+        <div class="slide" data-slide="1">
+            <div class="hero">
+                <svg id="svg-1" viewBox="0 0 320 300"></svg>
+                <div class="chip-top"></div>
+                <div class="chip-bottom"></div>
+            </div>
+            <div class="text-block">
+                <h1>Chaque versement est visible</h1>
+                <p>Tapez chaque membre : son montant s'affiche pour tout le groupe.</p>
+            </div>
+        </div>
+        <!-- PAGE 3 — Terrain -->
+        <div class="slide" data-slide="2">
+            <div class="hero">
+                <svg id="svg-2" viewBox="0 0 320 300"></svg>
+                <div class="chip-top"></div>
+                <div class="chip-bottom"></div>
+            </div>
+            <div class="text-block">
+                <h1>La cotisation construit le terrain</h1>
+                <p>Chaque cotisation pose une pierre. Tapez pour bâtir le terrain de l'église.</p>
+            </div>
+        </div>
+        <!-- PAGE 4 — C'est tout -->
+        <div class="slide" data-slide="3">
+            <div class="hero">
+                <svg id="svg-3" viewBox="0 0 320 300"></svg>
+                <div class="stamp-overlay" id="stamp">✓</div>
+            </div>
+            <div class="text-block">
+                <h1>C'est tout.</h1>
+                <p>Le terrain de l'église, c'est l'objectif de la cotisation.<br>Chacun donne, chacun voit. C'est tout.</p>
+            </div>
         </div>
     </div>
 
+    <div class="bottom-bar">
+        <div class="dots" id="dots"></div>
+        <button class="btn btn-primary" id="main-btn" onclick="mainAction()">Continuer →</button>
+        <button class="secondary-link" id="login-link" onclick="toast('→ /login (mock)')">J'ai déjà un compte — Se connecter</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ═══════════════ Palette plate (aucun dégradé, aucun glow) ═══════════════
+const C = {
+    blueTop:'#4D7CFF', blueLeft:'#2962FF', blueRight:'#1D4ED8',
+    goldTop:'#FFD166', goldLeft:'#F2B33D', goldRight:'#D9991F',
+    neutralTop:'#E9EDF5', neutralLeft:'#D7DEEC', neutralRight:'#BCC6D9',
+    greenLeft:'#00C853',
+    grassTop:'#9CCC65', grassLeft:'#7CB342', grassRight:'#689F38',
+    stoneTop:'#E3E8F2', stoneLeft:'#C9D2E3', stoneRight:'#AAB6CC',
+    roofLeft:'#2F3B5C', roofRight:'#1B243E', roofFront:'#263052',
+    navy:'#0F172A', white:'#FFFFFF'
+};
+
+// ═══════════════ Projection isométrique (mêmes formules que Flutter) ═══════════════
+const c30 = Math.cos(Math.PI/6), s30 = 0.5;
+function P(o, x, y, z) { return [o[0] + (x - y) * c30, o[1] + (x + y) * s30 - z]; }
+const num = (v) => v.toFixed(1);
+function poly(points, fill, attrs) {
+    const pts = points.map(p => num(p[0]) + ',' + num(p[1])).join(' ');
+    return `<polygon points="${pts}" fill="${fill}"${attrs ? ' ' + attrs : ''}/>`;
+}
+function cube(o, cx, cy, w, depth, h, top, left, right, attrs) {
+    const a0=P(o,cx-w/2,cy-depth/2,0), b0=P(o,cx+w/2,cy-depth/2,0), c0=P(o,cx+w/2,cy+depth/2,0), d0=P(o,cx-w/2,cy+depth/2,0);
+    const a=P(o,cx-w/2,cy-depth/2,h), b=P(o,cx+w/2,cy-depth/2,h), c=P(o,cx+w/2,cy+depth/2,h), d=P(o,cx-w/2,cy+depth/2,h);
+    const attrsAll = attrs || '';
+    return poly([a0,d0,d,a], left, attrsAll) + poly([a0,b0,b,a], right, attrsAll) + poly([a,b,c,d], top, attrsAll);
+}
+function coin(o, cx, cy, z, r, th, top, side) {
+    const btm = P(o,cx,cy,z), up = P(o,cx,cy,z+th);
+    const rx = r * c30, ry = r * s30;
+    const body = `<polygon points="${num(btm[0]-rx)},${num(btm[1])} ${num(up[0]-rx)},${num(up[1])} ${num(up[0]+rx)},${num(up[1])} ${num(btm[0]+rx)},${num(btm[1])}" fill="${side}"/>`;
+    const be = `<ellipse cx="${num(btm[0])}" cy="${num(btm[1])}" rx="${num(rx)}" ry="${num(ry)}" fill="${side}"/>`;
+    const ue = `<ellipse cx="${num(up[0])}" cy="${num(up[1])}" rx="${num(rx)}" ry="${num(ry)}" fill="${top}"/>`;
+    const ring = `<ellipse cx="${num(up[0])}" cy="${num(up[1])}" rx="${num(rx*1.15)}" ry="${num(ry*1.15)}" fill="none" stroke="${side}" stroke-width="1.2"/>`;
+    return body + be + ue + ring;
+}
+function check(o, cx, cy, h, size, color) {
+    const c = P(o,cx,cy,h), k = size;
+    return `<path d="M ${num(c[0]-k*0.85)} ${num(c[1]-k*0.1)} L ${num(c[0]-k*0.1)} ${num(c[1]+k*0.5)} L ${num(c[0]+k*0.9)} ${num(c[1]-k*0.55)}" fill="none" stroke="${color}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+function openBox(o, cx, cy, w, depth, h, insideFn) {
+    const a0=P(o,cx-w/2,cy-depth/2,0), b0=P(o,cx+w/2,cy-depth/2,0), c0=P(o,cx+w/2,cy+depth/2,0), d0=P(o,cx-w/2,cy+depth/2,0);
+    const a=P(o,cx-w/2,cy-depth/2,h), b=P(o,cx+w/2,cy-depth/2,h), c=P(o,cx+w/2,cy+depth/2,h), d=P(o,cx-w/2,cy+depth/2,h);
+    return poly([a0,b0,c0,d0], C.neutralTop)
+        + poly([a0,b0,b,a], C.neutralRight) + poly([a0,d0,d,a], C.neutralRight)
+        + insideFn()
+        + poly([c0,b0,b,c], C.neutralLeft) + poly([c0,d0,d,c], C.neutralLeft);
+}
+function terrain(o, cx, cy, w, depth, h, attrs) {
+    const a0=P(o,cx-w/2,cy-depth/2,0), b0=P(o,cx+w/2,cy-depth/2,0), c0=P(o,cx+w/2,cy+depth/2,0), d0=P(o,cx-w/2,cy+depth/2,0);
+    const a=P(o,cx-w/2,cy-depth/2,h), b=P(o,cx+w/2,cy-depth/2,h), c=P(o,cx+w/2,cy+depth/2,h), d=P(o,cx-w/2,cy+depth/2,h);
+    const attrsAll = attrs || '';
+    return poly([a0,d0,d,a], C.grassLeft, attrsAll) + poly([a0,b0,b,a], C.grassRight, attrsAll)
+        + poly([a,b,c,d], C.grassTop, attrsAll);
+}
+function stone(o, cx, cy, z, w, h, t) {
+    const hh = h * t;
+    if (hh <= 0) return '';
+    return cube(o, cx, cy, w, w, hh, C.stoneTop, C.stoneLeft, C.stoneRight)
+        + coin(o, cx, cy, z + hh, w*0.42, w*0.2, C.goldTop, C.goldLeft);
+}
+function church(o, cx, cy, nw, nd, nh, rh, ft, nt, rt) {
+    let out = '';
+    if (ft > 0) out += cube(o, cx, cy, nw+12, nd+8, 6*ft, C.stoneTop, C.stoneLeft, C.stoneRight);
+    if (nt <= 0) return out;
+    const nhh = nh * nt;
+    out += cube(o, cx, cy, nw, nd, nhh, C.blueTop, C.blueLeft, C.blueRight);
+    const dh = Math.min(12, nhh * 0.75);
+    if (dh > 2) {
+        const p1=P(o,cx-nw/2,cy-9,0), p2=P(o,cx-nw/2,cy+9,0), p3=P(o,cx-nw/2,cy+9,dh), p4=P(o,cx-nw/2,cy-9,dh);
+        out += poly([p1,p2,p3,p4], C.navy);
+    }
+    if (rt > 0 && nhh > 2) {
+        const rhh = rh*rt, L = nw+8, D = nd+8, ridge = nhh+rhh, eave = nhh;
+        const a1=P(o,cx-L/2,cy-D/2,eave), a2=P(o,cx+L/2,cy-D/2,eave);
+        const b1=P(o,cx-L/2,cy+D/2,eave), b2=P(o,cx+L/2,cy+D/2,eave);
+        const r1=P(o,cx-L/2,cy,ridge), r2=P(o,cx+L/2,cy,ridge);
+        out += poly([a1,a2,r2,r1], C.roofLeft) + poly([b1,b2,r2,r1], C.roofRight) + poly([a1,b1,r1], C.roofFront);
+        if (rt > 0.85) {
+            const apex = P(o,cx-L/2,cy,ridge);
+            out += `<path d="M ${num(apex[0])} ${num(apex[1]-11)} L ${num(apex[0])} ${num(apex[1]+3)} M ${num(apex[0]-5)} ${num(apex[1]-6)} L ${num(apex[0]+5)} ${num(apex[1]-6)}" stroke="${C.goldLeft}" stroke-width="2.6" stroke-linecap="round"/>`;
+        }
+    }
+    return out;
+}
+function label(x, y, text, size, color, weight) {
+    return `<text x="${num(x)}" y="${num(y)}" text-anchor="middle" font-family="'DM Sans',sans-serif" font-size="${size}" font-weight="${weight || 700}" fill="${color}">${text}</text>`;
+}
+function amountChip(cx, cy, text) {
+    const w = text.length * 6.4 + 20, h = 20;
+    return `<rect x="${num(cx - w/2)}" y="${num(cy - h/2)}" width="${num(w)}" height="${h}" rx="9" fill="${C.navy}"/>` +
+           label(cx, cy + 4, text, 11, C.white, 800);
+}
+
+// Courbes
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+const easeOutBack = (t) => { const c = 1.70158; return 1 + (c+1)*Math.pow(t-1,3) + c*Math.pow(t-1,2); };
+const seg = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
+
+// ═══════════════ États des 4 pages ═══════════════
+const s1 = { coins: 3, max: 8, flight: null, bob: 0 };
+const S2_MEMBERS = [
+    { name:'Awa', amt:'5 000 F', x:-70 },
+    { name:'Moussa', amt:'10 000 F', x:0 },
+    { name:'Jean', amt:'2 500 F', x:70 }
+];
+const s2 = { filled: new Set(), heights: [30, 30, 30] };
+const S3_STONES = [[-45,-26],[0,-38],[45,-26],[-45,20],[0,32],[45,20]];
+const s3 = { stones: 0, stoneTs: [0,0,0,0,0,0], build: 0, bob: 0 };
+let slide = 0;
+
+// ═══════════════ Rendu des scènes ═══════════════
+function renderS1() {
+    const o = [160, 238];
+    const flying = !!s1.flight;
+    const landed = s1.coins;
+    let out = openBox(o, 0, 0, 130, 84, 64, () => {
+        let s = '';
+        for (let i = 0; i < landed; i++) s += coin(o, 0, 0, 3 + i*8.5, 19, 8.5, C.goldTop, C.goldLeft);
+        return s;
+    });
+    if (flying) {
+        const f = s1.flight, t = easeOutCubic(f.t);
+        const inv = 1 - t;
+        const cx = inv*inv*f.from[0] + 2*inv*t*f.ctrl[0] + t*t*f.to[0];
+        const cy = inv*inv*f.from[1] + 2*inv*t*f.ctrl[1] + t*t*f.to[1];
+        const z = f.zFrom + (f.zTo - f.zFrom) * t;
+        out += coin(o, cx, cy, z, 19, 8.5, C.goldTop, C.goldLeft);
+    } else if (s1.coins < s1.max) {
+        const bob = Math.sin(s1.bob) * 4;
+        out += coin(o, -58, 48, 100 + bob, 19, 8.5, C.goldTop, C.goldLeft);
+    }
+    return out;
+}
+
+function renderS2() {
+    const o = [160, 224];
+    let out = '';
+    for (let i = 0; i < S2_MEMBERS.length; i++) {
+        const m = S2_MEMBERS[i], filled = s2.filled.has(i), h = s2.heights[i];
+        out += cube(o, m.x, -m.x, 40, 40, h,
+            filled ? C.blueTop : C.neutralTop,
+            filled ? C.blueLeft : C.neutralLeft,
+            filled ? C.blueRight : C.neutralRight,
+            `data-tap="member-${i}"`);
+        if (filled) out += check(o, m.x, -m.x, h, 13, C.white);
+        // Nom sous le cube
+        const base = P(o, m.x, -m.x, 0);
+        out += label(base[0], base[1] + 22, m.name, 11, '#4A5578', 700);
+        // Montant au-dessus
+        if (filled) {
+            const top = P(o, m.x, -m.x, 64 + 16);
+            out += amountChip(top[0], top[1], m.amt);
+        }
+    }
+    return out;
+}
+
+function renderS3() {
+    const o = [160, 252];
+    let out = terrain(o, 0, 0, 190, 120, 7);
+    for (let i = 0; i < s3.stones; i++) {
+        const p = S3_STONES[i];
+        out += stone(o, p[0], p[1], 0, 16, 12, s3.stoneTs[i]);
+    }
+    if (s3.stones < 6) {
+        const p = S3_STONES[s3.stones];
+        const bob = Math.sin(s3.bob) * 5;
+        out += coin(o, p[0], p[1], 46 + bob, 11, 5, C.goldTop, C.goldLeft);
+    }
+    out += church(o, 0, -2, 46, 34, 20, 13,
+        easeOutCubic(seg(s3.build, 0.00, 0.24)),
+        easeOutCubic(seg(s3.build, 0.16, 0.52)),
+        easeOutCubic(seg(s3.build, 0.46, 0.82)));
+    return out;
+}
+
+function renderS4() {
+    const o = [160, 246];
+    let out = terrain(o, 0, -10, 150, 96, 6);
+    out += church(o, 0, -10, 42, 30, 16, 12, 1, 1, 1);
+    out += openBox(o, -62, 14, 104, 68, 54, () => {
+        let s = '';
+        for (let i = 0; i < 8; i++) s += coin(o, -62, 14, 3 + i*6.5, 14, 6.5, C.goldTop, C.goldLeft);
+        return s;
+    });
+    [[60,0],[70,-10],[50,10]].forEach(m => {
+        out += cube(o, m[0], m[1], 18, 18, 26, C.blueTop, C.blueLeft, C.blueRight);
+        out += check(o, m[0], m[1], 26, 12, C.white);
+    });
+    return out;
+}
+
+const SVG_HTMLS = [renderS1, renderS2, renderS3, renderS4];
+function renderActive() {
+    const idx = Math.max(0, slide);
+    for (let i = idx; i <= Math.min(3, idx + 1); i++) {
+        document.getElementById('svg-' + i).innerHTML = SVG_HTMLS[i]();
+    }
+    updateChips();
+}
+
+// ═══════════════ Chips (compteurs + indices) ═══════════════
+function chip(icon, text, green) {
+    return `<span class="chip${green ? ' green' : ''}"><span style="font-size:14px">${icon}</span>${text}</span>`;
+}
+function updateChips() {
+    const s1Full = s1.coins >= s1.max;
+    document.querySelectorAll('.chip-top, .chip-bottom').forEach(el => el.innerHTML = '');
+    const top1 = document.querySelector('[data-slide="0"] .chip-top');
+    const bot1 = document.querySelector('[data-slide="0"] .chip-bottom');
+    top1.innerHTML = s1Full
+        ? chip('✓', 'Cagnotte pleine !', true)
+        : chip('💰', s1.coins + ' / ' + s1.max + ' cotisations', false);
+    bot1.innerHTML = s1Full ? '' : chip('👆', 'Tapez la pièce', false);
+
+    const all2 = s2.filled.size >= 3;
+    const top2 = document.querySelector('[data-slide="1"] .chip-top');
+    const bot2 = document.querySelector('[data-slide="1"] .chip-bottom');
+    top2.innerHTML = all2 ? chip('✓', 'Tout est visible !', true) : chip('☑', s2.filled.size + ' / 3 membres', false);
+    bot2.innerHTML = all2 ? '' : chip('👆', 'Tapez chaque membre', false);
+
+    const built3 = s3.stones >= 6;
+    const top3 = document.querySelector('[data-slide="2"] .chip-top');
+    const bot3 = document.querySelector('[data-slide="2"] .chip-bottom');
+    top3.innerHTML = built3 ? chip('✓', 'Terrain bâti !', true) : chip('🏞', s3.stones + ' / 6 pierres', false);
+    bot3.innerHTML = built3 ? '' : chip('👆', 'Tapez pour poser une pierre', false);
+}
+
+// ═══════════════ Interactions ═══════════════
+function tapCoin() {
+    if (s1.flight || s1.coins >= s1.max) return;
+    s1.flight = {
+        t: 0, from: [-58, 48], to: [0, 0], ctrl: [-29, 24],
+        zFrom: 100, zTo: 3 + s1.coins * 8.5
+    };
+}
+function tapMember(i) {
+    if (s2.filled.has(i)) return;
+    s2.filled.add(i);
+    animateHeight(i, 30, 64, 500);
+}
+function animateHeight(i, from, to, ms) {
+    const t0 = performance.now();
+    function step(now) {
+        const t = Math.min(1, (now - t0) / ms);
+        s2.heights[i] = from + (to - from) * easeOutBack(t);
+        if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+function tapPlot() {
+    if (s3.stones >= 6) return;
+    s3.stones++;
+    dropStone(s3.stones - 1);
+    if (s3.stones >= 6) {
+        const t0 = performance.now();
+        function step(now) {
+            const t = Math.min(1, (now - t0) / 1600);
+            s3.build = t;
+            if (t < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+}
+function dropStone(i) {
+    const t0 = performance.now();
+    function step(now) {
+        const t = Math.min(1, (now - t0) / 420);
+        s3.stoneTs[i] = easeOutCubic(t);
+        if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+// Clics
+document.getElementById('svg-0').addEventListener('click', tapCoin);
+document.getElementById('svg-2').addEventListener('click', tapPlot);
+document.getElementById('svg-1').addEventListener('click', (e) => {
+    const tap = e.target && e.target.getAttribute ? e.target.getAttribute('data-tap') : null;
+    if (tap && tap.startsWith('member-')) tapMember(parseInt(tap.split('-')[1], 10));
+});
+
+// ═══════════════ Navigation ═══════════════
+function buildDots() {
+    const dots = document.getElementById('dots');
+    dots.innerHTML = '';
+    for (let i = 0; i < 4; i++) {
+        const d = document.createElement('div');
+        d.className = 'dot' + (i === slide ? ' active' : '');
+        d.onclick = () => goTo(i);
+        dots.appendChild(d);
+    }
+}
+function goTo(i) {
+    if (i === slide) return;
+    const slides = document.querySelectorAll('.slide');
+    slides[slide].classList.add('exit-left');
+    slide = i;
+    slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === i);
+        s.classList.remove('exit-left');
+    });
+    buildDots();
+    document.getElementById('main-btn').innerHTML = i === 3 ? 'Créer mon compte ✓' : 'Continuer →';
+    document.getElementById('login-link').classList.toggle('visible', i === 3);
+    requestAnimationFrame(renderActive);
+}
+function mainAction() {
+    if (slide < 3) { goTo(slide + 1); return; }
+    const stamp = document.getElementById('stamp');
+    stamp.classList.remove('pop');
+    void stamp.offsetWidth;
+    stamp.classList.add('pop');
+    setTimeout(() => toast('✓ Création de compte → /signup (mock)'), 700);
+}
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._h);
+    toast._h = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// Swipe
+let touchX = null;
+const slidesEl = document.getElementById('slides');
+slidesEl.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+slidesEl.addEventListener('touchend', e => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 60) goTo(Math.max(0, Math.min(3, slide + (dx < 0 ? 1 : -1))));
+    touchX = null;
+}, { passive: true });
+
+// Boucle d'animation continue
+function loop() {
+    s1.bob += 0.05;
+    s3.bob += 0.05;
+    if (s1.flight) {
+        s1.flight.t = Math.min(1, s1.flight.t + 0.035);
+        if (s1.flight.t >= 1) {
+            s1.coins++;
+            s1.flight = null;
+        }
+    }
+    renderActive();
+    requestAnimationFrame(loop);
+}
+
+buildDots();
+requestAnimationFrame(loop);
+</script>
 </body>
 </html>
