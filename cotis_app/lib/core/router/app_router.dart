@@ -23,11 +23,16 @@ import '../../core/preferences/app_prefs.dart';
 
 part 'app_router.g.dart';
 
+/// Clé du Navigator racine — permet d'afficher des dialogues globaux
+/// (ex. vérification OneSignal) depuis n'importe quel écran.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 @Riverpod(keepAlive: true)
 GoRouter router(RouterRef ref) {
   final authNotifier = _AuthNotifier(ref);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/loading',
     refreshListenable: authNotifier,
     debugLogDiagnostics: !const bool.fromEnvironment('dart.vm.product'),

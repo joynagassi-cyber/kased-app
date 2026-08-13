@@ -8,6 +8,7 @@ import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/isar_local_cache.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
+import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/services/stats_service.dart';
 import 'package:kased_app/core/services/sync_service.dart';
 import 'package:kased_app/core/sync/device_service.dart';
@@ -17,6 +18,7 @@ import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:kased_app/models/corbeille_item.dart';
+import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/providers/isar_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -132,6 +134,38 @@ class AppData extends _$AppData {
     // Charger les notifications depuis Isar
     return initialState;
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // NOTIFICATIONS PUSH MULTI-UTILISATEURS (OneSignal)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /// Envoie une notification push aux AUTRES utilisateurs (jamais à soi-même,
+  /// la fonction serveur exclut l'acteur). Non bloquant : un échec d'envoi
+  /// n'interrompt jamais l'action en cours.
+  Future<void> _notifierPush(
+    String event,
+    String entityLabel, {
+    String? extra,
+  }) async {
+    final auth = ref.read(authProvider);
+    await PushNotifyService.notifier(
+      event: event,
+      entityLabel: entityLabel,
+      actorEmail: auth.userEmail,
+      actorName: auth.userName,
+      token: auth.token,
+      extra: extra,
+    );
+  }
+
+  String? _nomMembre(String? membreId) {
+    if (membreId == null) return null;
+    return state.value?.membres
+        .firstWhereOrNull((m) => m.id == membreId)?.nomComplet;
+  }
+
+  String _formatDate(DateTime date) =>
+      '${date.day}/${date.month}/${date.year}';
 
   // ──────────────────────────────────────────────────────────────────────────
   // SYNC
@@ -307,6 +341,9 @@ class AppData extends _$AppData {
           'CREATE', 'membre', newId, newMembre.toJson());
     }
 
+    // Notification push aux autres utilisateurs (non bloquant)
+    unawaited(_notifierPush('membre_ajoute', newMembre.nomComplet));
+
     return newMembre;
   }
 
@@ -374,6 +411,9 @@ class AppData extends _$AppData {
       await _syncService.queueSyncOperation(
           'UPDATE', 'membre', id, updated.toJson());
     }
+
+    // Notification push aux autres utilisateurs (non bloquant)
+    unawaited(_notifierPush('membre_modifie', updated.nomComplet));
   }
 
   /// Ajoute un paiement par avance pour un membre.
@@ -491,6 +531,9 @@ class AppData extends _$AppData {
         debugPrint('[AppData] deleteMembre réseau échoué: $e');
         await _syncService.queueSyncOperation('DELETE', 'membre', id, {});
       }
+
+      // Notification push aux autres utilisateurs (non bloquant)
+      unawaited(_notifierPush('membre_supprime', existing.nomComplet));
     } catch (e) {
       rethrow;
     }
@@ -574,6 +617,12 @@ class AppData extends _$AppData {
       debugPrint(
           '[AppData] addCulte réseau échoué, mise en file déjà effectuee: $e');
     }
+
+    // Notification push aux autres utilisateurs (non bloquant)
+    unawaited(_notifierPush(
+      'culte_cree',
+      _formatDate(newCulte.dateCulte),
+    ));
   }
 
   Future<void> updateCulte({
@@ -846,6 +895,17 @@ class AppData extends _$AppData {
           'UPDATE', 'cotisation', updatedCotisation.id,
           updatedCotisation.toJson());
     }
+
+    // Notification push aux autres utilisateurs (non bloquant)
+    final nomMembrePaye = _nomMembre(membreId);
+    final labelCulte = 'culte du ${_formatDate(culte.dateCulte)}';
+    unawaited(_notifierPush(
+      updatedCotisation.statut == StatutCotisation.paye
+          ? 'cotisation_payee'
+          : 'cotisation_modifiee',
+      nomMembrePaye != null ? '$nomMembrePaye — $labelCulte' : labelCulte,
+      extra: montant.toStringAsFixed(0),
+    ));
   }
 
   /// Garde la fonction togglePaiement pour compatibilité arrière.
@@ -948,6 +1008,13 @@ class AppData extends _$AppData {
         newStatut == StatutCotisation.paye ? 'payé(s)' : 'annulé(s)';
     NotificationCoordinator.notifierPaiementsEnMasse(success, actionText);
 
+    // Notification push aux autres utilisateurs (non bloquant)
+    unawaited(_notifierPush(
+      'cotisations_bulk',
+      '$success paiement(s) $actionText',
+      extra: newStatut.name,
+    ));
+
     return (success: success, total: membreIds.length);
   }
 
@@ -1025,6 +1092,12 @@ class AppData extends _$AppData {
           'UPDATE', 'cotisation', updatedCotisation.id,
           updatedCotisation.toJson());
     }
+
+    // Notification push aux autres utilisateurs (non bloquant)
+    unawaited(_notifierPush(
+      'cotisation_absente',
+      _nomMembre(membreId) ?? 'un membre',
+    ));
   }
 
   Future<List<Map<String, dynamic>>> getHistoriqueMembre(

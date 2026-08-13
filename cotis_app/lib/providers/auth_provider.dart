@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+import '../core/services/onesignal_service.dart';
 import '../services/auth_service.dart';
 
 part 'auth_provider.g.dart';
@@ -221,6 +223,11 @@ class Auth extends _$Auth {
       userEmail: email,
       userName: name,
     );
+
+    // Lier l'appareil à l'utilisateur OneSignal (external ID = email) pour
+    // permettre l'envoi de notifications push multi-utilisateurs ciblées.
+    // Non bloquant : l'authentification ne dépend pas de OneSignal.
+    unawaited(OneSignalService.instance.login(email));
   }
 
   Future<bool> refreshSession(String rToken) async {
@@ -370,6 +377,8 @@ class Auth extends _$Auth {
   Future<void> logout() async {
     await _storage.deleteAll();
     await _authService.signOut();
+    // Dissocier l'appareil de l'utilisateur OneSignal (sans effet si non init).
+    await OneSignalService.instance.logout();
     state = const AuthState(
       isAuthenticated: false,
       isLoading: false,
