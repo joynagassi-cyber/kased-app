@@ -80,8 +80,8 @@ jobs:
           UPLOAD_KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
         run: |
           if [ -z "$UPLOAD_KEYSTORE_B64" ]; then
-            echo "⚠️  UPLOAD_KEYSTORE_B64 non défini → sera ignoré au signing"
-            exit 0
+            echo "::error::Secret UPLOAD_KEYSTORE_B64 manquant : l'APK serait signé avec le keystore de debug, dont le SHA-1 n'est pas déclaré dans Firebase → Google Sign-In échoue avec ApiException 10."
+            exit 1
           fi
           echo "$UPLOAD_KEYSTORE_B64" | base64 -d > android/upload-keystore.jks
           echo "✅ upload-keystore.jks décodé ($(stat -c%s android/upload-keystore.jks) octets)"
@@ -103,11 +103,23 @@ jobs:
           GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
         run: |
           if [ -z "$GOOGLE_SERVICES_JSON_B64" ]; then
-            echo "⚠️  GOOGLE_SERVICES_JSON_B64 non défini — Firebase désactivé"
+            echo "⚠️  GOOGLE_SERVICES_JSON_B64 non défini — le fichier versionné est utilisé"
             exit 0
           fi
           echo "$GOOGLE_SERVICES_JSON_B64" | base64 -d > android/app/google-services.json
           echo "✅ google-services.json décodé ($(stat -c%s android/app/google-services.json) octets)"
+
+      # ── 6b. Cohérence Google Sign-In (SHA-1 ↔ client OAuth Android) ─────────
+      # Sans client OAuth Android déclarant le SHA-1 du keystore de signature,
+      # google_sign_in échoue avec ApiException: 10 sur tous les appareils.
+      - name: Vérifier la configuration Google Sign-In
+        run: |
+          python3 ../scripts/verifier-google-signin.py \
+            --google-services android/app/google-services.json \
+            --keystore android/upload-keystore.jks \
+            --keystore-password '${{ secrets.KEYSTORE_PASSWORD }}' \
+            --key-alias '${{ secrets.KEY_ALIAS }}' \
+            --web-client-id '${{ secrets.GOOGLE_WEB_CLIENT_ID }}'
 
       # ── 7. Dependencies ──────────────────────────────────────────────────────
       - name: Pub get
@@ -187,6 +199,10 @@ jobs:
           fi
           if [ -z "${{ secrets.GOOGLE_WEB_CLIENT_ID }}" ]; then
             echo "::error::Secret GOOGLE_WEB_CLIENT_ID manquant : ajoutez le Web Client ID Google OAuth du projet (Settings → Secrets). Sans lui, Google Sign-In échoue avec ApiException 10."
+            exit 1
+          fi
+          if [ -z "${{ secrets.GOOGLE_AUTH_BRIDGE_URL }}" ]; then
+            echo "::error::Secret GOOGLE_AUTH_BRIDGE_URL manquant : utilisez https://<projet>.insforge.app/functions/google-auth-bridge."
             exit 1
           fi
           echo "✅ Secrets requis présents"
