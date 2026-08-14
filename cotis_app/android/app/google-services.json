@@ -22,9 +22,7 @@
           "client_type": 1,
           "android_info": {
             "package_name": "com.kasedapp",
-            "certificate_hash": [
-              "a1260642e55d19587671d1695e22260aa56d92e4"
-            ]
+            "certificate_hash": "a1260642e55d19587671d1695e22260aa56d92e4"
           }
         }
       ],
