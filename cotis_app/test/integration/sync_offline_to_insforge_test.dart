@@ -4,9 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/services/sync_service.dart';
-import 'package:kased_app/models/cotisation.dart';
-import 'package:kased_app/models/culte.dart';
-import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:mocktail/mocktail.dart';
 

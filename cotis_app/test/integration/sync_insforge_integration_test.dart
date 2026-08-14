@@ -87,7 +87,7 @@ void main() {
 
     test('updateMembre utilise le filtre eq.$id', () async {
       final updates = {'nom': 'Koffi-Martin', 'notes': 'Modifié'};
-      final mockResponse = MockResponse(data: {'id': 'm1', ...updates});
+      final mockResponse = MockResponse(data: {'id': 'm1', 'nom': 'Koffi-Martin', 'notes': 'Modifié'});
       when(() => mockDio.patch(
         '/api/database/records/membres',
         queryParameters: any(named: 'queryParameters'),
@@ -620,14 +620,19 @@ void main() {
   group('Synchronisation InsForge - Erreurs et cas limites', () {
     test('getMembres avec erreur réseau lève DioException', () async {
       when(() => mockDio.get(any(), queryParameters: any(named: 'queryParameters')))
-          .thenThrow(DioException(connectionTimeout: Duration.zero));
+          .thenThrow(DioException(requestOptions: RequestOptions(path: '/test'), error: 'Connection timeout'));
 
       expect(() => service.getMembres(), throwsA(isA<DioException>()));
     });
 
     test('createMembre avec erreur serveur lève DioException', () async {
+      final mockResponse = Response(
+        requestOptions: RequestOptions(path: '/test'),
+        statusCode: 500,
+        data: 'Server Error',
+      );
       when(() => mockDio.post(any(), data: any(named: 'data')))
-          .thenThrow(DioException(response: Response(statusCode: 500, data: 'Server Error')));
+          .thenThrow(DioException(response: mockResponse));
 
       expect(() => service.createMembre({}), throwsA(isA<DioException>()));
     });
@@ -911,7 +916,7 @@ void main() {
 
       when(() => mockDio.post('/api/database/rpc/creer_culte_avec_cotisations', data: any(named: 'data')))
           .thenAnswer((invocation) async {
-        final data = invocation.arguments.named['data'] as Map;
+        final data = (invocation.namedArguments[#data] as Map? ?? {}) as Map<String, dynamic>;
         return MockResponse(data: data['p_date_culte'] == '2026-08-07' ? culte1Uuid : culte2Uuid);
       });
 
