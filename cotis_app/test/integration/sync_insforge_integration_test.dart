@@ -85,7 +85,7 @@ void main() {
       )).called(1);
     });
 
-    test('updateMembre utilise le filtre eq.$id', () async {
+    test('updateMembre utilise le filtre eq.[id]', () async {
       final updates = {'nom': 'Koffi-Martin', 'notes': 'Modifié'};
       final mockResponse = MockResponse(data: {'id': 'm1', 'nom': 'Koffi-Martin', 'notes': 'Modifié'});
       when(() => mockDio.patch(
@@ -103,7 +103,7 @@ void main() {
       )).called(1);
     });
 
-    test('deleteMembre utilise le filtre eq.$id', () async {
+    test('deleteMembre utilise le filtre eq.[id]', () async {
       final mockResponse = MockResponse();
       when(() => mockDio.delete(
         '/api/database/records/membres',
@@ -219,7 +219,7 @@ void main() {
       )).called(1);
     });
 
-    test('deleteCulte utilise le filtre eq.$id', () async {
+    test('deleteCulte utilise le filtre eq.[id]', () async {
       final mockResponse = MockResponse();
       when(() => mockDio.delete(
         '/api/database/records/cultes',
@@ -318,7 +318,7 @@ void main() {
       )).called(1);
     });
 
-    test('updateCotisation utilise le filtre eq.$id', () async {
+    test('updateCotisation utilise le filtre eq.[id]', () async {
       final updates = {'statut': 'paye', 'date_paiement': '2026-08-14T10:00:00.000Z'};
       final mockResponse = MockResponse(data: {'id': 'cot1', ...updates});
       when(() => mockDio.patch(
@@ -336,7 +336,7 @@ void main() {
       )).called(1);
     });
 
-    test('deleteCotisation utilise le filtre eq.$id', () async {
+    test('deleteCotisation utilise le filtre eq.[id]', () async {
       final mockResponse = MockResponse();
       when(() => mockDio.delete(
         '/api/database/records/cotisations',
@@ -632,7 +632,7 @@ void main() {
         data: 'Server Error',
       );
       when(() => mockDio.post(any(), data: any(named: 'data')))
-          .thenThrow(DioException(response: mockResponse));
+          .thenThrow(DioException(requestOptions: RequestOptions(path: '/test'), response: mockResponse));
 
       expect(() => service.createMembre({}), throwsA(isA<DioException>()));
     });
