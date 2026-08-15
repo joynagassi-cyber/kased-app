@@ -30,7 +30,7 @@ class EditMontantDialog {
     required Future<void> Function(double newMontant) onSave,
   }) async {
     final controller = TextEditingController(
-      text: currentMontant.toInt().toString(),
+      text: currentMontant.toStringAsFixed(0),
     );
     final formKey = GlobalKey<FormState>();
 
@@ -52,7 +52,7 @@ class EditMontantDialog {
               ),
               autofocus: true,
               validator: (value) {
-                final parsed = int.tryParse((value ?? '').trim()) ?? 0;
+                final parsed = double.tryParse((value ?? '').trim()) ?? 0;
                 if (parsed <= 0) return 'Montant invalide';
                 return null;
               },

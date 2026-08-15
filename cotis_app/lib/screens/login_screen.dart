@@ -256,11 +256,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   child: TextButton(
                                     onPressed: () {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Fonctionnalite a venir')),
+                                        const SnackBar(content: Text('Fonctionnalité à venir')),
                                       );
                                     },
                                     child: Text(
-                                      'Mot de passe oublie ?',
+                                      'Mot de passe oublié ?',
                                       style: GoogleFonts.dmSans(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
@@ -385,7 +385,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       Icon(Icons.lock_outline, size: 14, color: colorScheme.onSurfaceVariant),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Vos donnees sont chiffrees et stockees en securite',
+                                        'Vos données sont chiffrées et stockées en sécurité',
                                         style: GoogleFonts.dmSans(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,

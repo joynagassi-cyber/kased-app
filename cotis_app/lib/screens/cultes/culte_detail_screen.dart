@@ -403,7 +403,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                           ),
                         ),
                       ),
-                    if (membresNonPayes.isNotEmpty && tousPayes) const SizedBox(width: 12),
+                    // MembresNonPayes.isNotEmpty && tousPayes is impossible (dead code)
                     if (tousPayes)
                       Expanded(
                         child: SpringButton(

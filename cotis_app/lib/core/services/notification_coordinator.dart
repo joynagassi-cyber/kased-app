@@ -14,7 +14,7 @@ import 'package:kased_app/providers/app_data_provider.dart';
 class NotificationCoordinator {
   /// Initialisation: charge les notifications depuis Isar au demarrage.
   static Future<void> init(ref) async {
-    unawaited(ref.read(notificationsProvider.notifier).chargerDepuisIsar());
+    unawaited(ref.read(notificationsProvider.notifier).chargerDepuisPrefs());
   }
 
   /// Planifie les notifications d anniversaire pour une liste de membres.

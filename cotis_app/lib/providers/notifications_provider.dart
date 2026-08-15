@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,20 +88,20 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
       return n;
     }).toList();
     state = NotificationsState(liste: list);
-    _sauvegarderPrefs();
+    unawaited(_sauvegarderPrefs());
   }
 
   void marquerToutesLues() {
     state = NotificationsState(
       liste: state.liste.map((n) => n..isLue = true).toList(),
     );
-    _sauvegarderPrefs();
+    unawaited(_sauvegarderPrefs());
   }
 
   void supprimer(String id) {
     final list = state.liste.where((n) => n.id != id).toList();
     state = NotificationsState(liste: list);
-    _sauvegarderPrefs();
+    unawaited(_sauvegarderPrefs());
   }
 }
 

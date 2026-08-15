@@ -362,7 +362,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                   itemCount: items.length,
                   itemBuilder: (_, index) {
                     final item = items[index];
-                    final payload = jsonDecode(item.payloadJson);
+                    final payload = jsonDecode(item.payloadJson) as Map<String, dynamic>? ?? {};
                     final isSelected = _selectedIds.contains(item.isarId);
 
                     String titre;
@@ -384,7 +384,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                       icone = Icons.church_outlined;
                     }
 
-                    final joursRestants = 30 - DateTime.now().difference(item.deletedAt).inDays;
+                    final joursRestants = (30 - DateTime.now().difference(item.deletedAt).inDays).clamp(0, 30);
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),

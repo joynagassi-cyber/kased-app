@@ -389,7 +389,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                       Icon(Icons.lock_outline, size: 14, color: colorScheme.onSurfaceVariant),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Vos donnees sont chiffrees et stockees en securite',
+                                        'Vos données sont chiffrées et stockées en sécurité',
                                         style: GoogleFonts.dmSans(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,

@@ -24,6 +24,7 @@ class AppColors {
   static const background = Color(0xFFF8F9FE);
   static const surface = Color(0xFFFFFFFF);
   static const surface2 = Color(0xFFF0F4F8);
+  static const surfaceCard = Color(0xFFE8ECF8); // Nouvelle surface pour cartes
   static const border = Color(0xFFE2E8F0);
   static const borderStrong = Color(0xFFCBD5E1);
   static const textPrimary = Color(0xFF0F172A);
@@ -35,6 +36,7 @@ class AppColors {
   static const backgroundDark = Color(0xFF0B0F19);
   static const surfaceDark = Color(0xFF131A2A);
   static const surface2Dark = Color(0xFF1E293B);
+  static const surfaceCardDark = Color(0xFF243049); // Nouvelle surface pour cartes
   static const borderDark = Color(0xFF334155);
   static const borderStrongDark = Color(0xFF475569);
   static const textPrimaryDark = Color(0xFFF8FAFC);
@@ -166,10 +168,11 @@ class AppTheme {
     onErrorContainer: Color(0xFF410E02),
     inverseSurface: Color(0xFF303030),
     onInverseSurface: AppColors.textInverse,
-    inversePrimary: Color(0xFF9FB1FF),
-    shadow: Color(0x00000000),
-    scrim: Color(0x00000000),
-    surfaceTint: Colors.transparent,
+    inversePrimary: const Color(0xFF9FB1FF),
+    // Enhanced shadows for depth
+    shadow: const Color(0x1A000000),
+    scrim: const Color(0x4D000000),
+    surfaceTint: const Color(0x0D2962FF), // 5% opacity primary
   );
 
   static const _darkScheme = ColorScheme(
@@ -204,10 +207,11 @@ class AppTheme {
     onErrorContainer: Color(0xFFFFDAD6),
     inverseSurface: Color(0xFFE2E8F0),
     onInverseSurface: AppColors.textPrimaryDark,
-    inversePrimary: Color(0xFF9FB1FF),
-    shadow: Color(0x00000000),
-    scrim: Color(0x00000000),
-    surfaceTint: Colors.transparent,
+    inversePrimary: const Color(0xFF9FB1FF),
+    // Enhanced shadows for depth
+    shadow: const Color(0x3D000000),
+    scrim: const Color(0x80000000),
+    surfaceTint: const Color(0x1A2962FF), // 10% opacity primary
   );
 
   static TextTheme get _lightTextTheme => GoogleFonts.dmSansTextTheme().copyWith(
