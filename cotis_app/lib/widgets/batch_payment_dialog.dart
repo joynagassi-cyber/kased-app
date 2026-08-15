@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/models/culte.dart';
-import 'package:kased_app/widgets/kased_gradient_card.dart';
 
 /// Dialogue pour payer plusieurs cultes en avance d'un coup.
 ///

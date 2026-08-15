@@ -26,7 +26,6 @@ class CulteDetailScreen extends ConsumerStatefulWidget {
 class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
   String _searchQuery = '';
   String _filter = 'Tous';
-  bool _celebrationShown = false;
   bool _selectionMode = false;
   final Set<String> _selectedMembres = {};
 
@@ -349,7 +348,6 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                       );
                                       if (result != null && context.mounted) {
                                         if (result.isComplete) {
-                                          _celebrationShown = true;
                                           setState(() {});
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
@@ -425,7 +423,6 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                             ),
                                       );
                                       if (result != null && context.mounted) {
-                                        _celebrationShown = false;
                                         setState(() {});
                                         ConfirmActionDialog.showResultSnackBar(context, result);
                                       }
