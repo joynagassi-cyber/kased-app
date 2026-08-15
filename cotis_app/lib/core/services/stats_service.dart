@@ -92,10 +92,10 @@ class StatsService {
     int membresEnAvance = 0;
     double montantEnAvance = 0.0;
 
-    for (final cot in cotisations.where((c) => c.statut == StatutCotisation.enAvance)) {
-      if (futureCulteIds.contains(c.culteId)) {
+    for (final cot in cotisations.where((cot) => cot.statut == StatutCotisation.enAvance)) {
+      if (futureCulteIds.contains(cot.culteId)) {
         membresEnAvance++;
-        montantEnAvance += c.montantPaye;
+        montantEnAvance += cot.montantPaye;
       }
     }
 
