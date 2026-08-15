@@ -59,7 +59,7 @@ void main() {
           overrides: [
             authServiceProvider.overrideWithValue(mockAuth),
             secureStorageProvider.overrideWithValue(mockStorage),
-            appDataProvider.overrideWith((ref) => FakeAppData()),
+            appDataProvider.overrideWith(FakeAppData.new),
           ],
           child: const KasedApp(),
         );
