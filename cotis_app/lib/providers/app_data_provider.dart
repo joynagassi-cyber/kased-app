@@ -246,6 +246,15 @@ class AppData extends _$AppData {
     return _statsService.getDashboardStats(stateValue);
   }
 
+  /// Charge l'objectif mensuel et le retourne.
+  Future<double> getObjectifMensuel() => StatsService.loadObjectifMensuel();
+
+  /// Met à jour l'objectif mensuel et retourne le nouveau DashboardStats.
+  Future<DashboardStats> updateObjectifMensuel(double montant) async {
+    await StatsService.saveObjectifMensuel(montant);
+    return getDashboardStats();
+  }
+
   List<Map<String, dynamic>> getRetardsMembresLocally() {
     final stateValue = state.value;
     if (stateValue == null) return [];

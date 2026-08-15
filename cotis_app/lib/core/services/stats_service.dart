@@ -4,6 +4,7 @@ import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Statistiques globales du tableau de bord.
 class DashboardStats {
@@ -14,6 +15,9 @@ class DashboardStats {
   final double totalDu;
   final int membresEnAvance;
   final double montantEnAvance;
+  final Culte? prochainCulte;
+  final double collecteMoisPrecedent;
+  final double objectifMensuel;
 
   DashboardStats({
     required this.totalMembres,
@@ -23,6 +27,9 @@ class DashboardStats {
     required this.totalDu,
     this.membresEnAvance = 0,
     this.montantEnAvance = 0.0,
+    this.prochainCulte,
+    this.collecteMoisPrecedent = 0.0,
+    this.objectifMensuel = 0.0,
   });
 }
 
@@ -107,6 +114,9 @@ class StatsService {
       totalDu: totalDu,
       membresEnAvance: membresEnAvance,
       montantEnAvance: montantEnAvance,
+      prochainCulte: _getProchainCulte(cultes, now),
+      collecteMoisPrecedent: _getCollecteMoisPrecedent(cotisations, now),
+      objectifMensuel: 0.0, // Par défaut, peut être surchargé depuis AppState
     );
   }
 
@@ -226,6 +236,63 @@ class StatsService {
       return await api.getMembresAJour();
     } catch (e) {
       return [];
+    }
+  }
+
+  /// Retourne le prochain culte futur (non supprimé).
+  Culte? _getProchainCulte(List<Culte> cultes, DateTime now) {
+    final futurs = cultes
+        .where((c) => !c.isDeleted && c.dateCulte.isAfter(now))
+        .toList()
+      ..sort((a, b) => a.dateCulte.compareTo(b.dateCulte));
+    return futurs.isEmpty ? null : futurs.first;
+  }
+
+  /// Retourne la collecte du mois précédent (pour calcul de tendance).
+  double _getCollecteMoisPrecedent(List<Cotisation> cotisations, DateTime now) {
+    final moisActuel = now.month;
+    final anneeActuelle = now.year;
+    final moisPrecedent = moisActuel == 1 ? 12 : moisActuel - 1;
+    final anneePrecedente = moisActuel == 1 ? anneeActuelle - 1 : anneeActuelle;
+
+    final debutMoisPrec = DateTime(anneePrecedente, moisPrecedent, 1);
+    final finMoisPrec = DateTime(anneePrecedente, moisPrecedent + 1, 0);
+
+    return cotisations
+        .where((c) =>
+            c.estPaye &&
+            c.datePaiement != null &&
+            c.datePaiement!.isAfter(debutMoisPrec) &&
+            c.datePaiement!.isBefore(finMoisPrec.add(const Duration(days: 1))))
+        .fold<double>(0, (sum, c) => sum + c.montantPaye);
+  }
+
+  /// Retourne les N membres en retard les plus endettés.
+  List<Map<String, dynamic>> getTopRetards(AppState state, int n) {
+    final retards = getRetardsMembresLocally(state);
+    return retards.take(n).toList();
+  }
+
+  /// Charge l'objectif mensuel depuis SharedPreferences.
+  static Future<double> loadObjectifMensuel() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('kased_objectif_mensuel');
+      if (raw == null) return 0.0;
+      return double.tryParse(raw) ?? 0.0;
+    } catch (e) {
+      debugPrint('[Stats] Erreur chargement objectif: $e');
+      return 0.0;
+    }
+  }
+
+  /// Sauvegarde l'objectif mensuel dans SharedPreferences.
+  static Future<void> saveObjectifMensuel(double montant) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('kased_objectif_mensuel', montant.toString());
+    } catch (e) {
+      debugPrint('[Stats] Erreur sauvegarde objectif: $e');
     }
   }
 }
