@@ -9,6 +9,7 @@ import 'package:kased_app/widgets/member_pay_tile.dart';
 import 'package:kased_app/widgets/paiement_personnel_dialog.dart';
 import 'package:kased_app/widgets/edit_montant_dialog.dart';
 import 'package:kased_app/widgets/confirm_action_dialog.dart';
+import 'package:kased_app/widgets/batch_payment_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:kased_app/widgets/motion/skeleton_loading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,38 +51,6 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
         final membresPayesIds = cotisations.where((c) => c.estPaye).map((c) => c.membreId).toSet();
         final membresNonPayes = membres.where((m) => !membresPayesIds.contains(m.id)).toList();
         final tousPayes = membres.isNotEmpty && membresNonPayes.isEmpty;
-
-        if (tousPayes && !_celebrationShown) {
-          _celebrationShown = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(
-                  children: [
-                    Icon(Icons.stars, color: Colors.white),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Tout le monde a payé ! 🌟 Gloire à Dieu !',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: AppColors.success,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          });
-        }
 
         // Verrouillage à 30 jours : interdit de modifier les paiements validés
         final isOlderThan30Days = DateTime.now().difference(culte.dateCulte).inDays > 30;
@@ -193,6 +162,58 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                 icon: const Icon(Icons.sync),
                 onPressed: () => ref.read(appDataProvider.notifier).syncData(),
               ),
+              if (!isOlderThan30Days)
+                IconButton(
+                  icon: const Icon(Icons.flash_on, color: Colors.blue),
+                  tooltip: 'Payer en avance pour tous les membres',
+                  onPressed: () async {
+                    // Get future cultes for this member
+                    final futureCultes = state.cultes
+                        .where((c) => !c.isDeleted && c.dateCulte.isAfter(DateTime.now()))
+                        .take(10)
+                        .toList();
+
+                    if (futureCultes.isEmpty) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Aucun culte futur à payer en avance'),
+                            backgroundColor: AppColors.warning,
+                          ),
+                        );
+                      }
+                      return;
+                    }
+
+                    await BatchPaymentDialog.show(
+                      context,
+                      futureCultes: futureCultes,
+                      montantParCulte: culte.montantCotisation,
+                      onPay: (selectedCultes, totalAmount) async {
+                        // Pay for each member
+                        for (final membre in membres) {
+                          await ref.read(appDataProvider.notifier).payerPlusieursCultesEnAvance(
+                            membreId: membre.id,
+                            culteIds: selectedCultes.map((c) => c.id).toList(),
+                            montantTotal: totalAmount,
+                          );
+                        }
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '✅ ${selectedCultes.length} culte(s) payé(s) en avance pour ${membres.length} membre(s)\n'
+                                'Total: ${totalAmount.toStringAsFixed(0)} F par membre',
+                              ),
+                              backgroundColor: AppColors.success,
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
             ],
           ),
           body: ListView(
@@ -327,7 +348,40 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                             ),
                                       );
                                       if (result != null && context.mounted) {
-                                        ConfirmActionDialog.showResultSnackBar(context, result);
+                                        if (result.isComplete) {
+                                          _celebrationShown = true;
+                                          setState(() {});
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: const Row(
+                                                children: [
+                                                  Icon(Icons.stars, color: Colors.white),
+                                                  SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Text(
+                                                      'Tout le monde a payé ! 🌟 Gloire à Dieu !',
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              behavior: SnackBarBehavior.floating,
+                                              backgroundColor: AppColors.success,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(16),
+                                              ),
+                                              margin: const EdgeInsets.all(16),
+                                              duration: const Duration(seconds: 4),
+                                            ),
+                                          );
+                                        } else if (result.isPartial) {
+                                          ConfirmActionDialog.showResultSnackBar(context, result);
+                                        }
+                                        // isFailed: local optimistic update already applied,
+                                        // no red snackbar needed.
                                       }
                                     } catch (e) {
                                       if (context.mounted) {
@@ -371,6 +425,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                             ),
                                       );
                                       if (result != null && context.mounted) {
+                                        _celebrationShown = false;
+                                        setState(() {});
                                         ConfirmActionDialog.showResultSnackBar(context, result);
                                       }
                                     } catch (e) {

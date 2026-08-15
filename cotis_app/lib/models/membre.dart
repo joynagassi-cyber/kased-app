@@ -14,6 +14,7 @@ class Membre {
   late DateTime dateAdhesion;
   DateTime? dateNaissance;
   double montantEnAvance = 0.0; // Montant payé d'avance pour les futurs cultes
+  double totalDons = 0.0; // Total cumulé des dons (excédents de paiement)
   String? telephone;
   String? notes;
   bool isActive = true;
@@ -64,6 +65,7 @@ class Membre {
     'date_adhesion': dateAdhesion.toIso8601String().substring(0, 10),
     if (dateNaissance != null) 'date_naissance': dateNaissance!.toIso8601String().substring(0, 10),
     'montant_en_avance': montantEnAvance,
+    'total_dons': totalDons,
     if (telephone != null) 'telephone': telephone,
     if (notes != null) 'notes': notes,
     'is_active': isActive,
@@ -86,6 +88,7 @@ class Membre {
           ? null
           : DateTime.parse(json['date_naissance'] as String)
       ..montantEnAvance = (json['montant_en_avance'] as num?)?.toDouble() ?? 0.0
+      ..totalDons = (json['total_dons'] as num?)?.toDouble() ?? 0.0
       ..telephone = json['telephone'] as String?
       ..notes = json['notes'] as String?
       ..isActive = json['is_active'] as bool? ?? true

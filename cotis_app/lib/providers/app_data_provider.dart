@@ -239,6 +239,8 @@ class AppData extends _$AppData {
         totalCollecte: 0,
         membresEnRetard: 0,
         totalDu: 0,
+        membresEnAvance: 0,
+        montantEnAvance: 0.0,
       );
     }
     return _statsService.getDashboardStats(stateValue);
@@ -876,9 +878,47 @@ class AppData extends _$AppData {
     // Persister immédiatement dans Isar
     await _cache.saveCotisation(updatedCotisation);
 
-    // Notification de don
+    // Mettre à jour le total des dons du membre si un don a été enregistré
     if (montantDon > 0) {
-      final membreNom = previousState.membres.firstWhere((m) => m.id == membreId, orElse: () => Membre()..id = membreId..nom = membreId..prenom = membreId).nomComplet;
+      final currentAfterCot = state.value ?? previousState;
+      final membreWithDon = currentAfterCot.membres.firstWhereOrNull(
+        (m) => m.id == membreId,
+      );
+      if (membreWithDon != null && membreWithDon.totalDons < montantDon) {
+        // Le membre n'a pas encore ce don comptabilisé — ajouter la différence
+        final deviceId = await DeviceService.getDeviceId();
+        final now = DateTime.now();
+        final updatedMembre = Membre()
+          ..id = membreWithDon.id
+          ..nom = membreWithDon.nom
+          ..prenom = membreWithDon.prenom
+          ..dateAdhesion = membreWithDon.dateAdhesion
+          ..dateNaissance = membreWithDon.dateNaissance
+          ..montantEnAvance = membreWithDon.montantEnAvance
+          ..totalDons = membreWithDon.totalDons + montantDon
+          ..telephone = membreWithDon.telephone
+          ..notes = membreWithDon.notes
+          ..isActive = membreWithDon.isActive
+          ..deviceId = deviceId
+          ..createdAt = membreWithDon.createdAt
+          ..version = membreWithDon.version + 1
+          ..updatedAt = now;
+        final syncOp = SyncOperation()
+          ..operationId = UuidUtils.generate()
+          ..type = 'UPDATE'
+          ..entityType = 'membre'
+          ..entityId = membreId
+          ..payloadJson = jsonEncode(updatedMembre.toJson())
+          ..createdAt = now
+          ..deviceId = deviceId;
+        await _cache.saveMembreWithSyncOp(updatedMembre, syncOp);
+        final updatedMembres = [
+          ...currentAfterCot.membres.where((m) => m.id != membreId),
+          updatedMembre,
+        ]..sort((a, b) => a.nom.compareTo(b.nom));
+        state = AsyncValue.data(currentAfterCot.copyWith(membres: updatedMembres));
+      }
+      final membreNom = membreWithDon?.nomComplet ?? membreId;
       NotificationCoordinator.notifierDonEnregistre(montantDon, membreId, membreNom: membreNom);
     }
 
@@ -1103,6 +1143,112 @@ class AppData extends _$AppData {
     unawaited(_notifierPush(
       'cotisation_absente',
       _nomMembre(membreId) ?? 'un membre',
+    ));
+  }
+
+  /// Paye plusieurs cultes en avance pour un membre en un seul geste.
+  ///
+  /// Crée automatiquement une cotisation `enAvance` pour chaque culte
+  /// sélectionné, avec le montant proportionnel.
+  Future<void> payerPlusieursCultesEnAvance({
+    required String membreId,
+    required List<String> culteIds,
+    required double montantTotal,
+  }) async {
+    final previousState = state.value;
+    if (previousState == null || culteIds.isEmpty) return;
+
+    final now = DateTime.now();
+    final deviceId = await DeviceService.getDeviceId();
+    final montantParCulte = montantTotal / culteIds.length;
+
+    final updatedCotisations = List<Cotisation>.from(previousState.cotisations);
+    final syncOps = <SyncOperation>[];
+
+    for (final culteId in culteIds) {
+      final culte = previousState.cultes.firstWhereOrNull(
+        (c) => c.id == culteId && !c.isDeleted,
+      );
+      if (culte == null) continue;
+
+      var existingCotisation = updatedCotisations.firstWhereOrNull(
+        (c) => c.membreId == membreId && c.culteId == culteId,
+      );
+
+      final isNewCotisation = existingCotisation == null;
+      if (isNewCotisation) {
+        existingCotisation = Cotisation()
+          ..id = UuidUtils.generate()
+          ..membreId = membreId
+          ..culteId = culteId
+          ..montantObligatoire = culte.montantCotisation
+          ..montantPaye = 0.0
+          ..montantDon = 0.0
+          ..statut = StatutCotisation.nonPaye;
+      }
+
+      // Déterminer le statut : enAvance si culte futur
+      final statut = CotisationLogic.determinerStatut(
+        datePaiement: now,
+        dateCulte: culte.dateCulte,
+      );
+
+      final montantPartiel = montantParCulte;
+      final updated = existingCotisation.copyWith(
+        montantPaye: montantPartiel,
+        montantDon: 0.0,
+        statut: statut,
+        datePaiement: now,
+        updatedAt: now,
+      );
+
+      if (isNewCotisation) {
+        updatedCotisations.add(updated);
+      } else {
+        final index = updatedCotisations.indexWhere(
+          (c) => c.id == updated.id,
+        );
+        if (index != -1) {
+          updatedCotisations[index] = updated;
+        }
+      }
+
+      // Créer l'opération de sync
+      final syncOp = SyncOperation()
+        ..operationId = UuidUtils.generate()
+        ..type = isNewCotisation ? 'CREATE' : 'UPDATE'
+        ..entityType = 'cotisation'
+        ..entityId = updated.id
+        ..payloadJson = jsonEncode(updated.toJson())
+        ..createdAt = now
+        ..deviceId = deviceId;
+      syncOps.add(syncOp);
+    }
+
+    // Mettre à jour l'état
+    state = AsyncValue.data(previousState.copyWith(
+      cotisations: updatedCotisations,
+    ));
+
+    // Sauvegarder localement
+    await _cache.saveAllCotisations(updatedCotisations);
+    for (final op in syncOps) {
+      await _cache.saveSyncOp(op);
+    }
+
+    // Notification
+    final membre = previousState.membres.firstWhereOrNull(
+      (m) => m.id == membreId,
+    );
+    final culteLabels = culteIds
+        .map((id) => previousState.cultes.firstWhereOrNull((c) => c.id == id))
+        .whereType<Culte>()
+        .map((c) => c.dateFormatee)
+        .join(', ');
+    unawaited(_notifierPush(
+      'cotisation_payee',
+      membre?.nomComplet ?? membreId,
+      extra: '$montantTotal.toStringAsFixed(0)F pour $culteLabels',
     ));
   }
 

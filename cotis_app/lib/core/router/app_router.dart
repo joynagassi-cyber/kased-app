@@ -177,6 +177,14 @@ GoRouter router(RouterRef ref) {
               child: const RetardsScreen(),
             ),
           ),
+          GoRoute(
+            path: '/corbeille',
+            pageBuilder: (context, state) => _buildFadeSlidePage(
+              context: context,
+              state: state,
+              child: const CorbeilleScreen(),
+            ),
+          ),
         ],
       ),
       GoRoute(
@@ -185,14 +193,6 @@ GoRouter router(RouterRef ref) {
           context: context,
           state: state,
           child: const ProfileScreen(),
-        ),
-      ),
-      GoRoute(
-        path: '/corbeille',
-        pageBuilder: (context, state) => _buildFadeSlidePage(
-          context: context,
-          state: state,
-          child: const CorbeilleScreen(),
         ),
       ),
     ],

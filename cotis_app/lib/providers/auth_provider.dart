@@ -68,7 +68,9 @@ class Auth extends _$Auth {
   AuthState build() {
     _storage = ref.watch(secureStorageProvider);
     _authService = ref.watch(authServiceProvider);
-    _checkPersistedAuth();
+    // Démarrer la vérification asynchrone de l'auth persistée dès l'instanciation.
+    // Le provider conserve isLoading=true tant que le résultat n'est pas disponible.
+    unawaited(_checkPersistedAuth());
     return const AuthState(isLoading: true);
   }
 
@@ -109,6 +111,8 @@ class Auth extends _$Auth {
   }
 
   Future<void> _checkPersistedAuth() async {
+    // Petit délai pour laisser le storage s'initialiser correctement au redémarrage
+    await Future.delayed(const Duration(milliseconds: 50));
     try {
       final token = await _storage.read(key: 'auth_token');
       final refreshTokenValue = await _storage.read(key: 'refresh_token');
@@ -146,7 +150,6 @@ class Auth extends _$Auth {
             if (success) return;
           } else {
             // Offline + token expiré : garder connecté avec l'ancien token
-            // L'utilisateur pourra utiliser les données cachées
             debugPrint('[AUTH] Offline : token expiré mais on garde la session locale');
             state = AuthState(
               isAuthenticated: true,
@@ -247,9 +250,9 @@ class Auth extends _$Auth {
     } catch (e) {
       debugPrint('[AUTH] Erreur refresh session : $e');
       final errorStr = e.toString();
-      if (errorStr.contains('DioExceptionType.connectionTimeout') || 
-          errorStr.contains('DioExceptionType.receiveTimeout') || 
-          errorStr.contains('DioExceptionType.sendTimeout') || 
+      if (errorStr.contains('DioExceptionType.connectionTimeout') ||
+          errorStr.contains('DioExceptionType.receiveTimeout') ||
+          errorStr.contains('DioExceptionType.sendTimeout') ||
           errorStr.contains('DioExceptionType.connectionError') ||
           errorStr.contains('SocketException') ||
           errorStr.contains('Failed host lookup')) {

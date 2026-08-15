@@ -32,7 +32,6 @@ class MembreDetailScreen extends ConsumerWidget {
               orElse: () => throw Exception('Membre non trouvé'),
             );
 
-        // Stats locales depuis les cotisations
         final cotisationsMembre = state.cotisations
             .where((c) => c.membreId == membreId)
             .toList();
@@ -44,6 +43,12 @@ class MembreDetailScreen extends ConsumerWidget {
         final absences = cotisationsMembre
             .where((c) => c.statut == StatutCotisation.absent)
             .length;
+        final totalCultes = state.cultes.where((c) => !c.isDeleted).length;
+        final cadence = totalCultes > 0
+            ? (cultesPayes / totalCultes) * 100
+            : 0.0;
+        final totalDons = cotisationsMembre
+            .fold<double>(0, (sum, c) => sum + c.montantDon);
 
         // Historique local : associer chaque cotisation à son culte
         final cultesById = {for (final c in state.cultes) c.id: c};
@@ -54,11 +59,11 @@ class MembreDetailScreen extends ConsumerWidget {
                 date: culte?.dateCulte,
                 titre: culte?.titre ?? 'Culte',
                 statut: cot.statut,
-                 montant: cot.montantPaye,
+                montant: cot.montantPaye,
                 datePaiement: cot.datePaiement,
               );
             })
-            .where((item) => item.date != null) // ignorer si le culte n'existe plus
+            .where((item) => item.date != null)
             .toList()
           ..sort((a, b) {
             if (a.date == null || b.date == null) return 0;
@@ -73,6 +78,7 @@ class MembreDetailScreen extends ConsumerWidget {
           ),
           body: ListView(
             children: [
+              // ── Header Card ─────────────────────────────────────
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -132,85 +138,217 @@ class MembreDetailScreen extends ConsumerWidget {
                 ),
               ),
 
-              // ── Floating Stat Cards (2 au lieu de 3) ──────────
-              Transform.translate(
-                offset: const Offset(0, -24),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _GradientStatCard(
-                          label: 'Cultes',
-                          value: '$cultesPayes',
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF00C853), Color(0xFF69F0AE)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+              // ── Stat Cards Grid (3+2 layout) ──────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    // Row 1: Cultes, Retards, Absences
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(
+                            label: 'Cultes payés',
+                            value: '$cultesPayes',
+                            sub: '$totalCultes cultes',
+                            icon: Icons.check_circle,
+                            iconColor: AppColors.success,
+                            cardColor: colorScheme.secondaryContainer,
+                            textColor: colorScheme.onSecondaryContainer,
+                            isDark: isDark,
                           ),
-                          shadowColor: const Color(0xFF00C853),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _GradientStatCard(
-                          label: 'Retards',
-                          value: '$retards',
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF1744), Color(0xFFFF5252)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _StatCard(
+                            label: 'Retards',
+                            value: '$retards',
+                            sub: 'en attente',
+                            icon: Icons.schedule,
+                            iconColor: AppColors.danger,
+                            cardColor: colorScheme.errorContainer,
+                            textColor: colorScheme.onErrorContainer,
+                            isDark: isDark,
                           ),
-                          shadowColor: const Color(0xFFFF1744),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _GradientStatCard(
-                          label: 'Absences',
-                          value: '$absences',
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF9100), Color(0xFFFFAB40)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _StatCard(
+                            label: 'Absences',
+                            value: '$absences',
+                            sub: 'marqués',
+                            icon: Icons.person_off,
+                            iconColor: AppColors.warning,
+                            cardColor: colorScheme.tertiaryContainer,
+                            textColor: colorScheme.onTertiaryContainer,
+                            isDark: isDark,
                           ),
-                          shadowColor: const Color(0xFFFF9100),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // Row 2: Cadence, Dons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _CadenceCard(
+                            percentage: cadence,
+                            paid: cultesPayes,
+                            total: totalCultes,
+                            isDark: isDark,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _StatCard(
+                            label: 'Total Dons',
+                            value: '${totalDons.toStringAsFixed(0)}',
+                            sub: 'FCFA',
+                            icon: Icons.favorite,
+                            iconColor: colorScheme.primary,
+                            cardColor: colorScheme.primaryContainer,
+                            textColor: colorScheme.onPrimaryContainer,
+                            isDark: isDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
 
               // ── Paiement en avance Section ─────────────────────
               if (currentMembre.montantEnAvance > 0)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.schedule, size: 16, color: AppColors.primary),
-                      const SizedBox(width: 6),
-                      Text(
-                        'En avance: ${currentMembre.montantEnAvance.toStringAsFixed(0)} F',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.schedule,
+                            size: 20,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Paiement en avance',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.8,
+                                  color: colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${currentMembre.montantEnAvance.toStringAsFixed(0)} F',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton.tonal(
+                          onPressed: () =>
+                              _showAvanceDialog(context, ref, currentMembre),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
+                            foregroundColor: colorScheme.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'Ajouter',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
+                  child: InkWell(
+                    onTap: () => _showAvanceDialog(context, ref, currentMembre),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                         ),
                       ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () => _showAvanceDialog(context, ref, currentMembre),
-                        child: const Text('Ajouter'),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.add,
+                              size: 20,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Aucun paiement en avance',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Ajouter un paiement pour ce membre',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              const SizedBox(height: 8),
-              
+
               // ── Historique Section ─────────────────────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                 child: Text(
                   'HISTORIQUE',
                   style: TextStyle(
@@ -232,17 +370,21 @@ class MembreDetailScreen extends ConsumerWidget {
               else
                 ...historiqueItems.asMap().entries.map((entry) {
                   final item = entry.value;
-                  final estPaye = item.statut == StatutCotisation.paye || item.statut == StatutCotisation.enAvance;
+                  final estPaye = item.statut == StatutCotisation.paye ||
+                      item.statut == StatutCotisation.enAvance;
                   final estAbsent = item.statut == StatutCotisation.absent;
 
                   return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+                      color: colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? AppColors.borderDark : AppColors.border,
+                        color:
+                            colorScheme.outlineVariant.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Row(
@@ -254,7 +396,8 @@ class MembreDetailScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 item.date != null
-                                    ? DateFormat('dd/MM/yyyy').format(item.date!)
+                                    ? DateFormat('dd/MM/yyyy')
+                                        .format(item.date!)
                                     : item.titre,
                                 style: theme.textTheme.titleSmall
                                     ?.copyWith(fontWeight: FontWeight.w700),
@@ -279,17 +422,28 @@ class MembreDetailScreen extends ConsumerWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: estPaye
                                 ? AppColors.success.withValues(alpha: 0.12)
                                 : (estAbsent
-                                    ? colorScheme.onSurfaceVariant.withValues(alpha: 0.08)
+                                    ? colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.08)
                                     : AppColors.danger.withValues(alpha: 0.12)),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             '${item.montant.toInt()} F',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: estPaye
+                                  ? AppColors.success
+                                  : (estAbsent
+                                      ? colorScheme.onSurfaceVariant
+                                      : AppColors.danger),
+                            ),
                           ),
                         ),
                       ],
@@ -301,68 +455,71 @@ class MembreDetailScreen extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Erreur: $e'))),
     );
   }
 }
 
-  Future<void> _showAvanceDialog(BuildContext context, WidgetRef ref, Membre membre) async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Paiement en avance'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Montant en FCFA',
-            hintText: 'Ex: 500',
-          ),
+Future<void> _showAvanceDialog(
+    BuildContext context, WidgetRef ref, Membre membre) async {
+  final controller = TextEditingController();
+  final result = await showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Paiement en avance'),
+      content: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(
+          labelText: 'Montant en FCFA',
+          hintText: 'Ex: 500',
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
-          FilledButton(
-            onPressed: () {
-              final montant = double.tryParse(controller.text.trim());
-              if (montant != null && montant > 0) {
-                Navigator.pop(ctx, controller.text.trim());
-              }
-            },
-            child: const Text('Valider'),
-          ),
-        ],
       ),
-    );
-    controller.dispose();
-    
-    if (result == null || !context.mounted) return;
-    
-    final montant = double.tryParse(result) ?? 0.0;
-    if (montant <= 0) return;
-    
-    try {
-      await ref.read(appDataProvider.notifier).ajouterPaiementAvance(
-        membreId: membre.id,
-        montant: montant,
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+        FilledButton(
+          onPressed: () {
+            final montant = double.tryParse(controller.text.trim());
+            if (montant != null && montant > 0) {
+              Navigator.pop(ctx, controller.text.trim());
+            }
+          },
+          child: const Text('Valider'),
+        ),
+      ],
+    ),
+  );
+  controller.dispose();
+
+  if (result == null || !context.mounted) return;
+
+  final montant = double.tryParse(result) ?? 0.0;
+  if (montant <= 0) return;
+
+  try {
+    await ref
+        .read(appDataProvider.notifier)
+        .ajouterPaiementAvance(membreId: membre.id, montant: montant);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Gloire à Dieu ! ${montant.toStringAsFixed(0)} F ajoutés en avance'),
+          backgroundColor: AppColors.success,
+        ),
       );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gloire à Dieu ! ${montant.toStringAsFixed(0)} F ajoutés en avance'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
-      }
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur: $e')),
+      );
     }
   }
+}
 
 class _HistoriqueItem {
   final DateTime? date;
@@ -380,59 +537,208 @@ class _HistoriqueItem {
   });
 }
 
-// ── Gradient Stat Card ──────────────────────────────────────────────────────
+// ── Stat Card (theme-aware, uses ColorScheme) ────────────────────────────────
 
-class _GradientStatCard extends StatelessWidget {
+class _StatCard extends StatelessWidget {
   final String label;
   final String value;
-  final LinearGradient gradient;
-  final Color shadowColor;
+  final String sub;
+  final IconData icon;
+  final Color iconColor;
+  final Color cardColor;
+  final Color textColor;
+  final bool isDark;
 
-  const _GradientStatCard({
+  const _StatCard({
     required this.label,
     required this.value,
-    required this.gradient,
-    required this.shadowColor,
+    required this.sub,
+    required this.icon,
+    required this.iconColor,
+    required this.cardColor,
+    required this.textColor,
+    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor.withValues(alpha: 0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: iconColor),
+          ),
+          const SizedBox(height: 10),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: textColor,
               height: 1.1,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            label.toUpperCase(),
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: textColor.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            sub,
             style: TextStyle(
               fontSize: 9,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-              color: Colors.white.withValues(alpha: 0.85),
+              fontWeight: FontWeight.w500,
+              color: textColor.withValues(alpha: 0.45),
             ),
           ),
         ],
       ),
     );
   }
+}
+
+// ── Cadence Card (progress ring + percentage) ─────────────────────────────────
+
+class _CadenceCard extends StatelessWidget {
+  final double percentage;
+  final int paid;
+  final int total;
+  final bool isDark;
+
+  const _CadenceCard({
+    required this.percentage,
+    required this.paid,
+    required this.total,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          // Circular progress indicator
+          SizedBox(
+            width: 64,
+            height: 64,
+            child: CustomPaint(
+              painter: _ProgressPainter(percentage, colorScheme),
+              child: Center(
+                child: Text(
+                  '${percentage.toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Cadence',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$paid / $total cultes',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                LinearProgressIndicator(
+                  value: total > 0 ? percentage / 100 : 0,
+                  minHeight: 5,
+                  borderRadius: BorderRadius.circular(4),
+                  backgroundColor: colorScheme
+                      .onPrimaryContainer
+                      .withValues(alpha: 0.15),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    colorScheme.primary.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressPainter extends CustomPainter {
+  final double percentage;
+  final ColorScheme colorScheme;
+
+  _ProgressPainter(this.percentage, this.colorScheme);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width / 2) - 4;
+
+    // Background arc
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = colorScheme.onPrimaryContainer.withValues(alpha: 0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6,
+    );
+
+    // Progress arc
+    if (percentage > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -90 * (3.14159265 / 180),
+        (percentage / 100) * 2 * 3.14159265,
+        false,
+        Paint()
+          ..color = colorScheme.primary
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ProgressPainter oldDelegate) =>
+      oldDelegate.percentage != percentage;
 }

@@ -230,7 +230,16 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
         backgroundColor: colorScheme.surface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            // Try root navigator pop first (handles edge case where this
+            // screen is navigated to outside the shell, e.g. deep link).
+            final navigator = Navigator.of(context, rootNavigator: true);
+            if (navigator.canPop()) {
+              navigator.pop();
+            } else {
+              context.go('/dashboard');
+            }
+          },
         ),
         actions: [
           if (_selectedIds.isNotEmpty) ...[

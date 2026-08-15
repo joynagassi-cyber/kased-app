@@ -12,6 +12,8 @@ class DashboardStats {
   final double totalCollecte;
   final int membresEnRetard;
   final double totalDu;
+  final int membresEnAvance;
+  final double montantEnAvance;
 
   DashboardStats({
     required this.totalMembres,
@@ -19,6 +21,8 @@ class DashboardStats {
     required this.totalCollecte,
     required this.membresEnRetard,
     required this.totalDu,
+    this.membresEnAvance = 0,
+    this.montantEnAvance = 0.0,
   });
 }
 
@@ -79,12 +83,30 @@ class StatsService {
       }
     }
 
+    // Calcul des membres en avance
+    final futureCulteIds = cultes
+        .where((c) => !c.isDeleted && c.dateCulte.isAfter(now))
+        .map((c) => c.id)
+        .toSet();
+
+    int membresEnAvance = 0;
+    double montantEnAvance = 0.0;
+
+    for (final cot in cotisations.where((c) => c.statut == StatutCotisation.enAvance)) {
+      if (futureCulteIds.contains(c.culteId)) {
+        membresEnAvance++;
+        montantEnAvance += c.montantPaye;
+      }
+    }
+
     return DashboardStats(
       totalMembres: membres.where((m) => m.isActive && !m.isDeleted).length,
       totalCultes: cultes.where((c) => !c.isDeleted).length,
       totalCollecte: totalCollecte,
       membresEnRetard: membresEnRetardIds.length,
       totalDu: totalDu,
+      membresEnAvance: membresEnAvance,
+      montantEnAvance: montantEnAvance,
     );
   }
 

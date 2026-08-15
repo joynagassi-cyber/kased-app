@@ -87,13 +87,18 @@ const MembreSchema = CollectionSchema(
       name: r'telephone',
       type: IsarType.string,
     ),
-    r'updatedAt': PropertySchema(
+    r'totalDons': PropertySchema(
       id: 14,
+      name: r'totalDons',
+      type: IsarType.double,
+    ),
+    r'updatedAt': PropertySchema(
+      id: 15,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'version': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'version',
       type: IsarType.long,
     )
@@ -177,8 +182,9 @@ void _membreSerialize(
   writer.writeString(offsets[11], object.notes);
   writer.writeString(offsets[12], object.prenom);
   writer.writeString(offsets[13], object.telephone);
-  writer.writeDateTime(offsets[14], object.updatedAt);
-  writer.writeLong(offsets[15], object.version);
+  writer.writeDouble(offsets[14], object.totalDons);
+  writer.writeDateTime(offsets[15], object.updatedAt);
+  writer.writeLong(offsets[16], object.version);
 }
 
 Membre _membreDeserialize(
@@ -203,8 +209,9 @@ Membre _membreDeserialize(
   object.notes = reader.readStringOrNull(offsets[11]);
   object.prenom = reader.readString(offsets[12]);
   object.telephone = reader.readStringOrNull(offsets[13]);
-  object.updatedAt = reader.readDateTimeOrNull(offsets[14]);
-  object.version = reader.readLong(offsets[15]);
+  object.totalDons = reader.readDouble(offsets[14]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[15]);
+  object.version = reader.readLong(offsets[16]);
   return object;
 }
 
@@ -244,8 +251,10 @@ P _membreDeserializeProp<P>(
     case 13:
       return (reader.readStringOrNull(offset)) as P;
     case 14:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 15:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 16:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1770,6 +1779,68 @@ extension MembreQueryFilter on QueryBuilder<Membre, Membre, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Membre, Membre, QAfterFilterCondition> totalDonsEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalDons',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterFilterCondition> totalDonsGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalDons',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterFilterCondition> totalDonsLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalDons',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterFilterCondition> totalDonsBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalDons',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Membre, Membre, QAfterFilterCondition> updatedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -2066,6 +2137,18 @@ extension MembreQuerySortBy on QueryBuilder<Membre, Membre, QSortBy> {
     });
   }
 
+  QueryBuilder<Membre, Membre, QAfterSortBy> sortByTotalDons() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalDons', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterSortBy> sortByTotalDonsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalDons', Sort.desc);
+    });
+  }
+
   QueryBuilder<Membre, Membre, QAfterSortBy> sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
@@ -2272,6 +2355,18 @@ extension MembreQuerySortThenBy on QueryBuilder<Membre, Membre, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Membre, Membre, QAfterSortBy> thenByTotalDons() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalDons', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Membre, Membre, QAfterSortBy> thenByTotalDonsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalDons', Sort.desc);
+    });
+  }
+
   QueryBuilder<Membre, Membre, QAfterSortBy> thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
@@ -2389,6 +2484,12 @@ extension MembreQueryWhereDistinct on QueryBuilder<Membre, Membre, QDistinct> {
     });
   }
 
+  QueryBuilder<Membre, Membre, QDistinct> distinctByTotalDons() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'totalDons');
+    });
+  }
+
   QueryBuilder<Membre, Membre, QDistinct> distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
@@ -2490,6 +2591,12 @@ extension MembreQueryProperty on QueryBuilder<Membre, Membre, QQueryProperty> {
   QueryBuilder<Membre, String?, QQueryOperations> telephoneProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'telephone');
+    });
+  }
+
+  QueryBuilder<Membre, double, QQueryOperations> totalDonsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'totalDons');
     });
   }
 
