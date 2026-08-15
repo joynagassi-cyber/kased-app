@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:kased_app/core/logic/cotisation_logic.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/isar_local_cache.dart';
