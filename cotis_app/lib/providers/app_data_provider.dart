@@ -839,15 +839,20 @@ class AppData extends _$AppData {
     // Calcul du don (excédent)
     final montantDon = montant - existingCotisation.montantObligatoire;
 
+    // Détermination du statut : enAvance si paiement avant le culte, paye sinon
+    final datePaiement = DateTime.now();
+    final statut = CotisationLogic.determinerStatut(
+      datePaiement: datePaiement,
+      dateCulte: culte.dateCulte,
+    );
+
     // Mise à jour de la cotisation
     final updatedCotisation = existingCotisation.copyWith(
       montantPaye: montant,
       montantDon: montantDon,
-      statut: montant >= existingCotisation.montantObligatoire
-          ? StatutCotisation.paye
-          : StatutCotisation.nonPaye,
+      statut: statut,
       datePaiement: montant >= existingCotisation.montantObligatoire
-          ? DateTime.now()
+          ? datePaiement
           : null,
       updatedAt: DateTime.now(),
     );
