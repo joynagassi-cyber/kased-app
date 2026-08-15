@@ -215,7 +215,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    isLast ? 'Cr'eer mon compte' : 'Continuer',
+                    isLast ? 'Create my account' : 'Continue',
                     style: GoogleFonts.dmSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -236,7 +236,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           TextButton(
             onPressed: () => context.go('/login'),
             child: Text(
-              'J'ai d'ej`a un compte',
+              'I already have an account',
               style: GoogleFonts.dmSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,

@@ -277,7 +277,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                   Text('La corbeille est vide',
                       style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant)),
                   const SizedBox(height: 8),
-                  Text('Les elements sont conserves 30 jours',
+                  Text('Les éléments sont conservés 30 jours',
                       style: TextStyle(fontSize: 12,
                           color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
                 ],
