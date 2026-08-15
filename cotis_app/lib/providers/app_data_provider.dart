@@ -872,7 +872,7 @@ class AppData extends _$AppData {
 
     // Notification de don
     if (montantDon > 0) {
-      final membreNom = previousState.membres.firstWhere((m) => m.id == membreId, orElse: () => Membre()..nom = membreId).nomComplet;
+      final membreNom = previousState.membres.firstWhere((m) => m.id == membreId, orElse: () => Membre()..id = membreId..nom = membreId..prenom = membreId).nomComplet;
       NotificationCoordinator.notifierDonEnregistre(montantDon, membreId, membreNom: membreNom);
     }
 
