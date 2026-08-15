@@ -26,6 +26,7 @@ void main() {
     when(() => mockAppData.loadRetardsMembres()).thenAnswer((_) async => []);
     when(() => mockAppData.loadDashboard()).thenAnswer((_) async {});
     when(() => mockAppData.syncData()).thenAnswer((_) async {});
+    when(() => mockAppData.getRetardsMembresLocally()).thenReturn([]);
     when(() => mockAppData.getDashboardStats()).thenReturn(
       DashboardStats(
         totalMembres: 0,
