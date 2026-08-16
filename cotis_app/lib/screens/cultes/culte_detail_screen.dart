@@ -84,10 +84,11 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                   ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.edit),
-                tooltip: 'Modifier le montant',
-                onPressed: () async {
+              if (!isOlderThan30Days)
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Modifier le montant',
+                  onPressed: () async {
                     await EditMontantDialog.show(
                       context,
                       currentMontant: culte.montantCotisation,
@@ -99,7 +100,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                           ),
                     );
                   },
-              ),
+                ),
               IconButton(
                 icon: const Icon(Icons.picture_as_pdf),
                 tooltip: 'Exporter en PDF',

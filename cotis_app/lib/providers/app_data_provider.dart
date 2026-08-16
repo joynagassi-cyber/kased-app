@@ -648,6 +648,15 @@ class AppData extends _$AppData {
     if (current == null) return;
 
     final existing = current.cultes.firstWhere((c) => c.id == id);
+
+    // Verrouillage à 30 jours : interdit de modifier un culte passé
+    final isOlderThan30Days =
+        DateTime.now().difference(existing.dateCulte).inDays > 30;
+    if (isOlderThan30Days) {
+      throw Exception(
+          "Impossible de modifier un culte dont la date remonte à plus de 30 jours.");
+    }
+
     final updated = Culte()
       ..id = existing.id
       ..dateCulte = dateCulte ?? existing.dateCulte

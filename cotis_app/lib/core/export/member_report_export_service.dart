@@ -104,9 +104,6 @@ class MemberReportExportService {
   static Future<String> exporterTousLesMembresCsv({
     required AppState state,
   }) async {
-    final membresMap = {for (var m in state.membres) m.id: m};
-    final cultesMap = {for (var c in state.cultes) c.id: c};
-
     final buffer = StringBuffer();
     buffer.write('﻿');
 

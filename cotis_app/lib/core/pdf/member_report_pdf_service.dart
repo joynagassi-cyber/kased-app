@@ -37,8 +37,6 @@ class MemberReportPdfService {
     final totalDu = cotisations.fold<double>(0, (sum, c) => sum + (c.montantObligatoire - c.montantPaye));
     final cadence = cultes.isNotEmpty ? (cultesPayes / cultes.length * 100).toDouble() : 0.0;
 
-    // Date d'adhésion formatée
-    final dateFormat = DateFormat('dd MMMM yyyy', 'fr_FR');
     final maintenant = DateTime.now();
     final age = membre.dateNaissance != null
         ? maintenant.year - membre.dateNaissance!.year -

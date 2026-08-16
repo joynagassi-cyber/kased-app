@@ -191,16 +191,33 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                                           itemBuilder: (_) {
                                             final isOlderThan30 = DateTime.now().difference(culte.dateCulte).inDays > 30;
                                             return [
-                                              const PopupMenuItem(
-                                                value: 'edit',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.edit_outlined, size: 18),
-                                                    SizedBox(width: 8),
-                                                    Text('Modifier'),
-                                                  ],
+                                              if (!isOlderThan30)
+                                                const PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.edit_outlined, size: 18),
+                                                      SizedBox(width: 8),
+                                                      Text('Modifier'),
+                                                    ],
+                                                  ),
+                                                )
+                                              else
+                                                const PopupMenuItem(
+                                                  enabled: false,
+                                                  value: 'edit_locked',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.lock_outline,
+                                                          size: 18, color: Colors.grey),
+                                                      SizedBox(width: 8),
+                                                      Text(
+                                                        'Verrouillé (>30j)',
+                                                        style: TextStyle(color: Colors.grey),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
-                                              ),
                                               if (!isOlderThan30)
                                                 const PopupMenuItem(
                                                   value: 'delete',

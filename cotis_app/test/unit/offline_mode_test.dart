@@ -251,7 +251,7 @@ void main() {
       test('Update Culte when offline: updates locally and scales cotisation updates if amount changed', () async {
         final existingCulte = Culte()
           ..id = 'c-uuid'
-          ..dateCulte = DateTime(2026, 5, 17)
+          ..dateCulte = DateTime(2026, 8, 20) // dans le futur (< 30 jours)
           ..titre = 'Culte Dimanche'
           ..montantCotisation = 50.0;
         final linkedCot = Cotisation()
@@ -295,6 +295,37 @@ void main() {
 
         final capturedOps = verify(() => mockCache.saveSyncOp(captureAny())).captured;
         expect(capturedOps.length, equals(2));
+      });
+
+      test('Update Culte when older than 30 days: throws exception', () async {
+        final existingCulte = Culte()
+          ..id = 'c-locked'
+          ..dateCulte = DateTime(2026, 5, 1) // > 30 jours dans le passé
+          ..titre = 'Culte ancien'
+          ..montantCotisation = 50.0;
+
+        final notifier = TestAppData(
+          mockApi: mockApi,
+          mockCache: mockCache,
+          initialState: AppState(
+            cultes: [existingCulte],
+            cotisations: [],
+            isOffline: true,
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [appDataProvider.overrideWith(() => notifier)],
+        );
+        addTearDown(container.dispose);
+        await container.read(appDataProvider.future);
+
+        await expectLater(
+          () => container.read(appDataProvider.notifier).updateCulte(
+                id: 'c-locked',
+                montantCotisation: 75.0,
+              ),
+          throwsA(isA<Exception>()),
+        );
       });
     });
 

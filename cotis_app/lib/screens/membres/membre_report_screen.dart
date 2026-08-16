@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
@@ -146,7 +146,6 @@ class MembreReportScreen extends ConsumerWidget {
   }
 
   Widget _buildIdentityCard(Membre membre, ThemeData theme) {
-    final colorScheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
