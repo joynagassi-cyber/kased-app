@@ -73,7 +73,6 @@ void main() {
 
       expect(find.text('Gestion des Cultes'), findsOneWidget);
       expect(find.textContaining('FCFA'), findsOneWidget);
-      print('✅ Flow 1: Cult list displays');
     });
 
     testWidgets('Flow 2: Create cult dialog opens', (tester) async {
@@ -87,7 +86,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Nouveau culte'), findsOneWidget);
-      print('✅ Flow 2: Create cult dialog opens');
     });
 
     testWidgets('Flow 3: Cult detail actions', (tester) async {
@@ -100,7 +98,6 @@ void main() {
       // Verify action icons exist
       expect(find.byIcon(Icons.edit), findsWidgets);
       expect(find.byIcon(Icons.delete_outline), findsWidgets);
-      print('✅ Flow 3: Cult detail actions available');
     });
 
     testWidgets('Flow 4: Sync button available', (tester) async {
@@ -111,7 +108,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.sync), findsOneWidget);
-      print('✅ Flow 4: Sync button available');
     });
   });
 }

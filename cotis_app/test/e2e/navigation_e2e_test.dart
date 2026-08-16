@@ -73,7 +73,6 @@ void main() {
       expect(find.textContaining('CULTES'), findsOneWidget);
       expect(find.textContaining('COLLECTE TOTALE'), findsOneWidget);
 
-      print('✅ Flow 1: Dashboard loads correctly');
     });
 
     testWidgets('Flow 2: Navigate to Members screen', (tester) async {
@@ -84,7 +83,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Membres'), findsOneWidget);
-      print('✅ Flow 2: Members navigation works');
     });
 
     testWidgets('Flow 3: Navigate to Cultes screen', (tester) async {
@@ -95,7 +93,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Gestion des Cultes'), findsOneWidget);
-      print('✅ Flow 3: Cultes navigation works');
     });
 
     testWidgets('Flow 4: Navigate to Stats screen', (tester) async {
@@ -106,7 +103,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Statistiques'), findsOneWidget);
-      print('✅ Flow 4: Stats navigation works');
     });
 
     testWidgets('Flow 5: Navigate to Retards screen', (tester) async {
@@ -117,7 +113,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Retards'), findsOneWidget);
-      print('✅ Flow 5: Retards navigation works');
     });
 
     testWidgets('Flow 6: Return to Dashboard from any screen', (tester) async {
@@ -134,7 +129,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Dashboard Kased'), findsOneWidget);
 
-      print('✅ Flow 6: Navigation back to dashboard works');
     });
 
     testWidgets('Flow 7: Notification icon present', (tester) async {
@@ -142,7 +136,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
-      print('✅ Flow 7: Notification icon present');
     });
 
     testWidgets('Flow 8: Menu drawer accessible', (tester) async {
@@ -153,7 +146,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Mon profil'), findsOneWidget);
-      print('✅ Flow 8: Menu drawer works');
     });
 
     testWidgets('Flow 9: Trash navigation', (tester) async {
@@ -164,7 +156,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Corbeille'), findsOneWidget);
-      print('✅ Flow 9: Trash navigation works');
     });
   });
 }

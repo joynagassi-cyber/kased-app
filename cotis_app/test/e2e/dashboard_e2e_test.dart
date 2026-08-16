@@ -72,7 +72,6 @@ void main() {
       expect(find.textContaining('MEMBRES'), findsOneWidget);
       expect(find.textContaining('CULTES'), findsOneWidget);
       expect(find.textContaining('RETARDS'), findsOneWidget);
-      print('✅ Flow 1: Dashboard main stats card displays');
     });
 
     testWidgets('Flow 2: Quick action buttons', (tester) async {
@@ -83,7 +82,6 @@ void main() {
       expect(find.text('Voir les retards'), findsOneWidget);
       expect(find.text('Statistiques'), findsOneWidget);
       expect(find.text('Gérer les membres'), findsOneWidget);
-      print('✅ Flow 2: Quick action buttons present');
     });
 
     testWidgets('Flow 3: Pull to refresh', (tester) async {
@@ -91,7 +89,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(RefreshIndicator), findsOneWidget);
-      print('✅ Flow 3: Pull to refresh available');
     });
 
     testWidgets('Flow 4: Visual improvements', (tester) async {
@@ -101,7 +98,6 @@ void main() {
       // Verify glassmorphism elements
       expect(find.byType(BackdropFilter), findsWidgets);
       expect(find.byType(ShaderMask), findsWidgets);
-      print('✅ Flow 4: Visual improvements rendered');
     });
 
     testWidgets('Flow 5: Stats screen loads', (tester) async {
@@ -112,7 +108,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Statistiques'), findsOneWidget);
-      print('✅ Flow 5: Stats screen loads');
     });
 
     testWidgets('Flow 6: Retards screen loads', (tester) async {
@@ -123,7 +118,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Retards'), findsOneWidget);
-      print('✅ Flow 6: Retards screen loads');
     });
   });
 }

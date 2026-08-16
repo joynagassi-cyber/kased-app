@@ -75,7 +75,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Ajouter un membre'), findsOneWidget);
-      print('✅ Flow 1: Add member form opens');
     });
 
     testWidgets('Flow 2: Member list displays', (tester) async {
@@ -87,7 +86,6 @@ void main() {
 
       expect(find.text('Membres'), findsOneWidget);
       expect(find.byType(ListView), findsOneWidget);
-      print('✅ Flow 2: Member list displays');
     });
 
     testWidgets('Flow 3: Search functionality', (tester) async {
@@ -99,7 +97,6 @@ void main() {
 
       final searchField = find.byType(TextField).first;
       expect(searchField, findsOneWidget);
-      print('✅ Flow 3: Search field present');
     });
 
     testWidgets('Flow 4: Sync button available', (tester) async {
@@ -110,7 +107,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.sync), findsOneWidget);
-      print('✅ Flow 4: Sync button available');
     });
   });
 }

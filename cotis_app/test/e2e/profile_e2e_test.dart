@@ -75,7 +75,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Mon profil'), findsOneWidget);
-      print('✅ Flow 1: Profile accessible from drawer');
     });
 
     testWidgets('Flow 2: Theme options available', (tester) async {
@@ -90,7 +89,6 @@ void main() {
       expect(find.text('Clair'), findsOneWidget);
       expect(find.text('Sombre'), findsOneWidget);
       expect(find.text('Auto'), findsOneWidget);
-      print('✅ Flow 2: Theme options available');
     });
 
     testWidgets('Flow 3: Notification panel', (tester) async {
@@ -102,7 +100,6 @@ void main() {
 
       expect(find.text('Notifications'), findsOneWidget);
       expect(find.text('Tout marquer lu'), findsOneWidget);
-      print('✅ Flow 3: Notification panel works');
     });
 
     testWidgets('Flow 4: Logout flow', (tester) async {
@@ -118,7 +115,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Déconnexion'), findsOneWidget);
-      print('✅ Flow 4: Logout flow works');
     });
   });
 }
