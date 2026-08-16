@@ -1,11 +1,13 @@
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:kased_app/widgets/kased_avatar.dart';
+import 'membre_report_screen.dart';
 
 class MembreDetailScreen extends ConsumerWidget {
   final String membreId;
@@ -75,6 +77,21 @@ class MembreDetailScreen extends ConsumerWidget {
           appBar: AppBar(
             title: const Text('Détails du membre', style: TextStyle(fontSize: 16)),
             elevation: 0,
+            actions: [
+              // Bouton rapport
+              IconButton(
+                icon: const Icon(Icons.assessment),
+                tooltip: 'Voir le rapport complet',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => MembreReportScreen(
+                      membreId: membreId,
+                      membre: currentMembre,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           body: ListView(
             children: [

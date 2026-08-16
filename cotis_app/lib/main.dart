@@ -10,6 +10,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/preferences/app_prefs.dart';
 import 'core/services/onesignal_service.dart';
+import 'core/services/notification_coordinator.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
@@ -82,8 +83,12 @@ Future<void> main() async {
       }
 
       runApp(
-        const ProviderScope(
-          child: KasedApp(),
+        ProviderScope(
+          overrides: [
+            // Initialiser le coordinateur de notifications
+            // Ce provider est utilisé par NotificationCoordinator.init()
+          ],
+          child: const KasedApp(),
         ),
       );
     },

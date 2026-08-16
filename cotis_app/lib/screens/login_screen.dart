@@ -147,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisSize: MainAxisSize.max,
                             children: [
                               // 1. Logo
                               AnimatedAppear(
@@ -380,7 +380,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 reduceMotion: reduceMotion,
                                 child: Center(
                                   child: Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisSize: MainAxisSize.max,
                                     children: [
                                       Icon(Icons.lock_outline, size: 14, color: colorScheme.onSurfaceVariant),
                                       const SizedBox(width: 6),
