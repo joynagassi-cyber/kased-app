@@ -11,11 +11,18 @@ import 'package:kased_app/widgets/kased_gradient_card.dart';
 import 'package:intl/intl.dart';
 import 'package:kased_app/widgets/spring_button.dart';
 
-class CultesScreen extends ConsumerWidget {
+class CultesScreen extends ConsumerStatefulWidget {
   const CultesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CultesScreen> createState() => _CultesScreenState();
+}
+
+class _CultesScreenState extends ConsumerState<CultesScreen> {
+  bool _isCreatingCulte = false;
+
+  @override
+  Widget build(BuildContext context) {
     final appDataAsync = ref.watch(appDataProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -340,8 +347,9 @@ class CultesScreen extends ConsumerWidget {
                   child: const Text('Annuler'),
                 ),
                 FilledButton(
-                  onPressed: () async {
+                  onPressed: _isCreatingCulte ? null : () async {
                     if (!formKey.currentState!.validate()) return;
+                    setState(() => _isCreatingCulte = true);
                     try {
                       await ref.read(appDataProvider.notifier).addCulte(
                             date: selectedDate,
@@ -365,13 +373,23 @@ class CultesScreen extends ConsumerWidget {
                     } catch (e) {
                       if (dialogContext.mounted) {
                         Navigator.pop(dialogContext);
+                      }
+                      if (context.mounted) {
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
                           SnackBar(content: Text('Erreur: $e')),
                         );
                       }
+                    } finally {
+                      if (mounted) setState(() => _isCreatingCulte = false);
                     }
                   },
-                  child: const Text('Créer'),
+                  child: _isCreatingCulte
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Créer'),
                 ),
               ],
             );

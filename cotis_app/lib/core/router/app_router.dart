@@ -17,6 +17,7 @@ import '../../screens/stats/stats_screen.dart';
 import '../../screens/retards/retards_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/corbeille/corbeille_screen.dart';
+import '../../screens/membres/membre_report_screen.dart';
 import '../../widgets/app_shell.dart';
 import '../../models/membre.dart';
 import '../../core/preferences/app_prefs.dart';
@@ -138,6 +139,22 @@ GoRouter router(RouterRef ref) {
                     ),
                   );
                 },
+                routes: [
+                  GoRoute(
+                    path: 'rapport',
+                    pageBuilder: (context, state) {
+                      final membre = state.extra is Membre ? state.extra as Membre : null;
+                      return _buildFadeSlidePage(
+                        context: context,
+                        state: state,
+                        child: MembreReportScreen(
+                          membreId: state.pathParameters['id']!,
+                          membre: membre,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),

@@ -68,9 +68,11 @@ class Auth extends _$Auth {
   AuthState build() {
     _storage = ref.watch(secureStorageProvider);
     _authService = ref.watch(authServiceProvider);
-    // Démarrer la vérification asynchrone de l'auth persistée dès l'instanciation.
-    // Le provider conserve isLoading=true tant que le résultat n'est pas disponible.
+
+    // Vérification asynchrone de l'authentification persistée
+    // Le provider retourne isLoading=true immédiatement, puis met à jour
     unawaited(_checkPersistedAuth());
+
     return const AuthState(isLoading: true);
   }
 
@@ -111,19 +113,25 @@ class Auth extends _$Auth {
   }
 
   Future<void> _checkPersistedAuth() async {
-    // Petit délai pour laisser le storage s'initialiser correctement au redémarrage
-    await Future.delayed(const Duration(milliseconds: 50));
     try {
+      debugPrint('[AUTH] Vérification de l\'authentification persistée...');
+
+      // Lire les données de stockage
       final token = await _storage.read(key: 'auth_token');
       final refreshTokenValue = await _storage.read(key: 'refresh_token');
       final email = await _storage.read(key: 'user_email');
       final name = await _storage.read(key: 'user_name');
 
+      debugPrint('[AUTH] Token trouvé: ${token != null && token.isNotEmpty}');
+      debugPrint('[AUTH] RefreshToken trouvé: ${refreshTokenValue != null && refreshTokenValue.isNotEmpty}');
+
       if (token != null && token.isNotEmpty) {
         final expired = _isTokenExpired(token);
+        debugPrint('[AUTH] Token expiré: $expired');
 
         if (!expired) {
           // Token valide localement → authentifié immédiatement (même offline)
+          debugPrint('[AUTH] Authentification persistée restaurée avec succès');
           state = AuthState(
             isAuthenticated: true,
             isLoading: false,
@@ -132,10 +140,12 @@ class Auth extends _$Auth {
             userEmail: email,
             userName: name,
           );
+
           // Tenter un refresh en arrière-plan seulement si en ligne
           if (refreshTokenValue != null && refreshTokenValue.isNotEmpty) {
             final online = await _isOnline();
             if (online) {
+              debugPrint('[AUTH] Refresh silencieux en arrière-plan');
               _silentRefresh(refreshTokenValue, email, name);
             }
           }
@@ -143,6 +153,7 @@ class Auth extends _$Auth {
         }
 
         // Token expiré → tenter refresh si en ligne
+        debugPrint('[AUTH] Token expiré, tentative de refresh...');
         if (refreshTokenValue != null && refreshTokenValue.isNotEmpty) {
           final online = await _isOnline();
           if (online) {
@@ -164,6 +175,7 @@ class Auth extends _$Auth {
         }
       } else if (refreshTokenValue != null && refreshTokenValue.isNotEmpty) {
         // Pas de token mais refresh token disponible → tenter refresh si en ligne
+        debugPrint('[AUTH] Pas de token mais refresh token disponible');
         final online = await _isOnline();
         if (online) {
           await refreshSession(refreshTokenValue);
@@ -171,13 +183,16 @@ class Auth extends _$Auth {
         }
       }
 
-      // Aucun token valide
+      // Aucun token valide → déconnecter
+      debugPrint('[AUTH] Aucun token valide trouvé, déconnexion');
       state = const AuthState(
         isAuthenticated: false,
         isLoading: false,
       );
-    } catch (e) {
-      debugPrint('[AUTH] Erreur lecture secure storage : $e');
+    } catch (e, stack) {
+      debugPrint('[AUTH] Erreur lors de la vérification de l\'auth persistée: $e');
+      debugPrint('[AUTH] Stack: $stack');
+      // En cas d'erreur, on déconnecte l'utilisateur
       state = const AuthState(
         isAuthenticated: false,
         isLoading: false,

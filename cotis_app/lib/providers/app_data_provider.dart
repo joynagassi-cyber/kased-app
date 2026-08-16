@@ -308,14 +308,14 @@ class AppData extends _$AppData {
     ));
 
     // Notification anniversaire et création
-    // Créer des cotisations pour tous les cultes existants
+    // Créer des cotisations UNIQUEMENT pour les cultes FUTURS (après l'adhésion)
     final membreCreatedAt = newMembre.createdAt;
     final existingCultes = (state.value?.cultes ?? []).where((c) => !c.isDeleted).toList();
     for (final culte in existingCultes) {
       final culteDate = culte.dateCulte;
-      final statut = culteDate.isBefore(membreCreatedAt)
-          ? StatutCotisation.enAvance  // culte déjà passé, membre rejoint après
-          : StatutCotisation.nonPaye;   // culte à venir
+      // Ne créer des cotisations que pour les cultes à venir (après l'adhésion)
+      if (culteDate.isBefore(membreCreatedAt)) continue;
+      final statut = StatutCotisation.nonPaye;
       final newCot = Cotisation()
         ..id = UuidUtils.generate()
         ..membreId = newMembre.id
