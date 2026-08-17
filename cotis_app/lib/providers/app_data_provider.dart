@@ -1398,7 +1398,7 @@ class AppData extends _$AppData {
     }
 
     // Notification
-    final membre = previousState.membres.firstWhereOrNull(
+    final notifMembre = previousState.membres.firstWhereOrNull(
       (m) => m.id == membreId,
     );
     final culteLabels = culteIds
@@ -1408,7 +1408,7 @@ class AppData extends _$AppData {
         .join(', ');
     unawaited(_notifierPush(
       'cotisation_payee',
-      membre?.nomComplet ?? membreId,
+      notifMembre?.nomComplet ?? membreId,
       extra: '$montantTotal.toStringAsFixed(0)F pour $culteLabels',
     ));
   }
