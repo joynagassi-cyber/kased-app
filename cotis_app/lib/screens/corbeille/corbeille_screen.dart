@@ -69,6 +69,7 @@ class CorbeilleScreen extends ConsumerStatefulWidget {
 class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
   CorbeilleTri _tri = CorbeilleTri.suppressionDesc;
   final Set<int> _selectedIds = {};
+  final Set<int> _processingIds = {};
 
   List<CorbeilleItem> _trier(List<CorbeilleItem> items, CorbeilleTri tri) {
     final sorted = [...items];
@@ -95,128 +96,202 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
   }
 
   Future<void> _restaurer(int isarId) async {
-    await ref.read(appDataProvider.notifier).restaurerElement(isarId);
-    _refreshCorbeille(ref);
-    if (mounted) {
-      setState(() => _selectedIds.remove(isarId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Élément restauré avec succès')),
-      );
+    if (_processingIds.contains(isarId)) return;
+    setState(() => _processingIds.add(isarId));
+    try {
+      await ref.read(appDataProvider.notifier).restaurerElement(isarId);
+      _refreshCorbeille(ref);
+      if (mounted) {
+        setState(() => _selectedIds.remove(isarId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Élément restauré avec succès')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _processingIds.remove(isarId));
     }
   }
 
   Future<void> _restaurerSelection() async {
-    final count = _selectedIds.length;
-    for (final id in _selectedIds.toList()) {
-      await ref.read(appDataProvider.notifier).restaurerElement(id);
-    }
-    _refreshCorbeille(ref);
-    if (mounted) {
-      setState(_selectedIds.clear);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$count élément(s) restauré(s)')),
-      );
+    if (_processingIds.isNotEmpty) return;
+    setState(() => _processingIds.addAll(_selectedIds));
+    try {
+      final count = _selectedIds.length;
+      for (final id in _selectedIds.toList()) {
+        await ref.read(appDataProvider.notifier).restaurerElement(id);
+      }
+      _refreshCorbeille(ref);
+      if (mounted) {
+        setState(_selectedIds.clear);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$count élément(s) restauré(s)')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _processingIds.clear());
     }
   }
 
   Future<void> _restaurerTout(List<CorbeilleItem> items) async {
-    for (final item in items) {
-      await ref.read(appDataProvider.notifier).restaurerElement(item.isarId);
-    }
-    _refreshCorbeille(ref);
-    if (mounted) {
-      setState(_selectedIds.clear);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${items.length} élément(s) restauré(s)')),
-      );
+    if (_processingIds.isNotEmpty) return;
+    setState(() => _processingIds.addAll(items.map((i) => i.isarId)));
+    try {
+      for (final item in items) {
+        await ref.read(appDataProvider.notifier).restaurerElement(item.isarId);
+      }
+      _refreshCorbeille(ref);
+      if (mounted) {
+        setState(_selectedIds.clear);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${items.length} élément(s) restauré(s)')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _processingIds.clear());
     }
   }
 
   Future<void> _supprimerDefinitivement(int isarId, String titre) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Suppression définitive'),
-        content: Text('Supprimer définitivement « $titre » ? Cette action est irréversible.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Supprimer'),
-          ),
-        ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setLocalState) {
+          bool isDeleting = false;
+          return AlertDialog(
+            title: const Text('Suppression définitive'),
+            content: Text('Supprimer définitivement « $titre » ? Cette action est irréversible.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Annuler')),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Theme.of(dialogCtx).colorScheme.error),
+                onPressed: isDeleting
+                    ? null
+                    : () async {
+                        setLocalState(() => isDeleting = true);
+                        Navigator.pop(dialogCtx, true);
+                        if (ctx.mounted) {
+                          setState(() => _processingIds.add(isarId));
+                          try {
+                            await ref.read(appDataProvider.notifier).supprimerDefinitivement(isarId);
+                            _refreshCorbeille(ref);
+                            if (mounted) {
+                              setState(() => _selectedIds.remove(isarId));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Élément supprimé définitivement')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _processingIds.remove(isarId));
+                          }
+                        }
+                      },
+                child: isDeleting
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Supprimer'),
+              ),
+            ],
+          );
+        },
       ),
     );
     if (ok != true) return;
-
-    await ref.read(appDataProvider.notifier).supprimerDefinitivement(isarId);
-    _refreshCorbeille(ref);
-    if (mounted) {
-      setState(() => _selectedIds.remove(isarId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Élément supprimé définitivement')),
-      );
-    }
   }
 
   Future<void> _viderCorbeille(List<CorbeilleItem> items) async {
+    if (_processingIds.isNotEmpty) return;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Vider la corbeille'),
-        content: Text('Supprimer définitivement les ${items.length} élément(s) ? Cette action est irréversible.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Vider'),
-          ),
-        ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setLocalState) {
+          bool isProcessing = false;
+          return AlertDialog(
+            title: const Text('Vider la corbeille'),
+            content: Text('Supprimer définitivement les ${items.length} élément(s) ? Cette action est irréversible.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Annuler')),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Theme.of(dialogCtx).colorScheme.error),
+                onPressed: isProcessing
+                    ? null
+                    : () async {
+                        setLocalState(() => isProcessing = true);
+                        Navigator.pop(dialogCtx, true);
+                        if (ctx.mounted) {
+                          setState(() => _processingIds.addAll(items.map((i) => i.isarId)));
+                          try {
+                            await ref.read(appDataProvider.notifier).viderCorbeille();
+                            _refreshCorbeille(ref);
+                            if (mounted) {
+                              setState(_selectedIds.clear);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Corbeille vidée')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _processingIds.clear());
+                          }
+                        }
+                      },
+                child: isProcessing
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Vider'),
+              ),
+            ],
+          );
+        },
       ),
     );
     if (ok != true) return;
-
-    await ref.read(appDataProvider.notifier).viderCorbeille();
-    _refreshCorbeille(ref);
-    if (mounted) {
-      setState(_selectedIds.clear);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Corbeille vidée')),
-      );
-    }
   }
 
   Future<void> _supprimerSelection(List<CorbeilleItem> items) async {
     final selectedItems = items.where((i) => _selectedIds.contains(i.isarId)).toList();
+    if (_processingIds.isNotEmpty) return;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Suppression définitive'),
-        content: Text('Supprimer définitivement les ${selectedItems.length} élément(s) sélectionné(s) ? Cette action est irréversible.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Supprimer'),
-          ),
-        ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setLocalState) {
+          bool isProcessing = false;
+          return AlertDialog(
+            title: const Text('Suppression définitive'),
+            content: Text('Supprimer définitivement les ${selectedItems.length} élément(s) sélectionné(s) ? Cette action est irréversible.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Annuler')),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Theme.of(dialogCtx).colorScheme.error),
+                onPressed: isProcessing
+                    ? null
+                    : () async {
+                        setLocalState(() => isProcessing = true);
+                        Navigator.pop(dialogCtx, true);
+                        if (ctx.mounted) {
+                          setState(() => _processingIds.addAll(selectedItems.map((i) => i.isarId)));
+                          try {
+                            for (final item in selectedItems) {
+                              await ref.read(appDataProvider.notifier).supprimerDefinitivement(item.isarId);
+                            }
+                            _refreshCorbeille(ref);
+                            if (mounted) {
+                              setState(_selectedIds.clear);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${selectedItems.length} élément(s) supprimé(s) définitivement')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _processingIds.clear());
+                          }
+                        }
+                      },
+                child: isProcessing
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Supprimer'),
+              ),
+            ],
+          );
+        },
       ),
     );
     if (ok != true) return;
-
-    for (final item in selectedItems) {
-      await ref.read(appDataProvider.notifier).supprimerDefinitivement(item.isarId);
-    }
-    _refreshCorbeille(ref);
-    if (mounted) {
-      setState(_selectedIds.clear);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${selectedItems.length} élément(s) supprimé(s) définitivement')),
-      );
-    }
   }
 
   @override

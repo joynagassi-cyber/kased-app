@@ -269,6 +269,50 @@ class InsForgeService {
     return _asSingle(response.data);
   }
 
+  // Consomme automatiquement l'avance d'un membre lors du paiement d'un culte
+  Future<void> consommerAvancePourCulte({
+    required String membreId,
+    required String culteId,
+  }) async {
+    await _dio.post(
+      '/api/database/rpc/marquer_paye_avec_avance',
+      data: {
+        'p_membre_id': membreId,
+        'p_culte_id': culteId,
+      },
+    );
+  }
+
+  // Consomme l'avance sans cotisation (simple débit du compte avance)
+  Future<void> consommerAvanceSimple({
+    required String membreId,
+    required double montant,
+  }) async {
+    await _dio.post(
+      '/api/database/rpc/consommer_avance_membre',
+      data: {
+        'p_membre_id': membreId,
+        'p_montant': montant,
+      },
+    );
+  }
+
+  // Paiement en avance pour plusieurs cultes (crédite le membre + crée cotisations)
+  Future<void> consignerPaiementEnAvance({
+    required String membreId,
+    required List<String> culteIds,
+    required double montantTotal,
+  }) async {
+    await _dio.post(
+      '/api/database/rpc/consigner_paiement_en_avance',
+      data: {
+        'p_membre_id': membreId,
+        'p_culte_ids': culteIds,
+        'p_montant_total': montantTotal,
+      },
+    );
+  }
+
   // Marquer un membre comme absent
   Future<Map<String, dynamic>> marquerAbsent({
     required String membreId,

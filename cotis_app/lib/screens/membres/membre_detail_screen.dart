@@ -484,29 +484,45 @@ Future<void> _showAvanceDialog(
   final controller = TextEditingController();
   final result = await showDialog<String>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Paiement en avance'),
-      content: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          labelText: 'Montant en FCFA',
-          hintText: 'Ex: 500',
-        ),
-      ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
-        FilledButton(
-          onPressed: () {
-            final montant = double.tryParse(controller.text.trim());
-            if (montant != null && montant > 0) {
-              Navigator.pop(ctx, controller.text.trim());
-            }
-          },
-          child: const Text('Valider'),
-        ),
-      ],
+    builder: (ctx) => StatefulBuilder(
+      builder: (dialogCtx, setLocalState) {
+        bool isLoading = false;
+        return AlertDialog(
+          title: const Text('Paiement en avance'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Montant en FCFA',
+              hintText: 'Ex: 500',
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+            FilledButton(
+              onPressed: isLoading
+                  ? null
+                  : () {
+                      final montant = double.tryParse(controller.text.trim());
+                      if (montant != null && montant > 0) {
+                        setLocalState(() => isLoading = true);
+                        // We use a local variable for the result to avoid
+                        // accessing controller after dispose.
+                        final String submitted = controller.text.trim();
+                        Navigator.pop(ctx, submitted);
+                      }
+                    },
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Valider'),
+            ),
+          ],
+        );
+      },
     ),
   );
   controller.dispose();

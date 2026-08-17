@@ -21,7 +21,7 @@ final secureStorageProvider = Provider<FlutterSecureStorage>.internal(
 );
 
 typedef SecureStorageRef = ProviderRef<FlutterSecureStorage>;
-String _$authHash() => r'1cef4a3d4789e014b9ad0d842241704cbe73912d';
+String _$authHash() => r'e28d8260edbe83e67aae14fc182383b5b2623383';
 
 /// See also [Auth].
 @ProviderFor(Auth)

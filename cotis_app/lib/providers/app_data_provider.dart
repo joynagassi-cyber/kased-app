@@ -8,6 +8,7 @@ import 'package:kased_app/core/logic/cotisation_logic.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/isar_local_cache.dart';
+import 'package:kased_app/core/realtime/realtime_service.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
 import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/services/stats_service.dart';
@@ -71,6 +72,7 @@ class AppData extends _$AppData {
   late LocalCache _cache;
   late SyncService _syncService;
   late StatsService _statsService;
+  late RealtimeService _realtimeService;
   StreamSubscription? _connectivitySubscription;
 
   @visibleForTesting
@@ -89,6 +91,7 @@ class AppData extends _$AppData {
     _cache = IsarLocalCache(isar);
     _syncService = SyncService(_api, _cache);
     _statsService = StatsService();
+    _realtimeService = RealtimeService();
 
     // Micro-délai artificiel de 150ms pour permettre au framework de
     // rendre l'état "loading" au démarrage local (Isar)
@@ -105,8 +108,17 @@ class AppData extends _$AppData {
       }
     });
 
+    // Écouter les événements temps réel → forcer un rechargement
+    _realtimeService.addListener(() {
+      if (state.value?.isOffline != true) {
+        debugPrint('[AppData] Événement realtime reçu → rechargement');
+        syncData();
+      }
+    });
+
     ref.onDispose(() {
       _connectivitySubscription?.cancel();
+      _realtimeService.removeListener(() {});
     });
 
     // Charger d'abord les données locales
@@ -347,6 +359,8 @@ class AppData extends _$AppData {
     // 2. Tentative de synchronisation réseau
     try {
       await _api.createMembre(newMembre.toJson());
+      // Succès réseau : supprimer l'opération sync (déjà appliquée)
+      await _cache.deleteSyncOp(syncOp.isarId);
     } catch (e) {
       debugPrint('[AppData] addMembre réseau échoué, mise en file: $e');
       await _syncService.queueSyncOperation(
@@ -418,6 +432,8 @@ class AppData extends _$AppData {
     // 2. Réseau
     try {
       await _api.updateMembre(id, updated.toJson());
+      // Succès réseau : supprimer l'opération sync (déjà appliquée)
+      await _cache.deleteSyncOp(syncOp.isarId);
     } catch (e) {
       debugPrint('[AppData] updateMembre réseau échoué: $e');
       await _syncService.queueSyncOperation(
@@ -483,6 +499,8 @@ class AppData extends _$AppData {
     // 2. Réseau
     try {
       await _api.updateMembre(membreId, updated.toJson());
+      // Succès réseau : supprimer l'opération sync (déjà appliquée)
+      await _cache.deleteSyncOp(syncOp.isarId);
     } catch (e) {
       debugPrint('[AppData] ajouterPaiementAvance réseau échoué: $e');
       await _syncService.queueSyncOperation(
@@ -539,6 +557,8 @@ class AppData extends _$AppData {
 
       try {
         await _api.deleteMembre(id);
+        // Succès réseau : supprimer l'opération sync (déjà appliquée)
+        await _cache.deleteSyncOp(syncOp.isarId);
       } catch (e) {
         debugPrint('[AppData] deleteMembre réseau échoué: $e');
         await _syncService.queueSyncOperation('DELETE', 'membre', id, {});
@@ -625,6 +645,16 @@ class AppData extends _$AppData {
     // 2. Réseau
     try {
       await _api.createCulte(newCulte.toJson());
+      // Succès réseau : supprimer toutes les opérations sync (déjà appliquées)
+      await _cache.deleteSyncOp(syncOp.isarId);
+      // Supprimer aussi les ops des cotisations créées
+      for (final c in localCotisations) {
+        final pendingOps = await _cache.getPendingSyncOps();
+        final cotOp = pendingOps.where((op) => op.entityId == c.id).toList();
+        for (final op in cotOp) {
+          await _cache.deleteSyncOp(op.isarId);
+        }
+      }
     } catch (e) {
       debugPrint(
           '[AppData] addCulte réseau échoué, mise en file déjà effectuee: $e');
@@ -790,6 +820,8 @@ class AppData extends _$AppData {
       // 2. Réseau
       try {
         await _api.deleteCulte(id);
+        // Succès réseau : supprimer l'opération sync (déjà appliquée)
+        await _cache.deleteSyncOp(syncOp.isarId);
       } catch (e) {
         debugPrint('[AppData] deleteCulte réseau échoué: $e');
         await _syncService.queueSyncOperation('DELETE', 'culte', id, {});
@@ -895,6 +927,57 @@ class AppData extends _$AppData {
 
     // Persister immédiatement dans Isar
     await _cache.saveCotisation(updatedCotisation);
+
+    // Consommer l'avance du membre si paiement complet (pas de don)
+    if (montantDon == 0) {
+      final membre = previousState.membres.firstWhereOrNull(
+        (m) => m.id == membreId,
+      );
+      if (membre != null && membre.montantEnAvance >= montant) {
+        // Le membre a assez d'avance → consommer
+        final deviceId = await DeviceService.getDeviceId();
+        final now = DateTime.now();
+        final updatedMembre = Membre()
+          ..id = membre.id
+          ..nom = membre.nom
+          ..prenom = membre.prenom
+          ..dateAdhesion = membre.dateAdhesion
+          ..dateNaissance = membre.dateNaissance
+          ..montantEnAvance = membre.montantEnAvance - montant
+          ..totalDons = membre.totalDons
+          ..telephone = membre.telephone
+          ..notes = membre.notes
+          ..isActive = membre.isActive
+          ..deviceId = deviceId
+          ..createdAt = membre.createdAt
+          ..version = membre.version + 1
+          ..updatedAt = now;
+        final syncOp = SyncOperation()
+          ..operationId = UuidUtils.generate()
+          ..type = 'UPDATE'
+          ..entityType = 'membre'
+          ..entityId = membreId
+          ..payloadJson = jsonEncode(updatedMembre.toJson())
+          ..createdAt = now
+          ..deviceId = deviceId;
+        await _cache.saveMembreWithSyncOp(updatedMembre, syncOp);
+        final updatedMembres = [
+          ...state.value!.membres.where((m) => m.id != membreId),
+          updatedMembre,
+        ]..sort((a, b) => a.nom.compareTo(b.nom));
+        state = AsyncValue.data(state.value!.copyWith(membres: updatedMembres));
+        // Synchroniser l'avance consommée
+        try {
+          await _api.consommerAvancePourCulte(
+            membreId: membreId,
+            culteId: culteId,
+          );
+          await _cache.deleteSyncOp(syncOp.isarId);
+        } catch (e) {
+          debugPrint('[AppData] consommerAvance réseau échoué: $e');
+        }
+      }
+    }
 
     // Mettre à jour le total des dons du membre si un don a été enregistré
     if (montantDon > 0) {
@@ -1248,10 +1331,70 @@ class AppData extends _$AppData {
       cotisations: updatedCotisations,
     ));
 
+    // Créditer le membre : ajouter le montant total à son avance
+    final membre = previousState.membres.firstWhereOrNull(
+      (m) => m.id == membreId,
+    );
+    if (membre != null) {
+      final deviceId = await DeviceService.getDeviceId();
+      final now = DateTime.now();
+      final updatedMembre = Membre()
+        ..id = membre.id
+        ..nom = membre.nom
+        ..prenom = membre.prenom
+        ..dateAdhesion = membre.dateAdhesion
+        ..dateNaissance = membre.dateNaissance
+        ..montantEnAvance = membre.montantEnAvance + montantTotal
+        ..totalDons = membre.totalDons
+        ..telephone = membre.telephone
+        ..notes = membre.notes
+        ..isActive = membre.isActive
+        ..deviceId = deviceId
+        ..createdAt = membre.createdAt
+        ..version = membre.version + 1
+        ..updatedAt = now;
+      final syncOp = SyncOperation()
+        ..operationId = UuidUtils.generate()
+        ..type = 'UPDATE'
+        ..entityType = 'membre'
+        ..entityId = membreId
+        ..payloadJson = jsonEncode(updatedMembre.toJson())
+        ..createdAt = now
+        ..deviceId = deviceId;
+      await _cache.saveMembreWithSyncOp(updatedMembre, syncOp);
+      final updatedMembres = [
+        ...previousState.membres.where((m) => m.id != membreId),
+        updatedMembre,
+      ]..sort((a, b) => a.nom.compareTo(b.nom));
+      state = AsyncValue.data(state.value!.copyWith(membres: updatedMembres));
+    }
+
     // Sauvegarder localement
     await _cache.saveAllCotisations(updatedCotisations);
     for (final op in syncOps) {
       await _cache.saveSyncOp(op);
+    }
+
+    // Synchroniser avec le serveur (RPC qui gère tout : crédit + cotisations)
+    try {
+      await _api.consignerPaiementEnAvance(
+        membreId: membreId,
+        culteIds: culteIds,
+        montantTotal: montantTotal,
+      );
+      // Supprimer l'opération sync du membre (déjà appliquée)
+      final ops = await _cache.getPendingSyncOps();
+      final membreOp = ops.where((op) => op.entityId == membreId).toList();
+      for (final op in membreOp) {
+        await _cache.deleteSyncOp(op.isarId);
+      }
+      // Supprimer aussi les ops des cotisations
+      for (final op in syncOps) {
+        await _cache.deleteSyncOp(op.isarId);
+      }
+    } catch (e) {
+      debugPrint(
+          '[AppData] payerPlusieursCultesEnAvance réseau échoué, état local conservé: $e');
     }
 
     // Notification

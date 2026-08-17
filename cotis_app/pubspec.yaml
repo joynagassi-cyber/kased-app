@@ -63,6 +63,9 @@ dependencies:
   firebase_crashlytics: ^4.3.0
   collection: ^1.19.1
 
+  # Realtime (Socket.IO pour sync temps réel InsForge)
+  socket_io_client: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

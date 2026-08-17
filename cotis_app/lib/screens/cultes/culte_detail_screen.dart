@@ -27,7 +27,14 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
   String _searchQuery = '';
   String _filter = 'Tous';
   bool _selectionMode = false;
+  bool _isProcessing = false;
   final Set<String> _selectedMembres = {};
+  bool _isValidingSelection = false;
+  bool _isBulkProcessing = false;
+  bool _isSyncing = false;
+  bool _isPdfExporting = false;
+  bool _isBulkPaymentProcessing = false;
+  final Set<String> _processingMembres = {};
 
   @override
   Widget build(BuildContext context) {
@@ -102,44 +109,52 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                   },
                 ),
               IconButton(
-                icon: const Icon(Icons.picture_as_pdf),
-                tooltip: 'Exporter en PDF',
-                onPressed: () async {
-                  final statuses = membres
-                      .map(
-                        (m) => MembrePaiementStatus(
-                          membre: m,
-                          estPaye: cotisations.any((c) => c.membreId == m.id && c.estPaye),
-                        ),
+                icon: _isPdfExporting
+                    ? const SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                      .toList();
+                    : const Icon(Icons.picture_as_pdf),
+                tooltip: 'Exporter en PDF',
+                onPressed: _isPdfExporting
+                    ? null
+                    : () async {
+                        setState(() => _isPdfExporting = true);
+                        final statuses = membres
+                            .map(
+                              (m) => MembrePaiementStatus(
+                                membre: m,
+                                estPaye: cotisations.any((c) => c.membreId == m.id && c.estPaye),
+                              ),
+                            )
+                            .toList();
 
-                  try {
-                    final path = await PdfService.generateCultePdf(
-                      culte: culte,
-                      statuses: statuses,
-                      totalCollecte: totalCollecte,
-                    );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Rapport de culte enregistré dans :\n$path'),
-                          duration: const Duration(seconds: 5),
-                          action: SnackBarAction(
-                            label: 'OK',
-                            onPressed: () {},
-                          ),
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur: $e')),
-                      );
-                    }
-                  }
-                },
+                        try {
+                          final path = await PdfService.generateCultePdf(
+                            culte: culte,
+                            statuses: statuses,
+                            totalCollecte: totalCollecte,
+                          );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Rapport de culte enregistré dans :\n$path'),
+                                duration: const Duration(seconds: 5),
+                                action: SnackBarAction(
+                                  label: 'OK',
+                                  onPressed: () {},
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Erreur: $e')),
+                            );
+                          }
+                        }
+                      },
               ),
               IconButton(
                 icon: Icon(_selectionMode ? Icons.close : Icons.select_all),
@@ -153,14 +168,34 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                 Badge(
                   label: Text('${_selectedMembres.length}'),
                   child: IconButton(
-                    icon: const Icon(Icons.check_circle),
+                    icon: _isValidingSelection
+                        ? const SizedBox(
+                            width: 20, height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check_circle),
                     tooltip: 'Valider la sélection',
-                    onPressed: () => _validerSelection(),
+                    onPressed: _isValidingSelection ? null : () => _validerSelection(),
                   ),
                 ),
               IconButton(
-                icon: const Icon(Icons.sync),
-                onPressed: () => ref.read(appDataProvider.notifier).syncData(),
+                icon: _isSyncing
+                    ? const SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.sync),
+                tooltip: 'Synchroniser',
+                onPressed: _isSyncing
+                    ? null
+                    : () async {
+                        setState(() => _isSyncing = true);
+                        try {
+                          await ref.read(appDataProvider.notifier).syncData();
+                        } finally {
+                          if (mounted) setState(() => _isSyncing = false);
+                        }
+                      },
               ),
               if (!isOlderThan30Days)
                 IconButton(
@@ -593,8 +628,9 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
 
   /// Valide en masse les membres sélectionnés
   Future<void> _validerSelection() async {
-    if (_selectedMembres.isEmpty) return;
-    
+    if (_selectedMembres.isEmpty || _isValidingSelection) return;
+
+    setState(() => _isValidingSelection = true);
     try {
       final result = await ConfirmActionDialog.show(
         context,
@@ -606,7 +642,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
               membreIds: _selectedMembres.toList(),
             ),
       );
-      
+
       if (result != null && context.mounted) {
         ConfirmActionDialog.showResultSnackBar(context, result);
         setState(() {
@@ -620,6 +656,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
           SnackBar(content: Text('Erreur: $e')),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isValidingSelection = false);
     }
   }
 
@@ -633,6 +671,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
     required double montantObligatoire,
     required double montantActuel,
   }) async {
+    if (_isProcessing) return;
+
     final result = await PaiementPersonnelDialog.show(
       context,
       membreNom: membre.nomComplet,
@@ -642,6 +682,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
 
     if (result == null || !context.mounted) return;
 
+    setState(() => _isProcessing = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
@@ -661,6 +702,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
       messenger.showSnackBar(
         SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
       );
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 }

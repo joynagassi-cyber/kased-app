@@ -429,7 +429,8 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (ctx, setState) {
+          builder: (ctx, setLocalState) {
+            bool isSaving = false;
             return AlertDialog(
               title: const Text('Modifier le culte'),
               content: Form(
@@ -441,7 +442,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                       theme: theme,
                       selectedDate: selectedDate,
                       dialogContext: dialogContext,
-                      onDateChanged: (d) => setState(() => selectedDate = d),
+                      onDateChanged: (d) => setLocalState(() => selectedDate = d),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -466,28 +467,38 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                   child: const Text('Annuler'),
                 ),
                 FilledButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-                    try {
-                      await ref.read(appDataProvider.notifier).updateCulte(
-                            id: culte.id,
-                            dateCulte: selectedDate,
-                            montantCotisation:
-                                double.tryParse(montantController.text.trim()) ??
-                                    culte.montantCotisation,
-                          );
-                      if (dialogContext.mounted) {
-                        Navigator.pop(dialogContext);
-                      }
-                    } catch (e) {
-                      if (dialogContext.mounted) {
-                        ScaffoldMessenger.of(dialogContext).showSnackBar(
-                          SnackBar(content: Text('Erreur: $e')),
-                        );
-                      }
-                    }
-                  },
-                  child: const Text('Enregistrer'),
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+                          setLocalState(() => isSaving = true);
+                          try {
+                            await ref.read(appDataProvider.notifier).updateCulte(
+                                  id: culte.id,
+                                  dateCulte: selectedDate,
+                                  montantCotisation:
+                                      double.tryParse(montantController.text.trim()) ??
+                                          culte.montantCotisation,
+                                );
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext);
+                            }
+                          } catch (e) {
+                            if (dialogContext.mounted) {
+                              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                SnackBar(content: Text('Erreur: $e')),
+                              );
+                            }
+                          } finally {
+                            if (dialogContext.mounted) setLocalState(() => isSaving = false);
+                          }
+                        },
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 20, height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Enregistrer'),
                 ),
               ],
             );
@@ -500,27 +511,56 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
 
   void _confirmDeleteCulte(
       BuildContext context, WidgetRef ref, Culte culte) async {
+    bool isDeleting = false;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Supprimer ce culte ?'),
-        content: Text(
-          'Êtes-vous sûr de vouloir supprimer le culte du ${culte.dateFormatee} ? '
-          'Toutes les cotisations associées seront également supprimées.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setLocalState) {
+          return AlertDialog(
+            title: const Text('Supprimer ce culte ?'),
+            content: Text(
+              'Êtes-vous sûr de vouloir supprimer le culte du ${culte.dateFormatee} ? '
+              'Toutes les cotisations associées seront également supprimées.',
             ),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Supprimer'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Annuler'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.danger,
+                ),
+                onPressed: isDeleting
+                    ? null
+                    : () async {
+                        setLocalState(() => isDeleting = true);
+                        try {
+                          await ref.read(appDataProvider.notifier).deleteCulte(culte.id);
+                          if (ctx.mounted) {
+                            Navigator.pop(dialogContext, true);
+                          }
+                        } catch (e) {
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              SnackBar(content: Text('Erreur: $e')),
+                            );
+                          }
+                        } finally {
+                          if (ctx.mounted) setLocalState(() => isDeleting = false);
+                        }
+                      },
+                child: isDeleting
+                    ? const SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Supprimer'),
+              ),
+            ],
+          );
+        },
       ),
     );
 

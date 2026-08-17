@@ -192,62 +192,78 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
   void _confirmDelete(BuildContext context, WidgetRef ref, Membre membre) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Supprimer ?'),
-        content: Text('Voulez-vous vraiment supprimer ${membre.nomComplet} ?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler')),
-          TextButton(
-            onPressed: () async {
-              try {
-                await ref
-                    .read(appDataProvider.notifier)
-                    .deleteMembre(membre.id);
-                
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text('${membre.nomComplet} supprimé avec succès'),
-                          ),
-                        ],
-                      ),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 3),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          const Icon(Icons.error, color: Colors.white, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text('Erreur lors de la suppression: $e'),
-                          ),
-                        ],
-                      ),
-                      backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 4),
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Supprimer',
-                style: TextStyle(color: AppColors.danger)),
-          ),
-        ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setLocalState) {
+          bool isDeleting = false;
+          return AlertDialog(
+            title: const Text('Supprimer ?'),
+            content: Text('Voulez-vous vraiment supprimer ${membre.nomComplet} ?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: isDeleting
+                    ? null
+                    : () async {
+                        setLocalState(() => isDeleting = true);
+                        try {
+                          await ref
+                              .read(appDataProvider.notifier)
+                              .deleteMembre(membre.id);
+
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text('${membre.nomComplet} supprimé avec succès'),
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(Icons.error, color: Colors.white, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text('Erreur lors de la suppression: $e'),
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+                          }
+                        } finally {
+                          if (ctx.mounted) setLocalState(() => isDeleting = false);
+                        }
+                      },
+                child: isDeleting
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Supprimer',
+                        style: TextStyle(color: AppColors.danger)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -255,89 +271,106 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
   void _showEditDialog(BuildContext context, WidgetRef ref, Membre membre) {
     final nomController = TextEditingController(text: membre.nom);
     final prenomController = TextEditingController(text: membre.prenom);
-    
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Modifier le membre'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: prenomController,
-              decoration: const InputDecoration(
-                labelText: 'Prénom',
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setLocalState) {
+          bool isSaving = false;
+          return AlertDialog(
+            title: const Text('Modifier le membre'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: prenomController,
+                  decoration: const InputDecoration(
+                    labelText: 'Prénom',
+                    border: OutlineInputBorder(),
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nomController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nomController,
-              decoration: const InputDecoration(
-                labelText: 'Nom',
-                border: OutlineInputBorder(),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Annuler'),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await ref.read(appDataProvider.notifier).updateMembre(
-                  id: membre.id,
-                  nom: nomController.text.trim(),
-                  prenom: prenomController.text.trim(),
-                );
-                
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.white, size: 20),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text('Membre modifié avec succès'),
-                          ),
-                        ],
-                      ),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 3),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          const Icon(Icons.error, color: Colors.white, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text('Erreur lors de la modification: $e'),
-                          ),
-                        ],
-                      ),
-                      backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 4),
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Enregistrer'),
-          ),
-        ],
+              ElevatedButton(
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        setLocalState(() => isSaving = true);
+                        try {
+                          await ref.read(appDataProvider.notifier).updateMembre(
+                            id: membre.id,
+                            nom: nomController.text.trim(),
+                            prenom: prenomController.text.trim(),
+                          );
+
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Row(
+                                  children: [
+                                    Icon(Icons.check_circle, color: Colors.white, size: 20),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text('Membre modifié avec succès'),
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(Icons.error, color: Colors.white, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text('Erreur lors de la modification: $e'),
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+                          }
+                        } finally {
+                          if (ctx.mounted) setLocalState(() => isSaving = false);
+                        }
+                      },
+                child: isSaving
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Enregistrer'),
+              ),
+            ],
+          );
+        },
       ),
     );
+    nomController.dispose();
+    prenomController.dispose();
   }
 }
 

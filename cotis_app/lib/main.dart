@@ -9,6 +9,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 import 'core/notifications/notification_service.dart';
 import 'core/preferences/app_prefs.dart';
+import 'core/realtime/realtime_service.dart';
 import 'core/services/onesignal_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
@@ -76,6 +77,22 @@ Future<void> main() async {
             );
       } catch (e, stack) {
         debugPrint('[ONESIGNAL] Initialisation échouée (ignorée) : $e');
+        if (firebaseReady) {
+          FirebaseCrashlytics.instance.recordError(e, stack);
+        }
+      }
+
+      // Realtime (Socket.IO) — initialisation non bloquante :
+      // un échec ne doit jamais empêcher le démarrage de l'application.
+      try {
+        RealtimeService().connect().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            debugPrint('[WARN] RealtimeService.connect timeout — ignoré');
+          },
+        );
+      } catch (e, stack) {
+        debugPrint('[REALTIME] Initialisation échouée (ignorée) : $e');
         if (firebaseReady) {
           FirebaseCrashlytics.instance.recordError(e, stack);
         }
