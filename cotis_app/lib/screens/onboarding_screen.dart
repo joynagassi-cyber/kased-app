@@ -211,21 +211,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ],
               ),
-              child: const Center(
+              child: Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Continuer',
-                      style: TextStyle(
+                      isLast ? 'Créer mon compte' : 'Continuer',
+                      style: GoogleFonts.dmSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Icon(
-                      Icons.arrow_forward_rounded,
+                      isLast ? Icons.auto_awesome_rounded : Icons.arrow_forward_rounded,
                       size: 20,
                       color: Colors.white,
                     ),
