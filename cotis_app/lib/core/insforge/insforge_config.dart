@@ -52,7 +52,7 @@ class InsForgeConfig {
   /// InsForge : `{baseUrl}/functions/{slug}`.
   static String get googleAuthBridgeUrl =>
       _googleAuthBridgeUrlOverride.isEmpty
-          ? '$functionsBaseUrl/google-auth-bridge'
+          ? '$functionsBaseUrl/google-auth-bridge-v8'
           : _googleAuthBridgeUrlOverride;
 
   static const String membersPhotosBucket = 'membres-photos';
