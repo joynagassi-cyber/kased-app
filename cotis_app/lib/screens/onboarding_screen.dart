@@ -26,9 +26,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ];
 
   static const _subtitles = [
-    'Chaque piece que vous ajoutez remplit la cagnotte de votre communaute, en temps reel.',
-    "Visualisez l'evolution de vos cotisations mois par mois. Chaque barre raconte une histoire.",
-    'Chaque virement est visible par tous. Celebrez et rejoignez la communaute Kased !',
+    'Chaque pièce que vous ajoutez remplit la cagnotte de votre communauté, en temps réel.',
+    "Visualisez l'évolution de vos cotisations mois par mois. Chaque barre raconte une histoire.",
+    'Chaque virement est visible par tous. Célébrez et rejoignez la communauté Kased !',
   ];
 
   @override
@@ -211,24 +211,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    isLast ? 'Create my account' : 'Continue',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+              child: const Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Continuer',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 20,
                       color: Colors.white,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    isLast ? Icons.auto_awesome_rounded : Icons.arrow_forward_rounded,
-                    size: 20,
-                    color: Colors.white,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -236,7 +238,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           TextButton(
             onPressed: () => context.go('/login'),
             child: Text(
-              'I already have an account',
+              'J\'ai déjà un compte',
               style: GoogleFonts.dmSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,

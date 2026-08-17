@@ -199,9 +199,16 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
               ),
               if (!isOlderThan30Days)
                 IconButton(
-                  icon: const Icon(Icons.flash_on, color: Colors.blue),
+                  icon: _isBulkPaymentProcessing
+                      ? const SizedBox(
+                          width: 20, height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.flash_on, color: Colors.blue),
                   tooltip: 'Payer en avance pour tous les membres',
-                  onPressed: () async {
+                  onPressed: _isBulkPaymentProcessing
+                      ? null
+                      : () async {
                     // Get future cultes for this member
                     final futureCultes = state.cultes
                         .where((c) => !c.isDeleted && c.dateCulte.isAfter(DateTime.now()))
@@ -225,25 +232,30 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       futureCultes: futureCultes,
                       montantParCulte: culte.montantCotisation,
                       onPay: (selectedCultes, totalAmount) async {
-                        // Pay for each member
-                        for (final membre in membres) {
-                          await ref.read(appDataProvider.notifier).payerPlusieursCultesEnAvance(
-                            membreId: membre.id,
-                            culteIds: selectedCultes.map((c) => c.id).toList(),
-                            montantTotal: totalAmount,
-                          );
-                        }
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '✅ ${selectedCultes.length} culte(s) payé(s) en avance pour ${membres.length} membre(s)\n'
-                                'Total: ${totalAmount.toStringAsFixed(0)} F par membre',
-                              ),
-                              backgroundColor: AppColors.success,
-                              duration: const Duration(seconds: 4),
-                            ),
-                          );
+                        setState(() => _isBulkPaymentProcessing = true);
+                        try {
+                          // Pay for each member
+                          for (final membre in membres) {
+                            await ref.read(appDataProvider.notifier).payerPlusieursCultesEnAvance(
+                              membreId: membre.id,
+                              culteIds: selectedCultes.map((c) => c.id).toList(),
+                              montantTotal: totalAmount,
+                            );
+                          }
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                    '✅ ${selectedCultes.length} culte(s) payé(s) en avance pour ${membres.length} membre(s)\n'
+                                    'Total: ${totalAmount.toStringAsFixed(0)} F par membre',
+                                  ),
+                                  backgroundColor: AppColors.success,
+                                  duration: const Duration(seconds: 4),
+                                ),
+                              );
+                            }
+                        } finally {
+                          if (mounted) setState(() => _isBulkPaymentProcessing = false);
                         }
                       },
                     );

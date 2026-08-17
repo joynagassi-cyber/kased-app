@@ -14,6 +14,7 @@ import 'core/services/onesignal_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
+import 'providers/auth_provider.dart';
 import 'widgets/onesignal_verification_gate.dart';
 
 Future<void> main() async {
@@ -118,8 +119,34 @@ Future<void> main() async {
   );
 }
 
-class KasedApp extends ConsumerWidget {
+class KasedApp extends ConsumerStatefulWidget {
   const KasedApp({super.key});
+
+  @override
+  ConsumerState<KasedApp> createState() => _KasedAppState();
+}
+
+class _KasedAppState extends ConsumerState<KasedApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // L'app reprend : forcer une vérification de l'auth pour récupérer
+      // la session si elle a été perdue (ex: secure storage réinitialisé).
+      ref.read(authProvider.notifier).checkPersistedAuth();
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -319,20 +319,26 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
         actions: [
           if (_selectedIds.isNotEmpty) ...[
             IconButton(
-              icon: const Icon(Icons.restore_page),
+              icon: _processingIds.isNotEmpty
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.restore_page),
               tooltip: 'Restaurer la sélection',
-              onPressed: _restaurerSelection,
+              onPressed: _processingIds.isNotEmpty ? null : _restaurerSelection,
             ),
             IconButton(
-              icon: const Icon(Icons.delete_forever),
+              icon: _processingIds.isNotEmpty
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.delete_forever),
               tooltip: 'Supprimer la sélection',
-              onPressed: () {
-                final items = _trier(
-                  ref.read(corbeilleProvider).value ?? <CorbeilleItem>[],
-                  _tri,
-                );
-                _supprimerSelection(items);
-              },
+              onPressed: _processingIds.isNotEmpty
+                  ? null
+                  : () {
+                      final items = _trier(
+                        ref.read(corbeilleProvider).value ?? <CorbeilleItem>[],
+                        _tri,
+                      );
+                      _supprimerSelection(items);
+                    },
             ),
           ],
         ],
@@ -403,28 +409,36 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                     ),
                     // Tout restaurer
                     TextButton.icon(
-                      icon: const Icon(Icons.restore, size: 18),
+                      icon: _processingIds.isNotEmpty
+                          ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.grey)))
+                          : const Icon(Icons.restore, size: 18),
                       label: Text('Tout restaurer (${items.length})', style: const TextStyle(fontSize: 12)),
-                      onPressed: () async {
-                        final ok = await showDialog<bool>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Tout restaurer'),
-                            content: Text('Restaurer les ${items.length} élément(s) ?'),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
-                              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Restaurer tout')),
-                            ],
-                          ),
-                        );
-                        if (ok == true) await _restaurerTout(items);
-                      },
+                      onPressed: _processingIds.isNotEmpty
+                          ? null
+                          : () async {
+                              final ok = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Tout restaurer'),
+                                  content: Text('Restaurer les ${items.length} élément(s) ?'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+                                    FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Restaurer tout')),
+                                  ],
+                                ),
+                              );
+                              if (ok == true) await _restaurerTout(items);
+                            },
                     ),
                     // Vider la corbeille
                     TextButton.icon(
-                      icon: Icon(Icons.delete_forever, size: 18, color: colorScheme.error),
+                      icon: _processingIds.isNotEmpty
+                          ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.grey)))
+                          : Icon(Icons.delete_forever, size: 18, color: colorScheme.error),
                       label: Text('Vider', style: TextStyle(fontSize: 12, color: colorScheme.error)),
-                      onPressed: () => _viderCorbeille(items),
+                      onPressed: _processingIds.isNotEmpty
+                          ? null
+                          : () => _viderCorbeille(items),
                     ),
                   ],
                 ),
@@ -520,21 +534,25 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                                 ),
                               ),
                               IconButton(
-                                onPressed: () async {
-                                  final ok = await showDialog<bool>(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      title: const Text('Restaurer'),
-                                      content: Text('Restaurer "$titre" ?'),
-                                      actions: [
-                                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
-                                        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Restaurer')),
-                                      ],
-                                    ),
-                                  );
-                                  if (ok == true) await _restaurer(item.isarId);
-                                },
-                                icon: const Icon(Icons.restore),
+                                onPressed: _processingIds.contains(item.isarId)
+                                    ? null
+                                    : () async {
+                                        final ok = await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: const Text('Restaurer'),
+                                            content: Text('Restaurer "$titre" ?'),
+                                            actions: [
+                                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+                                              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Restaurer')),
+                                            ],
+                                          ),
+                                        );
+                                        if (ok == true) await _restaurer(item.isarId);
+                                      },
+                                icon: _processingIds.contains(item.isarId)
+                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                    : const Icon(Icons.restore),
                                 tooltip: 'Restaurer',
                                 color: colorScheme.primary,
                                 style: IconButton.styleFrom(
@@ -542,8 +560,12 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                                 ),
                               ),
                               IconButton(
-                                onPressed: () => _supprimerDefinitivement(item.isarId, titre),
-                                icon: const Icon(Icons.delete_forever),
+                                onPressed: _processingIds.contains(item.isarId)
+                                    ? null
+                                    : () => _supprimerDefinitivement(item.isarId, titre),
+                                icon: _processingIds.contains(item.isarId)
+                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                    : const Icon(Icons.delete_forever),
                                 tooltip: 'Supprimer définitivement',
                                 color: colorScheme.error,
                                 style: IconButton.styleFrom(

@@ -6,7 +6,7 @@ part of 'auth_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$secureStorageHash() => r'1803ee54eebc4038de1cd19ff9f0850676721a7f';
+String _$secureStorageHash() => r'101057af0575d1b5eabe288aa7410a7b6b252103';
 
 /// See also [secureStorage].
 @ProviderFor(secureStorage)
@@ -21,7 +21,7 @@ final secureStorageProvider = Provider<FlutterSecureStorage>.internal(
 );
 
 typedef SecureStorageRef = ProviderRef<FlutterSecureStorage>;
-String _$authHash() => r'e28d8260edbe83e67aae14fc182383b5b2623383';
+String _$authHash() => r'e8c3719f26a88dbd2984c34d2c009864559c9889';
 
 /// See also [Auth].
 @ProviderFor(Auth)

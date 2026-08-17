@@ -56,7 +56,18 @@ class AuthState {
 
 @Riverpod(keepAlive: true)
 FlutterSecureStorage secureStorage(SecureStorageRef ref) {
-  return const FlutterSecureStorage();
+  return const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      // Ne pas demander d'authentification biométrique pour lire les tokens
+      // Cela empêche la perte de session quand l'utilisateur change de compte
+      // biométrique ou désactive le verrouillage d'écran
+    ),
+    iOptions: IOSOptions(
+      // Utiliser Keychain avec accès跨app pour plus de stabilité
+      accessible: IOSAccessible.whenUnlockedThisDeviceOnly,
+    ),
+  );
 }
 
 @Riverpod(keepAlive: true)
@@ -110,6 +121,12 @@ class Auth extends _$Auth {
     } catch (_) {
       return true; // On suppose qu'on est en ligne si on ne peut pas vérifier
     }
+  }
+
+  /// Vérifie et restaure la session persistée. Utilisé au lancement
+  /// et au retour du background.
+  Future<void> checkPersistedAuth() async {
+    await _checkPersistedAuth();
   }
 
   Future<void> _checkPersistedAuth() async {

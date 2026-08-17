@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:kased_app/widgets/kased_avatar.dart';
 import 'membre_report_screen.dart';
 
-class MembreDetailScreen extends ConsumerWidget {
+class MembreDetailScreen extends ConsumerStatefulWidget {
   final String membreId;
   final Membre? membre;
 
@@ -18,6 +18,13 @@ class MembreDetailScreen extends ConsumerWidget {
     required this.membreId,
     this.membre,
   });
+
+  @override
+  ConsumerState<MembreDetailScreen> createState() => _MembreDetailScreenState();
+}
+
+class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
+  bool _isSavingAvance = false;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -286,8 +293,9 @@ class MembreDetailScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         FilledButton.tonal(
-                          onPressed: () =>
-                              _showAvanceDialog(context, ref, currentMembre),
+                          onPressed: _isSavingAvance
+                              ? null
+                              : () => _showAvanceDialog(context, currentMembre),
                           style: FilledButton.styleFrom(
                             backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
                             foregroundColor: colorScheme.primary,
@@ -297,10 +305,12 @@ class MembreDetailScreen extends ConsumerWidget {
                             ),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text(
-                            'Ajouter',
-                            style: TextStyle(fontSize: 13),
-                          ),
+                          child: _isSavingAvance
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Text(
+                                  'Ajouter',
+                                  style: TextStyle(fontSize: 13),
+                                ),
                         ),
                       ],
                     ),
@@ -310,7 +320,9 @@ class MembreDetailScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
                   child: InkWell(
-                    onTap: () => _showAvanceDialog(context, ref, currentMembre),
+                    onTap: _isSavingAvance
+                        ? null
+                        : () => _showAvanceDialog(context, currentMembre),
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
                       padding: const EdgeInsets.all(16),
@@ -477,79 +489,63 @@ class MembreDetailScreen extends ConsumerWidget {
       error: (e, _) => Scaffold(body: Center(child: Text('Erreur: $e'))),
     );
   }
-}
-
-Future<void> _showAvanceDialog(
-    BuildContext context, WidgetRef ref, Membre membre) async {
-  final controller = TextEditingController();
-  final result = await showDialog<String>(
-    context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (dialogCtx, setLocalState) {
-        bool isLoading = false;
-        return AlertDialog(
-          title: const Text('Paiement en avance'),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Montant en FCFA',
-              hintText: 'Ex: 500',
-            ),
+  Future<void> _showAvanceDialog(BuildContext context, Membre membre) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Paiement en avance'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Montant en FCFA',
+            hintText: 'Ex: 500',
           ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
-            FilledButton(
-              onPressed: isLoading
-                  ? null
-                  : () {
-                      final montant = double.tryParse(controller.text.trim());
-                      if (montant != null && montant > 0) {
-                        setLocalState(() => isLoading = true);
-                        // We use a local variable for the result to avoid
-                        // accessing controller after dispose.
-                        final String submitted = controller.text.trim();
-                        Navigator.pop(ctx, submitted);
-                      }
-                    },
-              child: isLoading
-                  ? const SizedBox(
-                      width: 20, height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Valider'),
-            ),
-          ],
-        );
-      },
-    ),
-  );
-  controller.dispose();
-
-  if (result == null || !context.mounted) return;
-
-  final montant = double.tryParse(result) ?? 0.0;
-  if (montant <= 0) return;
-
-  try {
-    await ref
-        .read(appDataProvider.notifier)
-        .ajouterPaiementAvance(membreId: membre.id, montant: montant);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Gloire à Dieu ! ${montant.toStringAsFixed(0)} F ajoutés en avance'),
-          backgroundColor: AppColors.success,
         ),
-      );
-    }
-  } catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur: $e')),
-      );
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          FilledButton(
+            onPressed: () {
+              final montant = double.tryParse(controller.text.trim());
+              if (montant != null && montant > 0) {
+                Navigator.pop(ctx, controller.text.trim());
+              }
+            },
+            child: const Text('Valider'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    if (result == null || !context.mounted) return;
+
+    final montant = double.tryParse(result) ?? 0.0;
+    if (montant <= 0) return;
+
+    setState(() => _isSavingAvance = true);
+    try {
+      await ref
+          .read(appDataProvider.notifier)
+          .ajouterPaiementAvance(membreId: membre.id, montant: montant);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Gloire à Dieu ! ${montant.toStringAsFixed(0)} F ajoutés en avance'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSavingAvance = false);
     }
   }
 }
