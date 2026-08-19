@@ -32,12 +32,17 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
         }
         final culte = state.cultes[culteIndex];
 
-        _ensureQueue(state);
-        _total = state.membres.length;
+        _ensureQueue(state, culte);
+        final culteMemberIds = culte.memberIds;
+        _total = culteMemberIds.isNotEmpty
+            ? state.membres.where((m) => culteMemberIds.contains(m.id)).length
+            : state.membres.length;
         final paidIds = state.cotisations.where((c) => c.culteId == widget.culteId && c.estPaye).map((c) => c.membreId).toSet();
         final remainingIds = _queueIds.where((id) => !paidIds.contains(id)).toList();
+        final membersById = {for (final m in state.membres) m.id: m};
         final remainingMembers = remainingIds
-            .map((id) => state.membres.firstWhere((m) => m.id == id))
+            .map((id) => membersById[id])
+            .whereType<Membre>()
             .toList();
 
         if (remainingMembers.isEmpty) {
@@ -207,9 +212,13 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
     );
   }
 
-  void _ensureQueue(AppState state) {
+  void _ensureQueue(AppState state, Culte culte) {
     if (_initialized) return;
-    final sortedMembers = [...state.membres]..sort((a, b) => a.nomComplet.compareTo(b.nomComplet));
+    final culteMemberIds = culte.memberIds;
+    final allMembres = culteMemberIds.isNotEmpty
+        ? state.membres.where((m) => culteMemberIds.contains(m.id)).toList()
+        : state.membres;
+    final sortedMembers = [...allMembres]..sort((a, b) => a.nomComplet.compareTo(b.nomComplet));
     _queueIds
       ..clear()
       ..addAll(sortedMembers.map((m) => m.id));
