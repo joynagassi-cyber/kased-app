@@ -18,6 +18,11 @@ const _prefsKeyDialogShown = 'onesignal_dialog_shown_v1';
 ///
 /// L'état du dialogue est persisté dans SharedPreferences pour éviter
 /// qu'il ne s'affiche à chaque démarrage.
+///
+/// ⚠️ IMPORTANT : si l'utilisateur a refusé la permission push ou n'a jamais
+/// reçu de vrai push OneSignal, le dialogue ne s'affichera JAMAIS. Cela est
+/// intentionnel : le dialogue est une vérification d'intégration, pas un
+/// prompt de permission.
 class OneSignalVerificationGate extends ConsumerStatefulWidget {
   const OneSignalVerificationGate({super.key, required this.child});
 
@@ -35,6 +40,7 @@ class _OneSignalVerificationGateState
   late final OneSignalService _oneSignal;
   OnPushSubscriptionChangeObserver? _observer;
   bool _dialogShown = false;
+  BuildContext? _safeContext;
 
   @override
   void initState() {
@@ -78,25 +84,36 @@ class _OneSignalVerificationGateState
       id != null && id.isNotEmpty && !id.startsWith('local-');
 
   void _maybeShowDialog(String? subscriptionId) {
-    if (_dialogShown || !_isRegistered(subscriptionId)) return;
+    // Ne jamais afficher si le dialogue a déjà été montré
+    if (_dialogShown) return;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final navigator = rootNavigatorKey.currentState;
-      if (navigator == null || !navigator.mounted) {
-        // Navigator pas encore prêt — le prochain événement d'abonnement
-        // (ou la prochaine évaluation) déclenchera un nouvel essai.
-        return;
-      }
-      _dialogShown = true;
-      _saveDialogState(true);
-      _showIntegrationCompleteDialog(navigator.context);
-    });
+    // Ne pas afficher si l'app n'est pas initialisée
+    if (!_oneSignal.isInitialized) return;
+
+    // Ne pas afficher si le device n'a pas de vrai subscription ID serveur
+    if (!_isRegistered(subscriptionId)) return;
+
+    // Le dialogue a été montré → persist l'état et demander la permission
+    _dialogShown = true;
+    _saveDialogState(true);
+    _showIntegrationCompleteDialogAndRequestPermission();
   }
 
-  Future<void> _showIntegrationCompleteDialog(BuildContext navigatorContext) async {
+  /// Demande la permission push ET ferme le dialogue en une seule étape.
+  Future<void> _showIntegrationCompleteDialogAndRequestPermission() async {
+    // Utiliser le contexte le plus sûr disponible :
+    // 1. Le contexte de build stocké après le premier build
+    // 2. Le contexte rootNavigatorKey si disponible
+    final ctx = _safeContext ??
+        rootNavigatorKey.currentContext;
+
+    if (ctx == null) {
+      debugPrint('[OneSignal] Cannot show dialog — no context available');
+      return;
+    }
+
     await showDialog<void>(
-      context: navigatorContext,
+      context: ctx,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Your OneSignal SDK integration is complete!'),
@@ -108,7 +125,6 @@ class _OneSignalVerificationGateState
           TextButton(
             onPressed: () async {
               Navigator.of(dialogContext).pop();
-              // Seul endroit où la permission push est demandée (guide OneSignal).
               await _oneSignal.requestPermission();
             },
             child: const Text('Got it'),
@@ -120,6 +136,10 @@ class _OneSignalVerificationGateState
 
   @override
   Widget build(BuildContext context) {
+    // Stocker le contexte pour utilisation ultérieure par showDialog
+    if (_safeContext == null) {
+      _safeContext = context;
+    }
     return widget.child;
   }
 }
