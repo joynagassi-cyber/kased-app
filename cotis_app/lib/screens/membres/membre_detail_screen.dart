@@ -25,6 +25,12 @@ class MembreDetailScreen extends ConsumerStatefulWidget {
 
 class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
   bool _isSavingAvance = false;
+  String _searchQuery = '';
+  StatutCotisation? _statutFilter;
+
+  void _filterHistorique() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +79,16 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
               );
             })
             .where((item) => item.date != null)
+            .where((item) {
+              if (_statutFilter != null && item.statut != _statutFilter) {
+                return false;
+              }
+              if (_searchQuery.isNotEmpty &&
+                  !item.titre.toLowerCase().contains(_searchQuery.toLowerCase())) {
+                return false;
+              }
+              return true;
+            })
             .toList()
           ..sort((a, b) {
             if (a.date == null || b.date == null) return 0;
@@ -378,14 +394,88 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
               // ── Historique Section ─────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-                child: Text(
-                  'HISTORIQUE',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                child: Row(
+                  children: [
+                    Text(
+                      'HISTORIQUE',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Filter by status
+                    SegmentedButton<StatutCotisation?>(
+                      segments: const [
+                        ButtonSegment(
+                          value: null,
+                          label: Text('Tout'),
+                        ),
+                        ButtonSegment(
+                          value: StatutCotisation.paye,
+                          label: Text('Payé'),
+                        ),
+                        ButtonSegment(
+                          value: StatutCotisation.enAvance,
+                          label: Text('Avance'),
+                        ),
+                        ButtonSegment(
+                          value: StatutCotisation.nonPaye,
+                          label: Text('En retard'),
+                        ),
+                        ButtonSegment(
+                          value: StatutCotisation.absent,
+                          label: Text('Absent'),
+                        ),
+                      ],
+                      selected: {_statutFilter},
+                      onSelectionChanged: (Set<StatutCotisation?> s) {
+                        setState(() => _statutFilter = s.first);
+                      },
+                      style: const ButtonStyle(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Search field
+                    SizedBox(
+                      width: 160,
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Rechercher...',
+                          hintStyle: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                          prefixIcon: const Icon(Icons.search, size: 18),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: colorScheme.primary),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          isDense: true,
+                        ),
+                        style: const TextStyle(fontSize: 13),
+                        onChanged: (v) {
+                          setState(() => _searchQuery = v);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (historiqueItems.isEmpty)

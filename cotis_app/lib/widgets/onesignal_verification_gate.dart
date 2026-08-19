@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/router/app_router.dart';
 import '../core/services/onesignal_service.dart';
 import '../providers/onesignal_provider.dart';
+
+const _prefsKeyDialogShown = 'onesignal_dialog_shown_v1';
 
 /// Gate de vérification de l'intégration OneSignal.
 ///
@@ -13,8 +16,8 @@ import '../providers/onesignal_provider.dart';
 /// vrai subscription ID serveur. Le bouton « Got it » est le SEUL endroit où
 /// la permission de notification push est demandée.
 ///
-/// L'observateur est conservé dans un champ State (référence forte) pour la
-/// durée de vie du widget, comme recommandé par le guide OneSignal.
+/// L'état du dialogue est persisté dans SharedPreferences pour éviter
+/// qu'il ne s'affiche à chaque démarrage.
 class OneSignalVerificationGate extends ConsumerStatefulWidget {
   const OneSignalVerificationGate({super.key, required this.child});
 
@@ -37,8 +40,23 @@ class _OneSignalVerificationGateState
   void initState() {
     super.initState();
     _oneSignal = ref.read(oneSignalServiceProvider);
+    _loadDialogState();
     if (!_oneSignal.isInitialized) return;
     _setupSubscriptionObserver();
+  }
+
+  Future<void> _loadDialogState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _dialogShown = prefs.getBool(_prefsKeyDialogShown) ?? false;
+    } catch (_) {}
+  }
+
+  Future<void> _saveDialogState(bool shown) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefsKeyDialogShown, shown);
+    } catch (_) {}
   }
 
   void _setupSubscriptionObserver() {
@@ -71,6 +89,7 @@ class _OneSignalVerificationGateState
         return;
       }
       _dialogShown = true;
+      _saveDialogState(true);
       _showIntegrationCompleteDialog(navigator.context);
     });
   }

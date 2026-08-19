@@ -1,19 +1,21 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:kased_app/core/notifications/notification_service.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/providers/notifications_provider.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Coordinateur des notifications locales.
 ///
 /// Centralise tous les appels a [NotificationService] et [NotificationsProvider]
 /// pour eviter de les disperser dans le provider ou les services.
 class NotificationCoordinator {
-  /// Initialisation: charge les notifications depuis Isar au demarrage.
-  static Future<void> init(ref) async {
+  /// Initialisation: charge les notifications depuis prefs au demarrage.
+  static Future<void> init(Ref ref) async {
     unawaited(ref.read(notificationsProvider.notifier).chargerDepuisPrefs());
   }
 
@@ -40,13 +42,21 @@ class NotificationCoordinator {
 
   /// Affiche une notification de creation de membre.
   static void notifierCreationMembre(Membre membre) {
+    final titre = '${membre.prenom} ${membre.nom} a ete ajoute a la communaute';
     unawaited(NotificationService.showNotification(
       title: 'Gloire a Dieu',
-      body: '${membre.prenom} ${membre.nom} a ete ajoute a la communaute',
+      body: titre,
     ));
     unawaited(NotificationService.showNotification(
       title: 'Nouveau membre',
       body: '${membre.prenom} ${membre.nom} vient d etre ajoute',
+      channelId: 'membres',
+      channelName: 'Membres',
+    ));
+    // Ajouter aussi dans le provider in-app
+    unawaited(NotificationService.showNotification(
+      title: 'Nouveau membre',
+      body: '${membre.prenom} ${membre.nom} a rejoint l\'eglise',
       channelId: 'membres',
       channelName: 'Membres',
     ));
@@ -55,9 +65,16 @@ class NotificationCoordinator {
   /// Affiche une notification de creation de culte.
   static void notifierCreationCulte(Culte culte) {
     final titreCulte = culte.titre != null ? ' : ${culte.titre}' : '';
+    final body = 'Nouveau culte${titreCulte.isNotEmpty ? titreCulte : ''} - ${DateFormat('dd/MM/yyyy').format(culte.dateCulte)}';
     unawaited(NotificationService.showNotification(
       title: 'Gloire a Dieu',
-      body: 'Nouveau culte${titreCulte.isNotEmpty ? titreCulte : ''} - ${DateFormat('dd/MM/yyyy').format(culte.dateCulte)}',
+      body: body,
+    ));
+    unawaited(NotificationService.showNotification(
+      title: 'Nouveau culte',
+      body: body,
+      channelId: 'cultes',
+      channelName: 'Cultes',
     ));
   }
 
@@ -76,7 +93,7 @@ class NotificationCoordinator {
   static void notifierPaiementPersonnalise(String membreNom, double montant, String culteTitre) {
     unawaited(NotificationService.showNotification(
       title: 'Paiement enregistre',
-      body: '$membreNom - ${montant.toStringAsFixed(0)} F',
+      body: '$membreNom - ${montant.toStringAsFixed(0)} F pour $culteTitre',
       channelId: 'paiements',
       channelName: 'Paiements',
     ));
@@ -97,8 +114,8 @@ class NotificationCoordinator {
   /// Affiche une notification de paiement par avance.
   static void notifierPaiementAvance(double montant, String membreNom) {
     unawaited(NotificationService.showNotification(
-      title: 'Gloire à Dieu',
-      body: '$membreNom a payé ${montant.toStringAsFixed(0)} F en avance',
+      title: 'Gloire a Dieu',
+      body: '$membreNom a paye ${montant.toStringAsFixed(0)} F en avance',
       channelId: 'paiements',
       channelName: 'Paiements',
     ));

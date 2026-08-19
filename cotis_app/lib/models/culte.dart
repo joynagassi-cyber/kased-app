@@ -1,4 +1,4 @@
-﻿import 'package:isar/isar.dart';
+import 'package:isar/isar.dart';
 
 part 'culte.g.dart';
 
@@ -29,13 +29,7 @@ class Culte {
   List<String> memberIds = [];
 
   @ignore
-  String get dateFormatee {
-    const mois = ['Janvier','Février','Mars','Avril','Mai','Juin',
-                   'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-    final wd = dateCulte.weekday;
-    final nomJour = wd == 7 ? 'Dimanche' : ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][wd-1];
-    return '   ';
-  }
+  String get dateFormatee => '   ';
 
   // Helper for JSON (InsForge)
   Map<String, dynamic> toJson() => {
