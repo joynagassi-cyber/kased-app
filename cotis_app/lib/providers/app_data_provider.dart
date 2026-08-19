@@ -523,10 +523,13 @@ class AppData extends _$AppData {
         mergedCotisations.add(c);
       }
     }
+    // Reload membres from cache since controller may have deducted avance
+    final updatedMembres = await _cache.getAllMembres();
     state = AsyncValue.data(current.copyWith(
       cultes: [newCulte, ...current.cultes]
         ..sort((a, b) => b.dateCulte.compareTo(a.dateCulte)),
       cotisations: mergedCotisations,
+      membres: updatedMembres,
     ));
 
     NotificationCoordinator.notifierCreationCulte(newCulte);
