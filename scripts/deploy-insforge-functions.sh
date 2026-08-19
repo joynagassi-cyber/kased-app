@@ -11,7 +11,8 @@ set -euo pipefail
 
 BASE_URL="${INSFORGE_BASE_URL:-https://pu74z8pe.us-east.insforge.app}"
 : "${INSFORGE_ANON_KEY:?INSFORGE_ANON_KEY requis (console InsForge → API keys → clé anon)}"
-: "${ONESIGNAL_REST_API_KEY:?ONESIGNAL_REST_API_KEY requis (OneSignal → Settings → Keys & IDs)}"
+# ONESIGNAL_REST_API_KEY est optionnel — nécessaire uniquement pour push-notify
+: "${ONESIGNAL_REST_API_KEY:-}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP="$(mktemp -d)"
