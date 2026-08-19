@@ -10,6 +10,7 @@ import 'package:kased_app/core/utils/uuid.dart';
 import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
+import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:kased_app/models/corbeille_item.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
@@ -76,18 +77,50 @@ class CulteController {
     final membres = await _cache.getAllMembres();
     final activeMembres = membres.where((m) => m.isActive).toList();
     newCulte.memberIds = activeMembres.map((m) => m.id).toList();
-    final localCotisations = activeMembres.map((m) {
-      return Cotisation()
+
+    // Créer les cotisations : consommer automatiquement l'avance si disponible
+    final localCotisations = <Cotisation>[];
+    final membreUpdates = <Membre>[];
+
+    for (final membre in activeMembres) {
+      final cotisation = Cotisation()
         ..id = UuidUtils.generate()
         ..culteId = culteId
-        ..membreId = m.id
+        ..membreId = membre.id
         ..montantObligatoire = montant
         ..montantPaye = 0.0
         ..montantDon = 0.0
         ..statut = StatutCotisation.nonPaye
         ..deviceId = deviceId
         ..createdAt = now;
-    }).toList();
+
+      // Consommer l'avance automatiquement si le membre a assez de crédit
+      if (membre.montantEnAvance >= montant) {
+        cotisation.montantPaye = montant;
+        cotisation.statut = StatutCotisation.enAvance;
+        cotisation.datePaiement = now;
+
+        // Déduire de l'avance du membre
+        final updatedMembre = Membre()
+          ..id = membre.id
+          ..nom = membre.nom
+          ..prenom = membre.prenom
+          ..dateAdhesion = membre.dateAdhesion
+          ..dateNaissance = membre.dateNaissance
+          ..montantEnAvance = membre.montantEnAvance - montant
+          ..totalDons = membre.totalDons
+          ..telephone = membre.telephone
+          ..notes = membre.notes
+          ..isActive = membre.isActive
+          ..deviceId = deviceId
+          ..createdAt = membre.createdAt
+          ..version = membre.version + 1
+          ..updatedAt = now;
+        membreUpdates.add(updatedMembre);
+      }
+
+      localCotisations.add(cotisation);
+    }
 
     final syncOp = SyncOperation()
       ..operationId = UuidUtils.generate()
@@ -111,6 +144,19 @@ class CulteController {
         ..createdAt = now
         ..deviceId = deviceId;
       await _cache.saveSyncOp(cotSyncOp);
+    }
+
+    // Sauvegarder les membres dont l'avance a été consommée
+    for (final updatedMembre in membreUpdates) {
+      final membreSyncOp = SyncOperation()
+        ..operationId = UuidUtils.generate()
+        ..type = 'UPDATE'
+        ..entityType = 'membre'
+        ..entityId = updatedMembre.id
+        ..payloadJson = jsonEncode(updatedMembre.toJson())
+        ..createdAt = now
+        ..deviceId = deviceId;
+      await _cache.saveMembreWithSyncOp(updatedMembre, membreSyncOp);
     }
 
     NotificationCoordinator.notifierCreationCulte(newCulte);
