@@ -75,7 +75,7 @@ void main() {
   }
 
   testWidgets('Renders essential login fields', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1200, 1800);
+    tester.view.physicalSize = const Size(600, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 
@@ -88,7 +88,7 @@ void main() {
   });
 
   testWidgets('Login success calls AuthService and storage', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1200, 1800);
+    tester.view.physicalSize = const Size(600, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 

@@ -13,7 +13,7 @@ import 'package:kased_app/core/services/notification_coordinator.dart';
 import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/services/stats_service.dart';
 import 'package:kased_app/core/services/sync_service.dart';
-import 'package:kased_app/core/sync/device_service.dart';
+import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/core/utils/uuid.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
@@ -24,6 +24,11 @@ import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/providers/isar_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+
+import 'package:kased_app/controllers/membre_controller.dart';
+import 'package:kased_app/controllers/culte_controller.dart';
+import 'package:kased_app/controllers/cotisation_controller.dart';
+import 'package:kased_app/controllers/system_controller.dart';
 part 'app_data_provider.g.dart';
 
 class AppState {
@@ -73,6 +78,11 @@ class AppData extends _$AppData {
   late SyncService _syncService;
   late StatsService _statsService;
   late RealtimeService _realtimeService;
+  late MembreController _membreController;
+  late CulteController _culteController;
+  late CotisationController _cotisationController;
+  late SystemController _systemController;
+  late DeviceServicePort _deviceServicePort;
   StreamSubscription? _connectivitySubscription;
 
   @visibleForTesting
@@ -83,15 +93,56 @@ class AppData extends _$AppData {
   set syncService(SyncService s) => _syncService = s;
   @visibleForTesting
   set statsService(StatsService s) => _statsService = s;
+  @visibleForTesting
+  set deviceServicePort(DeviceServicePort d) => _deviceServicePort = d;
+
+  @visibleForTesting
+  set membreController(MembreController c) => _membreController = c;
+  @visibleForTesting
+  set culteController(CulteController c) => _culteController = c;
+  @visibleForTesting
+  set cotisationController(CotisationController c) => _cotisationController = c;
+  @visibleForTesting
+  set systemController(SystemController c) => _systemController = c;
 
   @override
   FutureOr<AppState> build() async {
     _api = ref.watch(insForgeServiceProvider);
     final isar = await ref.watch(isarProvider.future);
     _cache = IsarLocalCache(isar);
+    _deviceServicePort = RealDeviceService();
     _syncService = SyncService(_api, _cache);
     _statsService = StatsService();
     _realtimeService = RealtimeService();
+
+    // Initialize controllers
+    _membreController = MembreController(
+      cache: _cache,
+      api: _api,
+      syncService: _syncService,
+      deviceService: _deviceServicePort,
+      onStateChanged: (appState) => state = AsyncValue.data(appState),
+    );
+    _culteController = CulteController(
+      cache: _cache,
+      api: _api,
+      syncService: _syncService,
+      deviceService: _deviceServicePort,
+      onStateChanged: (appState) => state = AsyncValue.data(appState),
+    );
+    _cotisationController = CotisationController(
+      cache: _cache,
+      api: _api,
+      deviceService: _deviceServicePort,
+      onStateChanged: (appState) => state = AsyncValue.data(appState),
+    );
+    _systemController = SystemController(
+      cache: _cache,
+      api: _api,
+      syncService: _syncService,
+      statsService: _statsService,
+      onStateChanged: (appState) => state = AsyncValue.data(appState),
+    );
 
     // Micro-délai artificiel de 150ms pour permettre au framework de
     // rendre l'état "loading" au démarrage local (Isar)
@@ -285,89 +336,28 @@ class AppData extends _$AppData {
     String? telephone,
     String? notes,
   }) async {
-    final newId = UuidUtils.generate();
-    final deviceId = await DeviceService.getDeviceId();
-    final now = DateTime.now();
-    final newMembre = Membre()
-      ..id = newId
-      ..nom = nom
-      ..prenom = prenom
-      ..dateAdhesion = dateAdhesion
-      ..dateNaissance = dateNaissance
-      ..telephone = telephone
-      ..notes = notes
-      ..isActive = true
-      ..deviceId = deviceId
-      ..createdAt = now
-      ..updatedAt = now;
+    final newMembre = await _membreController.addMembre(
+      nom: nom,
+      prenom: prenom,
+      dateAdhesion: dateAdhesion,
+      dateNaissance: dateNaissance,
+      telephone: telephone,
+      notes: notes,
+    );
 
-    final syncOp = SyncOperation()
-      ..operationId = UuidUtils.generate()
-      ..type = 'CREATE'
-      ..entityType = 'membre'
-      ..entityId = newId
-      ..payloadJson = jsonEncode(newMembre.toJson())
-      ..createdAt = now
-      ..deviceId = deviceId;
+    // Generate initial cotisations for future cultes
+    await _cotisationController.generateInitialCotisationsForMembre(newMembre);
 
-    // 1. Sauvegarde locale atomique (membre + SyncOp)
-    await _cache.saveMembreWithSyncOp(newMembre, syncOp);
-
+    // Update state with new membre
     final current = state.value ?? AppState();
     state = AsyncValue.data(current.copyWith(
       membres: [...current.membres, newMembre]
         ..sort((a, b) => a.nom.compareTo(b.nom)),
     ));
 
-    // Notification anniversaire et création
-    // Créer des cotisations UNIQUEMENT pour les cultes FUTURS (après l'adhésion)
-    final membreCreatedAt = newMembre.createdAt;
-    final existingCultes = (state.value?.cultes ?? []).where((c) => !c.isDeleted).toList();
-    for (final culte in existingCultes) {
-      final culteDate = culte.dateCulte;
-      // Ne créer des cotisations que pour les cultes à venir (après l'adhésion)
-      if (culteDate.isBefore(membreCreatedAt)) continue;
-      final statut = StatutCotisation.nonPaye;
-      final newCot = Cotisation()
-        ..id = UuidUtils.generate()
-        ..membreId = newMembre.id
-        ..culteId = culte.id
-        ..montantObligatoire = culte.montantCotisation
-        ..montantPaye = 0.0
-        ..montantDon = 0.0
-        ..statut = statut
-        ..deviceId = await DeviceService.getDeviceId()
-        ..createdAt = newMembre.createdAt;
-      await _cache.saveCotisation(newCot);
-      final syncDeviceId = await DeviceService.getDeviceId();
-      final cotSyncOp = SyncOperation()
-        ..operationId = UuidUtils.generate()
-        ..type = 'CREATE'
-        ..entityType = 'cotisation'
-        ..entityId = newCot.id
-        ..payloadJson = jsonEncode(newCot.toJson())
-        ..createdAt = newMembre.createdAt
-        ..deviceId = syncDeviceId;
-      await _cache.saveSyncOp(cotSyncOp);
-    }
-
     NotificationCoordinator.planifierAnniversaireMembre(newMembre);
     NotificationCoordinator.notifierCreationMembre(newMembre);
-
     await loadDashboard();
-
-    // 2. Tentative de synchronisation réseau
-    try {
-      await _api.createMembre(newMembre.toJson());
-      // Succès réseau : supprimer l'opération sync (déjà appliquée)
-      await _cache.deleteSyncOp(syncOp.isarId);
-    } catch (e) {
-      debugPrint('[AppData] addMembre réseau échoué, mise en file: $e');
-      await _syncService.queueSyncOperation(
-          'CREATE', 'membre', newId, newMembre.toJson());
-    }
-
-    // Notification push aux autres utilisateurs (non bloquant)
     unawaited(_notifierPush('membre_ajoute', newMembre.nomComplet));
 
     return newMembre;
@@ -383,12 +373,23 @@ class AppData extends _$AppData {
     String? notes,
     bool? isActive,
   }) async {
+    await _membreController.updateMembre(
+      id: id,
+      nom: nom,
+      prenom: prenom,
+      dateAdhesion: dateAdhesion,
+      dateNaissance: dateNaissance,
+      telephone: telephone,
+      notes: notes,
+      isActive: isActive,
+    );
+
+    // Update state
     final current = state.value;
     if (current == null) return;
 
-    final existing = current.membres.firstWhere((m) => m.id == id);
-    final deviceId = await DeviceService.getDeviceId();
-    final now = DateTime.now();
+    final membres = current.membres;
+    final existing = membres.firstWhere((m) => m.id == id);
     final updated = Membre()
       ..id = existing.id
       ..nom = nom ?? existing.nom
@@ -398,49 +399,20 @@ class AppData extends _$AppData {
       ..telephone = telephone ?? existing.telephone
       ..notes = notes ?? existing.notes
       ..isActive = isActive ?? existing.isActive
-      ..deviceId = deviceId
+      ..deviceId = existing.deviceId
       ..createdAt = existing.createdAt
       ..version = existing.version + 1
-      ..updatedAt = now;
+      ..updatedAt = DateTime.now();
 
-    final syncOp = SyncOperation()
-      ..operationId = UuidUtils.generate()
-      ..type = 'UPDATE'
-      ..entityType = 'membre'
-      ..entityId = id
-      ..payloadJson = jsonEncode(updated.toJson())
-      ..createdAt = now
-      ..deviceId = deviceId;
+    final sortedMembres = [...membres.where((m) => m.id != id), updated]
+      ..sort((a, b) => a.nom.compareTo(b.nom));
+    state = AsyncValue.data(current.copyWith(membres: sortedMembres));
 
-    // 1. Sauvegarde locale atomique
-    await _cache.saveMembreWithSyncOp(updated, syncOp);
-
-    final membres = [
-      ...current.membres.where((m) => m.id != id),
-      updated,
-    ]..sort((a, b) => a.nom.compareTo(b.nom));
-
-    state = AsyncValue.data(current.copyWith(membres: membres));
-
-    // Notifications anniversaire
     if (updated.dateNaissance != null) {
       NotificationCoordinator.planifierAnniversaireMembre(updated);
     } else {
       NotificationCoordinator.annulerAnniversaireMembre(id);
     }
-
-    // 2. Réseau
-    try {
-      await _api.updateMembre(id, updated.toJson());
-      // Succès réseau : supprimer l'opération sync (déjà appliquée)
-      await _cache.deleteSyncOp(syncOp.isarId);
-    } catch (e) {
-      debugPrint('[AppData] updateMembre réseau échoué: $e');
-      await _syncService.queueSyncOperation(
-          'UPDATE', 'membre', id, updated.toJson());
-    }
-
-    // Notification push aux autres utilisateurs (non bloquant)
     unawaited(_notifierPush('membre_modifie', updated.nomComplet));
   }
 
@@ -459,7 +431,7 @@ class AppData extends _$AppData {
       (m) => m.id == membreId,
       orElse: () => throw Exception('Membre introuvable'),
     );
-    final deviceId = await DeviceService.getDeviceId();
+    final deviceId = await _deviceServicePort.getDeviceId();
     final now = DateTime.now();
 
     final updated = Membre()
@@ -512,63 +484,18 @@ class AppData extends _$AppData {
   }
 
   Future<void> deleteMembre(String id) async {
+    await _membreController.deleteMembre(id);
+
+    // Update state
     final current = state.value;
     if (current == null) return;
-    try {
-      final existing = current.membres.firstWhere((m) => m.id == id);
-      final deviceId = await DeviceService.getDeviceId();
-      final now = DateTime.now();
 
-      // Soft delete : marquer comme supprimé, ne pas effacer physiquement
-      existing.isDeleted = true;
-      existing.deletedAt = now;
-      existing.deletedBy = deviceId;
-      existing.version++;
+    state = AsyncValue.data(current.copyWith(
+      membres: current.membres.where((m) => m.id != id).toList(),
+    ));
 
-      final syncOp = SyncOperation()
-        ..operationId = UuidUtils.generate()
-        ..type = 'DELETE'
-        ..entityType = 'membre'
-        ..entityId = id
-        ..payloadJson = jsonEncode(existing.toJson())
-        ..createdAt = now
-        ..deviceId = deviceId;
-
-      // Sauvegarder dans la corbeille
-      final corbeilleItem = CorbeilleItem()
-        ..entityId = id
-        ..entityType = 'membre'
-        ..payloadJson = jsonEncode(existing.toJson())
-        ..deletedAt = now
-        ..updatedAt = existing.updatedAt;
-      await _cache.saveCorbeilleItem(corbeilleItem);
-
-      await _cache.softDeleteMembreWithSyncOp(existing, syncOp);
-
-      NotificationCoordinator.annulerAnniversaireMembre(id);
-
-      state = AsyncValue.data(current.copyWith(
-        membres: current.membres.where((m) => m.id != id).toList(),
-        // Cotisations are KEPT — they belong to the culte, not the member
-        // cotisations: current.cotisations.where((c) => c.membreId != id).toList(),
-      ));
-
-      await loadDashboard();
-
-      try {
-        await _api.deleteMembre(id);
-        // Succès réseau : supprimer l'opération sync (déjà appliquée)
-        await _cache.deleteSyncOp(syncOp.isarId);
-      } catch (e) {
-        debugPrint('[AppData] deleteMembre réseau échoué: $e');
-        await _syncService.queueSyncOperation('DELETE', 'membre', id, {});
-      }
-
-      // Notification push aux autres utilisateurs (non bloquant)
-      unawaited(_notifierPush('membre_supprime', existing.nomComplet));
-    } catch (e) {
-      rethrow;
-    }
+    await loadDashboard();
+    unawaited(_notifierPush('membre_supprime', id));
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -580,91 +507,31 @@ class AppData extends _$AppData {
     String? titre,
     required double montant,
   }) async {
-    final culteId = UuidUtils.generate();
-    final deviceId = await DeviceService.getDeviceId();
-    final now = DateTime.now();
-    final newCulte = Culte()
-      ..id = culteId
-      ..dateCulte = date
-      ..titre = titre
-      ..montantCotisation = montant
-      ..deviceId = deviceId
-      ..createdAt = now
-      ..updatedAt = now;
+    final newCulte = await _culteController.addCulte(
+      date: date,
+      titre: titre,
+      montant: montant,
+    );
 
-    final activeMembres =
-        state.value?.membres.where((m) => m.isActive).toList() ?? [];
-    final localCotisations = activeMembres.map((m) {
-      return Cotisation()
-        ..id = UuidUtils.generate()
-        ..culteId = culteId
-        ..membreId = m.id
-        ..montantObligatoire = montant
-        ..montantPaye = 0.0
-        ..montantDon = 0.0
-        ..statut = StatutCotisation.nonPaye
-        ..deviceId = deviceId
-        ..createdAt = now;
-    }).toList();
-
-    final syncOp = SyncOperation()
-      ..operationId = UuidUtils.generate()
-      ..type = 'CREATE'
-      ..entityType = 'culte'
-      ..entityId = culteId
-      ..payloadJson = jsonEncode(newCulte.toJson())
-      ..createdAt = now
-      ..deviceId = deviceId;
-
-    // 1. Sauvegarde locale atomique
-    await _cache.saveCulteWithCotisations(newCulte, localCotisations);
-    await _cache.saveSyncOp(syncOp);
-    for (final c in localCotisations) {
-      final cotSyncOp = SyncOperation()
-        ..operationId = UuidUtils.generate()
-        ..type = 'CREATE'
-        ..entityType = 'cotisation'
-        ..entityId = c.id
-        ..payloadJson = jsonEncode(c.toJson())
-        ..createdAt = now
-        ..deviceId = deviceId;
-      await _cache.saveSyncOp(cotSyncOp);
-    }
-
+    // Update state
     final current = state.value ?? AppState();
+    // Reload cotisations from cache since controller may have created new ones
+    final newCotisations = await _cache.getAllCotisations();
+    final mergedCotisations = [...current.cotisations];
+    for (final c in newCotisations) {
+      if (!mergedCotisations.any((existing) => existing.id == c.id)) {
+        mergedCotisations.add(c);
+      }
+    }
     state = AsyncValue.data(current.copyWith(
       cultes: [newCulte, ...current.cultes]
         ..sort((a, b) => b.dateCulte.compareTo(a.dateCulte)),
-      cotisations: [...current.cotisations, ...localCotisations],
+      cotisations: mergedCotisations,
     ));
 
     NotificationCoordinator.notifierCreationCulte(newCulte);
-
     await loadDashboard();
-
-    // 2. Réseau
-    try {
-      await _api.createCulte(newCulte.toJson());
-      // Succès réseau : supprimer toutes les opérations sync (déjà appliquées)
-      await _cache.deleteSyncOp(syncOp.isarId);
-      // Supprimer aussi les ops des cotisations créées
-      for (final c in localCotisations) {
-        final pendingOps = await _cache.getPendingSyncOps();
-        final cotOp = pendingOps.where((op) => op.entityId == c.id).toList();
-        for (final op in cotOp) {
-          await _cache.deleteSyncOp(op.isarId);
-        }
-      }
-    } catch (e) {
-      debugPrint(
-          '[AppData] addCulte réseau échoué, mise en file déjà effectuee: $e');
-    }
-
-    // Notification push aux autres utilisateurs (non bloquant)
-    unawaited(_notifierPush(
-      'culte_cree',
-      _formatDate(newCulte.dateCulte),
-    ));
+    unawaited(_notifierPush('culte_cree', _formatDate(newCulte.dateCulte)));
   }
 
   Future<void> updateCulte({
@@ -771,7 +638,7 @@ class AppData extends _$AppData {
       final existing = existingList.isNotEmpty
           ? existingList.first
           : current.cultes.firstWhere((c) => c.id == id);
-      final deviceId = await DeviceService.getDeviceId();
+      final deviceId = await _deviceServicePort.getDeviceId();
       final now = DateTime.now();
 
       // Soft delete
@@ -935,7 +802,7 @@ class AppData extends _$AppData {
       );
       if (membre != null && membre.montantEnAvance >= montant) {
         // Le membre a assez d'avance → consommer
-        final deviceId = await DeviceService.getDeviceId();
+        final deviceId = await _deviceServicePort.getDeviceId();
         final now = DateTime.now();
         final updatedMembre = Membre()
           ..id = membre.id
@@ -987,7 +854,7 @@ class AppData extends _$AppData {
       );
       if (membreWithDon != null && membreWithDon.totalDons < montantDon) {
         // Le membre n'a pas encore ce don comptabilisé — ajouter la différence
-        final deviceId = await DeviceService.getDeviceId();
+        final deviceId = await _deviceServicePort.getDeviceId();
         final now = DateTime.now();
         final updatedMembre = Membre()
           ..id = membreWithDon.id
@@ -1260,7 +1127,7 @@ class AppData extends _$AppData {
     if (previousState == null || culteIds.isEmpty) return;
 
     final now = DateTime.now();
-    final deviceId = await DeviceService.getDeviceId();
+    final deviceId = await _deviceServicePort.getDeviceId();
     final montantParCulte = montantTotal / culteIds.length;
 
     final updatedCotisations = List<Cotisation>.from(previousState.cotisations);
@@ -1336,7 +1203,7 @@ class AppData extends _$AppData {
       (m) => m.id == membreId,
     );
     if (membre != null) {
-      final deviceId = await DeviceService.getDeviceId();
+      final deviceId = await _deviceServicePort.getDeviceId();
       final now = DateTime.now();
       final updatedMembre = Membre()
         ..id = membre.id
@@ -1477,6 +1344,6 @@ class AppData extends _$AppData {
   }
 
   Future<void> viderCorbeille() async {
-    await _cache.deleteAllCorbeilleItems();
+    await _systemController.viderCorbeille();
   }
 }

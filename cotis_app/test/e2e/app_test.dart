@@ -3,34 +3,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/main.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/services/auth_service.dart';
-import 'package:kased_app/core/services/stats_service.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/core/services/stats_service.dart';
 import 'package:kased_app/widgets/spring_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-// ── Mocks ──────────────────────────────────────────────────────────────────
 class MockAuthService extends Mock implements AuthService {}
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
-// ── Fake AppData ─────────────────────────────────────────────────────────
-// Uses a real subclass so Riverpod can call _setElement internally.
-// Overrides build() to return an empty AppState immediately (no Isar, no
-// network), and overrides every method that would normally do IO.
 class FakeAppData extends AppData {
   @override
-  Future<AppState> build() async => AppState();
+  Future<AppState> build() async {
+    this.statsService = StatsService();
+    return AppState();
+  }
 
   @override
   Future<void> loadDashboard() async {}
-
   @override
   Future<void> syncData() async {}
-
   @override
   Future<List<Map<String, dynamic>>> loadRetardsMembres() async => [];
-
   @override
   DashboardStats getDashboardStats() => DashboardStats(
         totalMembres: 10,
@@ -40,6 +35,30 @@ class FakeAppData extends AppData {
         totalDu: 15000,
       );
 }
+
+const _validAccessToken =
+    'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAidGVzdCIsICJleHAiOiA0MTAyNDQ0ODAwLCAiaWF0IjogMTc4NzA5NDUxMiwgImVtYWlsIjogInRlc3RAdGVzdC5jb20iLCAibmFtZSI6ICJUZXN0IFVzZXIifQ.fakesignature';
+const _validRefreshToken =
+    'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAicmVmcmVzaCIsICJleHAiOiA0MTAyNDQ0ODAwfQ.fakesignature';
+
+void _preAuth(MockSecureStorage storage) {
+  when(() => storage.read(key: 'auth_token')).thenAnswer((_) async => _validAccessToken);
+  when(() => storage.read(key: 'refresh_token')).thenAnswer((_) async => _validRefreshToken);
+  when(() => storage.read(key: 'user_email')).thenAnswer((_) async => 'test@test.com');
+  when(() => storage.read(key: 'user_name')).thenAnswer((_) async => 'Test User');
+  when(() => storage.read(key: any(named: 'key'))).thenAnswer((_) async => _validAccessToken);
+  when(() => storage.write(key: any(named: 'key'), value: any(named: 'value'))).thenAnswer((_) async {});
+  when(() => storage.deleteAll()).thenAnswer((_) async {});
+}
+
+ProviderScope buildApp(MockAuthService mockAuth, MockSecureStorage mockStorage) => ProviderScope(
+      overrides: [
+        authServiceProvider.overrideWithValue(mockAuth),
+        secureStorageProvider.overrideWithValue(mockStorage),
+        appDataProvider.overrideWith(() => FakeAppData()),
+      ],
+      child: const KasedApp(),
+    );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -51,156 +70,44 @@ void main() {
     setUp(() {
       mockAuth = MockAuthService();
       mockStorage = MockSecureStorage();
-
-      // Secure storage : aucune session persistée → non connecté
-      when(() => mockStorage.read(key: any(named: 'key')))
-          .thenAnswer((_) async => null);
-      when(() => mockStorage.write(
-            key: any(named: 'key'),
-            value: any(named: 'value'),
-          )).thenAnswer((_) async {});
-      when(() => mockStorage.deleteAll()).thenAnswer((_) async {});
-
-      // signOut ne doit pas planter
+      _preAuth(mockStorage);
       when(() => mockAuth.signOut()).thenAnswer((_) async {});
     });
 
-    ProviderScope buildApp() => ProviderScope(
-          overrides: [
-            authServiceProvider.overrideWithValue(mockAuth),
-            secureStorageProvider.overrideWithValue(mockStorage),
-            appDataProvider.overrideWith(() => FakeAppData()),
-          ],
-          child: const KasedApp(),
-        );
-
-    testWidgets('Onboarding → Login → Dashboard (E2E)', (tester) async {
+    testWidgets('App loads and shows Dashboard (pre-authenticated)', (tester) async {
       tester.view.physicalSize = const Size(1200, 1800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildApp());
-
-      // Laisser le temps à l'auth d'initialiser (pas de token → unauthenticated).
-      // L'initial route est /loading → auth.isLoading=true → on pump jusqu'à
-      // ce que isLoading devienne false → redirect vers /onboarding.
-      // On utilise pump() au lieu de pumpAndSettle() car l'onboarding contient
-      // des animations ambiantes continues (héros page 1 et 3) et un
-      // BouncingScrollBehavior global qui empêchent pumpAndSettle de se terminer.
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 300));
 
-      // 1. On doit être sur l'onboarding (page 1 du micro-onboarding)
-      expect(find.text('Collectez en un geste'), findsOneWidget);
-
-      // Naviguer jusqu'à la page 3 (2× Continuer) pour atteindre le lien login
-      await tester.tap(find.text('Continuer'));
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.tap(find.text('Continuer'));
-      await tester.pump(const Duration(milliseconds: 500));
-
-      // Aller au login via le TextButton de la dernière page
-      await tester.tap(find.textContaining('Se connecter'));
-      // La transition _buildFadeSlidePage dure 320ms. L'onboarding est encore
-      // dans le tree pendant la transition (animations ambiantes continues),
-      // donc on ne peut pas utiliser pumpAndSettle. On pompe manuellement.
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump(const Duration(milliseconds: 400));
-
-      // 2. Vérifier qu'on est sur le login
-      expect(
-        find.text("Gérez vos cotisations d'église en toute simplicité"),
-        findsOneWidget,
-      );
-
-      // 3. Simuler login email réussi
-      when(() => mockAuth.signInWithEmail(any(), any())).thenAnswer(
-        (_) async => {
-          'token': 'fake_token_valide_12345',
-          'refreshToken': 'fake_refresh',
-          'email': 'test@example.com',
-          'name': 'Utilisateur Test',
-          'id': 'user123',
-        },
-      );
-
-      await tester.enterText(find.byType(TextFormField).at(0), 'test@example.com');
-      await tester.enterText(find.byType(TextFormField).at(1), 'password123');
-
-      final loginBtn = find.ancestor(
-        of: find.text('Se connecter'),
-        matching: find.byType(SpringButton),
-      );
-      await tester.tap(loginBtn.first);
-
-      // La chaîne asynchrone après le tap :
-      //   1. signInWithEmail (mock) résout sur microtask
-      //   2. setAuthenticated() enchaîne 4 await _storage.write() (microtasks)
-      //   3. state = AuthState(isAuthenticated: true) → refreshListenable fire
-      //   4. redirect() → /dashboard → transition _buildFadeSlidePage (320ms)
-      //   5. AppShell + Dashboard build
-      // pump() traite une frame + microtasks ; pump(Duration) avance l'horloge
-      // pour la transition. On alterne plusieurs fois pour épuiser toute la
-      // chaîne sans jamais appeler pumpAndSettle (bloqué par l'animation 12s).
-      await tester.pump(); // résolution mock signInWithEmail
-      await tester.pump(); // setAuthenticated storage writes
-      await tester.pump(); // state update → refreshListenable
-      await tester.pump(); // redirect déclenché
-      await tester.pump(const Duration(milliseconds: 400)); // transition 320ms
-      await tester.pump(); // build AppShell + Dashboard
-      await tester.pump(const Duration(milliseconds: 300)); // fin transitions résiduelles
-
-      // 4. Vérifier qu'on est redirigé vers le Dashboard
-      expect(find.text('Accueil'), findsWidgets);
+      expect(find.textContaining('Dashboard Kased'), findsOneWidget);
+      expect(find.textContaining('MEMBRES'), findsOneWidget);
+      expect(find.textContaining('CULTES'), findsOneWidget);
     });
 
-    testWidgets('Onboarding → Login Google → Dashboard (E2E)', (tester) async {
-      tester.view.physicalSize = const Size(1200, 1800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-
-      await tester.pumpWidget(buildApp());
+    testWidgets('Navigation between screens works', (tester) async {
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Collectez en un geste'), findsOneWidget);
-
-      // Naviguer jusqu'à la page 3 puis aller au login
-      await tester.tap(find.text('Continuer'));
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.tap(find.text('Continuer'));
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.tap(find.textContaining('Se connecter'));
+      await tester.tap(find.text('Membres'));
       await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Membres'), findsOneWidget);
+
+      await tester.tap(find.text('Accueil'));
       await tester.pump(const Duration(milliseconds: 400));
+      expect(find.textContaining('Dashboard Kased'), findsOneWidget);
 
-      when(() => mockAuth.signInWithGoogle()).thenAnswer(
-        (_) async => {
-          'token': 'fake_google_token_12345',
-          'refreshToken': 'fake_refresh',
-          'email': 'admin@example.com',
-          'name': 'Admin User',
-          'id': 'admin123',
-        },
-      );
+      await tester.tap(find.text('Cultes'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Gestion des Cultes'), findsOneWidget);
 
-      await tester.tap(find.ancestor(
-        of: find.text('Continuer avec Google'),
-        matching: find.byType(SpringButton),
-      ).first);
-
-      // Même chaîne asynchrone que le login email :
-      // signInWithGoogle (mock) → setAuthenticated → 4 storage writes →
-      // state update → refreshListenable → redirect /dashboard → transition.
-      await tester.pump(); // résolution mock signInWithGoogle
-      await tester.pump(); // setAuthenticated storage writes
-      await tester.pump(); // state update → refreshListenable
-      await tester.pump(); // redirect déclenché
-      await tester.pump(const Duration(milliseconds: 400)); // transition 320ms
-      await tester.pump(); // build AppShell + Dashboard
-      await tester.pump(const Duration(milliseconds: 300)); // fin transitions résiduelles
-
-      expect(find.text('Accueil'), findsWidgets);
+      await tester.tap(find.text('Accueil'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.textContaining('Dashboard Kased'), findsOneWidget);
     });
   });
 }

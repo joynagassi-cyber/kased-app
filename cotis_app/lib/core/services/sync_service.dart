@@ -10,7 +10,7 @@ import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:kased_app/core/utils/uuid.dart';
-import 'package:kased_app/core/sync/device_service.dart';
+import 'package:kased_app/core/sync/device_service_port.dart';
 
 /// Résultat complet d'une opération de synchronisation.
 ///
@@ -46,12 +46,17 @@ class SyncService {
   final InsForgeService _api;
   final LocalCache _cache;
   final SyncManager _syncManager;
+  final DeviceServicePort _deviceService;
 
   DateTime? _lastSyncAt;
   static const _syncThrottle = Duration(minutes: 5);
 
-  SyncService(this._api, this._cache)
-      : _syncManager = SyncManager(_api, _cache);
+  SyncService(
+    this._api,
+    this._cache, {
+    DeviceServicePort? deviceService,
+  })  : _syncManager = SyncManager(_api, _cache),
+        _deviceService = deviceService ?? RealDeviceService();
 
   /// Retourne true si le dernier sync date de plus de [_syncThrottle]
   /// ou s'il y a des opérations en attente.
@@ -143,7 +148,7 @@ class SyncService {
     Map<String, dynamic> payload,
   ) async {
     final now = DateTime.now();
-    final deviceId = await DeviceService.getDeviceId();
+    final deviceId = await _deviceService.getDeviceId();
     final op = SyncOperation()
       ..operationId = UuidUtils.generate()
       ..type = type

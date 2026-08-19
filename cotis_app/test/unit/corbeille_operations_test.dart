@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/services/sync_service.dart';
+import 'package:kased_app/core/services/stats_service.dart';
+import 'package:kased_app/core/sync/device_service_port.dart';
+import 'package:kased_app/controllers/system_controller.dart';
 import 'package:kased_app/models/corbeille_item.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
@@ -19,10 +22,12 @@ class TestAppData extends AppData {
   final AppState? initialState;
   final InsForgeService mockApi;
   final LocalCache mockCache;
+  final DeviceServicePort mockDeviceService;
 
   TestAppData({
     required this.mockApi,
     required this.mockCache,
+    required this.mockDeviceService,
     this.initialState,
   });
 
@@ -30,7 +35,16 @@ class TestAppData extends AppData {
   Future<AppState> build() async {
     this.api = mockApi;
     this.cache = mockCache;
-    this.syncService = SyncService(mockApi, mockCache);
+    final svc = SyncService(mockApi, mockCache);
+    this.syncService = svc;
+    this.deviceServicePort = mockDeviceService;
+    this.systemController = SystemController(
+      cache: mockCache,
+      api: mockApi,
+      syncService: svc,
+      statsService: StatsService(),
+      onStateChanged: (appState) => state = AsyncValue.data(appState),
+    );
     return initialState ?? AppState();
   }
 }
@@ -65,10 +79,12 @@ void main() {
 
   late MockInsForgeService mockApi;
   late MockLocalCache mockCache;
+  late FakeDeviceService mockDeviceService;
 
   setUp(() {
     mockApi = MockInsForgeService();
     mockCache = MockLocalCache();
+    mockDeviceService = FakeDeviceService(deviceId: 'test-device-123');
 
     when(() => mockCache.saveSyncOp(any())).thenAnswer((_) async => {});
     when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
@@ -82,7 +98,7 @@ void main() {
       when(() => mockCache.deleteCorbeilleItem(any()))
           .thenAnswer((_) async => {});
 
-      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache);
+      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, mockDeviceService: mockDeviceService);
       final container = ProviderContainer(
         overrides: [appDataProvider.overrideWith(() => notifier)],
       );
@@ -101,7 +117,7 @@ void main() {
       when(() => mockCache.deleteAllCorbeilleItems())
           .thenAnswer((_) async => {});
 
-      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache);
+      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, mockDeviceService: mockDeviceService);
       final container = ProviderContainer(
         overrides: [appDataProvider.overrideWith(() => notifier)],
       );
@@ -128,7 +144,7 @@ void main() {
       when(() => mockApi.updateMembre(any(), any()))
           .thenAnswer((_) async => throw Exception('Network down'));
 
-      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache);
+      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, mockDeviceService: mockDeviceService);
       final container = ProviderContainer(
         overrides: [appDataProvider.overrideWith(() => notifier)],
       );
@@ -157,7 +173,7 @@ void main() {
       when(() => mockApi.updateMembre(any(), any()))
           .thenAnswer((_) async => {});
 
-      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache);
+      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, mockDeviceService: mockDeviceService);
       final container = ProviderContainer(
         overrides: [appDataProvider.overrideWith(() => notifier)],
       );

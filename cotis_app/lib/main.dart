@@ -149,7 +149,7 @@ class _KasedAppState extends ConsumerState<KasedApp> with WidgetsBindingObserver
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
 

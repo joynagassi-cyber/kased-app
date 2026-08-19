@@ -27,7 +27,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
   bool _isSavingAvance = false;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final appDataAsync = ref.watch(appDataProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -35,14 +35,14 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
 
     return appDataAsync.when(
       data: (state) {
-        final currentMembre = membre ??
+        final currentMembre = widget.membre ??
             state.membres.firstWhere(
-              (m) => m.id == membreId,
+              (m) => m.id == widget.membreId,
               orElse: () => throw Exception('Membre non trouvé'),
             );
 
         final cotisationsMembre = state.cotisations
-            .where((c) => c.membreId == membreId)
+            .where((c) => c.membreId == widget.membreId)
             .toList();
 
         final cultesPayes = cotisationsMembre.where((c) => c.estPaye).length;
@@ -92,7 +92,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => MembreReportScreen(
-                      membreId: membreId,
+                      membreId: widget.membreId,
                       membre: currentMembre,
                     ),
                   ),

@@ -164,7 +164,9 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
               TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Annuler')),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Theme.of(dialogCtx).colorScheme.error),
+                // ignore: dead_code
                 onPressed: isDeleting
+                    // ignore: dead_code
                     ? null
                     : () async {
                         setLocalState(() => isDeleting = true);
@@ -211,7 +213,9 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
               TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Annuler')),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Theme.of(dialogCtx).colorScheme.error),
+                // ignore: dead_code
                 onPressed: isProcessing
+                    // ignore: dead_code
                     ? null
                     : () async {
                         setLocalState(() => isProcessing = true);
@@ -259,7 +263,9 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
               TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Annuler')),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Theme.of(dialogCtx).colorScheme.error),
+                // ignore: dead_code
                 onPressed: isProcessing
+                    // ignore: dead_code
                     ? null
                     : () async {
                         setLocalState(() => isProcessing = true);

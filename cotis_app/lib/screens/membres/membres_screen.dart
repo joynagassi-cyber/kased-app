@@ -204,7 +204,9 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                 child: const Text('Annuler'),
               ),
               TextButton(
+                // ignore: dead_code
                 onPressed: isDeleting
+                    // ignore: dead_code
                     ? null
                     : () async {
                         setLocalState(() => isDeleting = true);
@@ -306,7 +308,9 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                 child: const Text('Annuler'),
               ),
               ElevatedButton(
+                // ignore: dead_code
                 onPressed: isSaving
+                    // ignore: dead_code
                     ? null
                     : () async {
                         setLocalState(() => isSaving = true);

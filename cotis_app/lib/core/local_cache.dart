@@ -14,23 +14,17 @@ abstract class LocalCache {
   Future<List<Culte>> getAllCultes(); // sorted by dateCulte desc
   Future<List<Cotisation>> getAllCotisations();
   Future<List<SyncOperation>> getPendingSyncOps(); // sorted by createdAt asc
-  bool getPendingSyncOpsSync(); // synchronous version for connectivity listener
 
   // ── Individual writes ──────────────────────────────────────────────────────
 
   Future<void> saveMembre(Membre m);
-  Future<void> saveAllMembres(List<Membre> list);
-  Future<void> clearMembres();
   Future<void> deleteMembreById(String id);
 
   Future<void> saveCulte(Culte c);
-  Future<void> saveAllCultes(List<Culte> list);
-  Future<void> clearCultes();
   Future<void> deleteCulteById(String id);
 
   Future<void> saveCotisation(Cotisation c);
   Future<void> saveAllCotisations(List<Cotisation> list);
-  Future<void> clearCotisations();
   Future<void> deleteCotisationsByCulteId(String culteId);
 
   Future<void> saveSyncOp(SyncOperation op);

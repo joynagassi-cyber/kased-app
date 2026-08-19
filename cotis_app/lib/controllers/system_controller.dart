@@ -10,20 +10,20 @@ import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 
-/// Exception lancée quand une opération sync est déjà en cours.
+/// Exception lancee quand une operation sync est deja en cours.
 class SyncEnCoursException implements Exception {
   SyncEnCoursException();
   @override
-  String toString() => "Synchronisation déjà en cours";
+  String toString() => "Synchronisation deja en cours";
 }
 
-/// Contrôleur dédié aux opérations système : sync, stats, corbeille.
+/// Controleur dedie aux operations systeme : sync, stats, corbeille.
 ///
-/// Responsabilités :
+/// Responsabilites :
 /// - Synchronisation offline → cloud
 /// - Chargement des statistiques du dashboard
 /// - Calcul des retards membres
-/// - Opérations de corbeille (restauration, suppression définitive)
+/// - Operations de corbeille (restauration, suppression definitive)
 class SystemController {
   final LocalCache _cache;
   final InsForgeService _api;
@@ -39,19 +39,19 @@ class SystemController {
     required this.onStateChanged,
   })  : _cache = cache,
         _api = api,
-        _syncManager = syncManager,
+        _syncService = syncService,
         _statsService = statsService;
 
-  /// Exécute une synchronisation complète.
+  /// Execute une synchronisation complete.
   Future<SyncDataResult?> syncData({required bool isOffline}) async {
     if (isOffline) return null;
 
-    final result = await _syncManager.runSync(
+    final result = await _syncService.syncData(
       isOffline: isOffline,
     );
 
     if (result == null) {
-      // Sync déjà en cours
+      // Sync deja en cours
       return null;
     }
 
@@ -62,12 +62,12 @@ class SystemController {
       );
     }
 
-    // Recharger depuis Isar après merge
+    // Recharger depuis Isar apres merge
     final mergedMembres = await _cache.getAllMembres();
     final mergedCultes = await _cache.getAllCultes();
     final mergedCotisations = await _cache.getAllCotisations();
 
-    // Le dashboard est servi par InsForge (réponse API agrégée)
+    // Le dashboard est servi par InsForge (reponse API agregee)
     Map<String, dynamic>? dashboardData;
     try {
       dashboardData = await _api.getDashboard();
@@ -84,18 +84,17 @@ class SystemController {
     );
   }
 
-  /// Charge les données du dashboard depuis l'API.
+  /// Charge les donnees du dashboard depuis l'API.
   Future<void> loadDashboard() async {
     try {
-      final dashboardData = await _api.getDashboard();
       // Note: this is called by AppData which handles state update
     } catch (e) {
       debugPrint('[SystemController] Erreur chargement dashboard: $e');
     }
-    return {};
+    
   }
 
-  /// Calcule les statistiques du dashboard à partir de l'état local.
+  /// Calcule les statistiques du dashboard a partir de l'etat local.
   DashboardStats getDashboardStats(AppState state) {
     return _statsService.getDashboardStats(state);
   }
@@ -110,17 +109,17 @@ class SystemController {
     }
   }
 
-  /// Charge les membres à jour depuis l'API.
+  /// Charge les membres a jour depuis l'API.
   Future<List<Map<String, dynamic>>> loadMembresAJour() async {
     try {
       return await _api.getMembresAJour();
     } catch (e) {
-      debugPrint('[SystemController] Erreur chargement membres à jour: $e');
+      debugPrint('[SystemController] Erreur chargement membres a jour: $e');
       return [];
     }
   }
 
-  /// Calcule les membres en retard à partir de l'état local.
+  /// Calcule les membres en retard a partir de l'etat local.
   List<Map<String, dynamic>> getRetardsMembresLocally(AppState state) {
     return _statsService.getRetardsMembresLocally(state);
   }
@@ -128,12 +127,12 @@ class SystemController {
   /// Charge l'objectif mensuel depuis SharedPreferences.
   Future<double> getObjectifMensuel() => StatsService.loadObjectifMensuel();
 
-  /// Met à jour l'objectif mensuel.
+  /// Met a jour l'objectif mensuel.
   Future<void> updateObjectifMensuel(double montant) async {
     await StatsService.saveObjectifMensuel(montant);
   }
 
-  /// Restaure un élément depuis la corbeille.
+  /// Restaure un element depuis la corbeille.
   Future<void> restaurerElement(int isarId) async {
     final item = await _cache.getCorbeilleItem(isarId);
     if (item == null) return;
@@ -150,8 +149,8 @@ class SystemController {
         await _api.updateMembre(membre.id, {'is_active': true});
       } catch (e) {
         debugPrint(
-            '[SystemController] restaurerElement membre réseau échoué, mis en file: $e');
-        await _syncManager.queueSyncOperation(
+            '[SystemController] restaurerElement membre reseau echoue, mis en file: $e');
+        await _syncService.queueSyncOperation(
             'UPDATE', 'membre', membre.id, {'is_active': true});
       }
     } else if (item.entityType == 'culte') {
@@ -163,14 +162,14 @@ class SystemController {
         await _api.createCulte(culte.toJson());
       } catch (e) {
         debugPrint(
-            '[SystemController] restaurerElement culte réseau échoué, mis en file: $e');
-        await _syncManager.queueSyncOperation(
+            '[SystemController] restaurerElement culte reseau echoue, mis en file: $e');
+        await _syncService.queueSyncOperation(
             'CREATE', 'culte', culte.id, culte.toJson());
       }
     }
   }
 
-  /// Supprime définitivement un élément de la corbeille.
+  /// Supprime definitivement un element de la corbeille.
   Future<void> supprimerDefinitivement(int isarId) async {
     await _cache.deleteCorbeilleItem(isarId);
   }

@@ -30,11 +30,9 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
   bool _isProcessing = false;
   final Set<String> _selectedMembres = {};
   bool _isValidingSelection = false;
-  bool _isBulkProcessing = false;
   bool _isSyncing = false;
   bool _isPdfExporting = false;
   bool _isBulkPaymentProcessing = false;
-  final Set<String> _processingMembres = {};
 
   @override
   Widget build(BuildContext context) {

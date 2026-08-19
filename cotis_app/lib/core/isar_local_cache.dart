@@ -30,29 +30,11 @@ class IsarLocalCache implements LocalCache {
   Future<List<SyncOperation>> getPendingSyncOps() =>
       _isar.syncOperations.where().sortByCreatedAt().findAll();
 
-  @override
-  bool getPendingSyncOpsSync() {
-    try {
-      // Use a synchronous check via the Isar instance
-      return _isar.syncOperations.countSync() > 0;
-    } catch (_) {
-      return false;
-    }
-  }
-
   // ── Individual writes ──────────────────────────────────────────────────────
 
   @override
   Future<void> saveMembre(Membre m) =>
       _isar.writeTxn(() => _isar.membres.put(m));
-
-  @override
-  Future<void> saveAllMembres(List<Membre> list) =>
-      _isar.writeTxn(() => _isar.membres.putAll(list));
-
-  @override
-  Future<void> clearMembres() =>
-      _isar.writeTxn(() => _isar.membres.clear());
 
   @override
   Future<void> deleteMembreById(String id) =>
@@ -61,14 +43,6 @@ class IsarLocalCache implements LocalCache {
   @override
   Future<void> saveCulte(Culte c) =>
       _isar.writeTxn(() => _isar.cultes.put(c));
-
-  @override
-  Future<void> saveAllCultes(List<Culte> list) =>
-      _isar.writeTxn(() => _isar.cultes.putAll(list));
-
-  @override
-  Future<void> clearCultes() =>
-      _isar.writeTxn(() => _isar.cultes.clear());
 
   @override
   Future<void> deleteCulteById(String id) =>
@@ -81,10 +55,6 @@ class IsarLocalCache implements LocalCache {
   @override
   Future<void> saveAllCotisations(List<Cotisation> list) =>
       _isar.writeTxn(() => _isar.cotisations.putAll(list));
-
-  @override
-  Future<void> clearCotisations() =>
-      _isar.writeTxn(() => _isar.cotisations.clear());
 
   @override
   Future<void> deleteCotisationsByCulteId(String culteId) =>

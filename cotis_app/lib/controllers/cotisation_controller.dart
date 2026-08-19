@@ -8,14 +8,13 @@ import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/logic/cotisation_logic.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
 import 'package:kased_app/core/utils/uuid.dart';
-import 'package:kased_app/core/sync/device_service.dart';
+import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
-import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 
-/// Exception lancée quand un culte est introuvable lors d'un paiement.
+/// Exception lancee quand un culte est introuvable lors d'un paiement.
 class CulteIntrouvableException implements Exception {
   final String culteId;
   CulteIntrouvableException(this.culteId);
@@ -23,46 +22,49 @@ class CulteIntrouvableException implements Exception {
   String toString() => "Culte introuvable: $culteId";
 }
 
-/// Exception lancée quand un paiement est inférieur au montant obligatoire.
+/// Exception lancee quand un paiement est inferieur au montant obligatoire.
 class MontantInsuffisantException implements Exception {
   final double montant;
   final double montantObligatoire;
   MontantInsuffisantException(this.montant, this.montantObligatoire);
   @override
   String toString() =>
-      'Le montant payé doit être au moins égal au montant obligatoire (${montantObligatoire}F)';
+      'Le montant paye doit etre au moins egal au montant obligatoire (${montantObligatoire}F)';
 }
 
-/// Exception lancée quand on tente de modifier un paiement verrouillé.
-class PaiementVerrouilléException implements Exception {
+/// Exception lancee quand on tente de modifier un paiement verrouille.
+class PaiementVerrouilleException implements Exception {
   final String message;
-  PaiementVerrouilléException(this.message);
+  PaiementVerrouilleException(this.message);
   @override
   String toString() => message;
 }
 
-/// Contrôleur dédié à la gestion des cotisations et paiements.
+/// Controleur dedie a la gestion des cotisations et paiements.
 ///
-/// Responsabilités :
-/// - Enregistrement de paiements personnalisés
-/// - Toggle de paiement (rétrocompatibilité)
-/// - Mise à jour en masse de statuts
+/// Responsabilites :
+/// - Enregistrement de paiements personnalises
+/// - Toggle de paiement (retrocompatibilite)
+/// - Mise a jour en masse de statuts
 /// - Marquage d'absences
 /// - Paiements en avance pour plusieurs cultes
 class CotisationController {
   final LocalCache _cache;
   final InsForgeService _api;
+  final DeviceServicePort _deviceService;
   final void Function(AppState) onStateChanged;
 
   CotisationController({
     required LocalCache cache,
     required InsForgeService api,
+    required DeviceServicePort deviceService,
     required this.onStateChanged,
   })  : _cache = cache,
-        _api = api;
+        _api = api,
+        _deviceService = deviceService;
 
-  /// Enregistre un paiement personnalisé pour un membre sur un culte.
-  /// Gère la consommation d'avance et le suivi des dons.
+  /// Enregistre un paiement personnalise pour un membre sur un culte.
+  /// Gere la consommation d'avance et le suivi des dons.
   Future<void> enregistrerPaiement({
     required String membreId,
     required String culteId,
@@ -74,7 +76,7 @@ class CotisationController {
       throw CulteIntrouvableException(culteId);
     }
 
-    // Vérification du verrouillage après 30 jours (si déjà payé)
+    // Verification du verrouillage apres 30 jours (si deja paye)
     final isOlderThan30Days =
         DateTime.now().difference(culte.dateCulte).inDays > 30;
 
@@ -95,28 +97,28 @@ class CotisationController {
         ..statut = StatutCotisation.nonPaye;
     }
 
-    // Vérification du verrouillage après 30 jours (si déjà payé)
+    // Verification du verrouillage apres 30 jours (si deja paye)
     if (isOlderThan30Days && existingCotisation.estPaye) {
-      throw PaiementVerrouilléException("Le paiement est verrouillé après 30 jours.");
+      throw PaiementVerrouilleException("Le paiement est verrouille apres 30 jours.");
     }
 
-    // Validation : le montant doit être au moins égal au montant obligatoire
+    // Validation : le montant doit etre au moins egal au montant obligatoire
     if (montant < existingCotisation.montantObligatoire) {
       throw MontantInsuffisantException(
           montant, existingCotisation.montantObligatoire);
     }
 
-    // Calcul du don (excédent)
+    // Calcul du don (excedent)
     final montantDon = montant - existingCotisation.montantObligatoire;
 
-    // Détermination du statut : enAvance si paiement avant le culte, paye sinon
+    // Determination du statut : enAvance si paiement avant le culte, paye sinon
     final datePaiement = DateTime.now();
     final statut = CotisationLogic.determinerStatut(
       datePaiement: datePaiement,
       dateCulte: culte.dateCulte,
     );
 
-    // Mise à jour de la cotisation
+    // Mise a jour de la cotisation
     final updatedCotisation = existingCotisation.copyWith(
       montantPaye: montant,
       montantDon: montantDon,
@@ -127,7 +129,7 @@ class CotisationController {
       updatedAt: DateTime.now(),
     );
 
-    // Persister immédiatement dans Isar
+    // Persister immediatement dans Isar
     await _cache.saveCotisation(updatedCotisation);
 
     // Consommer l'avance du membre si paiement complet (pas de don)
@@ -137,7 +139,7 @@ class CotisationController {
         (m) => m.id == membreId,
       );
       if (membre != null && membre.montantEnAvance >= montant) {
-        final deviceId = await DeviceService.getDeviceId();
+        final deviceId = await _deviceService.getDeviceId();
         final now = DateTime.now();
         final updatedMembre = Membre()
           ..id = membre.id
@@ -163,7 +165,7 @@ class CotisationController {
           ..createdAt = now
           ..deviceId = deviceId;
         await _cache.saveMembreWithSyncOp(updatedMembre, syncOp);
-        // Synchroniser l'avance consommée
+        // Synchroniser l'avance consommee
         try {
           await _api.consommerAvancePourCulte(
             membreId: membreId,
@@ -171,19 +173,19 @@ class CotisationController {
           );
           await _cache.deleteSyncOp(syncOp.isarId);
         } catch (e) {
-          debugPrint('[CotisationController] consommerAvance réseau échoué: $e');
+          debugPrint('[CotisationController] consommerAvance reseau echoue: $e');
         }
       }
     }
 
-    // Mettre à jour le total des dons du membre si un don a été enregistré
+    // Mettre a jour le total des dons du membre si un don a ete enregistre
     if (montantDon > 0) {
       final membres = await _cache.getAllMembres();
       final membreWithDon = membres.firstWhereOrNull(
         (m) => m.id == membreId,
       );
       if (membreWithDon != null && membreWithDon.totalDons < montantDon) {
-        final deviceId = await DeviceService.getDeviceId();
+        final deviceId = await _deviceService.getDeviceId();
         final now = DateTime.now();
         final updatedMembre = Membre()
           ..id = membreWithDon.id
@@ -228,7 +230,7 @@ class CotisationController {
       }
     } catch (e) {
       debugPrint(
-          '[CotisationController] enregistrerPaiement réseau échoué, état local conservé: $e');
+          '[CotisationController] enregistrerPaiement reseau echoue, etat local conserve: $e');
       await _cache.saveSyncOp(SyncOperation()
         ..operationId = UuidUtils.generate()
         ..type = 'UPDATE'
@@ -236,11 +238,11 @@ class CotisationController {
         ..entityId = updatedCotisation.id
         ..payloadJson = jsonEncode(updatedCotisation.toJson())
         ..createdAt = DateTime.now()
-        ..deviceId = await DeviceService.getDeviceId());
+        ..deviceId = await _deviceService.getDeviceId());
     }
   }
 
-  /// Garde la fonction togglePaiement pour compatibilité arrière.
+  /// Garde la fonction togglePaiement pour compatibilite arriere.
   Future<void> togglePaiement({
     required String membreId,
     required String culteId,
@@ -256,7 +258,7 @@ class CotisationController {
     );
   }
 
-  /// Met à jour le statut de TOUTES les cotisations d'un culte.
+  /// Met a jour le statut de TOUTES les cotisations d'un culte.
   Future<({int success, int total})> bulkSetPaiements({
     required String culteId,
     required StatutCotisation newStatut,
@@ -267,7 +269,7 @@ class CotisationController {
     final culte = cultes.firstWhereOrNull((c) => c.id == culteId);
     final montantObligatoire = culte?.montantCotisation ?? 50.0;
 
-    // Mise à jour optimiste immédiate
+    // Mise a jour optimiste immediate
     final updatedCotisations = cotisations.map((c) {
       if (c.culteId == culteId && membreIds.contains(c.membreId)) {
         double montantPaye = 0.0;
@@ -321,7 +323,7 @@ class CotisationController {
                 ..entityId = cotisationToUpdate.id
                 ..payloadJson = jsonEncode(cotisationToUpdate.toJson())
                 ..createdAt = DateTime.now()
-                ..deviceId = await DeviceService.getDeviceId());
+                ..deviceId = await _deviceService.getDeviceId());
               return false;
             }
           }),
@@ -330,18 +332,18 @@ class CotisationController {
       }
     } catch (e) {
       debugPrint(
-          '[CotisationController] bulkSetPaiements réseau échoué, état local conservé: $e');
+          '[CotisationController] bulkSetPaiements reseau echoue, etat local conserve: $e');
     }
 
-    // Notification de mise à jour des paiements
+    // Notification de mise a jour des paiements
     final actionText =
-        newStatut == StatutCotisation.paye ? 'payé(s)' : 'annulé(s)';
+        newStatut == StatutCotisation.paye ? 'paye(s)' : 'annule(s)';
     NotificationCoordinator.notifierPaiementsEnMasse(success, actionText);
 
     return (success: success, total: membreIds.length);
   }
 
-  /// Marque un membre comme absent pour un culte donné.
+  /// Marque un membre comme absent pour un culte donne.
   Future<void> marquerAbsent({
     required String membreId,
     required String culteId,
@@ -371,8 +373,8 @@ class CotisationController {
     }
 
     if (isOlderThan30Days && existingCotisation.estPaye) {
-      throw PaiementVerrouilléException(
-          "Impossible de marquer absent un membre ayant déjà payé pour un culte verrouillé.");
+      throw PaiementVerrouilleException(
+          "Impossible de marquer absent un membre ayant deja paye pour un culte verrouille.");
     }
 
     final updatedCotisation = existingCotisation.copyWith(
@@ -397,7 +399,7 @@ class CotisationController {
       }
     } catch (e) {
       debugPrint(
-          '[CotisationController] marquerAbsent réseau échoué, état local conservé: $e');
+          '[CotisationController] marquerAbsent reseau echoue, etat local conserve: $e');
       await _cache.saveSyncOp(SyncOperation()
         ..operationId = UuidUtils.generate()
         ..type = 'UPDATE'
@@ -405,7 +407,7 @@ class CotisationController {
         ..entityId = updatedCotisation.id
         ..payloadJson = jsonEncode(updatedCotisation.toJson())
         ..createdAt = DateTime.now()
-        ..deviceId = await DeviceService.getDeviceId());
+        ..deviceId = await _deviceService.getDeviceId());
     }
   }
 
@@ -418,7 +420,7 @@ class CotisationController {
     if (culteIds.isEmpty) return;
 
     final now = DateTime.now();
-    final deviceId = await DeviceService.getDeviceId();
+    final deviceId = await _deviceService.getDeviceId();
     final montantParCulte = montantTotal / culteIds.length;
 
     final cotisations = await _cache.getAllCotisations();
@@ -426,15 +428,11 @@ class CotisationController {
     final syncOps = <SyncOperation>[];
 
     for (final cid in culteIds) {
-      final culte = updatedCotisations.firstWhereOrNull(
-        (c) => c.culteId == cid,
-      );
-      // Need to get culte from cache
       final allCultes = await _cache.getAllCultes();
-      final foundCulte = allCultes.firstWhereOrNull(
+      final culte = allCultes.firstWhereOrNull(
         (c) => c.id == cid && !c.isDeleted,
       );
-      if (foundCulte == null) continue;
+      if (culte == null) continue;
 
       var existingCotisation = updatedCotisations.firstWhereOrNull(
         (c) => c.membreId == membreId && c.culteId == cid,
@@ -446,16 +444,16 @@ class CotisationController {
           ..id = UuidUtils.generate()
           ..membreId = membreId
           ..culteId = cid
-          ..montantObligatoire = foundCulte.montantCotisation
+          ..montantObligatoire = culte.montantCotisation
           ..montantPaye = 0.0
           ..montantDon = 0.0
           ..statut = StatutCotisation.nonPaye;
       }
 
-      // Déterminer le statut : enAvance si culte futur
+      // Determiner le statut : enAvance si culte futur
       final statut = CotisationLogic.determinerStatut(
         datePaiement: now,
-        dateCulte: foundCulte.dateCulte,
+        dateCulte: culte.dateCulte,
       );
 
       final updated = existingCotisation.copyWith(
@@ -477,7 +475,7 @@ class CotisationController {
         }
       }
 
-      // Créer l'opération de sync
+      // Creer l'operation de sync
       final syncOp = SyncOperation()
         ..operationId = UuidUtils.generate()
         ..type = isNewCotisation ? 'CREATE' : 'UPDATE'
@@ -495,7 +493,7 @@ class CotisationController {
       await _cache.saveSyncOp(op);
     }
 
-    // Créditer le membre : ajouter le montant total à son avance
+    // Crediter le membre : ajouter le montant total a son avance
     final membres = await _cache.getAllMembres();
     final membre = membres.firstWhereOrNull(
       (m) => m.id == membreId,
@@ -528,14 +526,14 @@ class CotisationController {
       await _cache.saveMembreWithSyncOp(updatedMembre, syncOp);
     }
 
-    // Synchroniser avec le serveur (RPC qui gère tout : crédit + cotisations)
+    // Synchroniser avec le serveur (RPC qui gere tout : credit + cotisations)
     try {
       await _api.consignerPaiementEnAvance(
         membreId: membreId,
         culteIds: culteIds,
         montantTotal: montantTotal,
       );
-      // Supprimer l'opération sync du membre (déjà appliquée)
+      // Supprimer l'operation sync du membre (deja appliquee)
       final ops = await _cache.getPendingSyncOps();
       final membreOp = ops.where((op) => op.entityId == membreId).toList();
       for (final op in membreOp) {
@@ -547,11 +545,11 @@ class CotisationController {
       }
     } catch (e) {
       debugPrint(
-          '[CotisationController] payerPlusieursCultesEnAvance réseau échoué, état local conservé: $e');
+          '[CotisationController] payerPlusieursCultesEnAvance reseau echoue, etat local conserve: $e');
     }
   }
 
-  /// Récupère l'historique des paiements d'un membre.
+  /// Recupere l'historique des paiements d'un membre.
   Future<List<Map<String, dynamic>>> getHistoriqueMembre(
       String membreId) async {
     try {
@@ -559,6 +557,32 @@ class CotisationController {
     } catch (e) {
       debugPrint('Erreur chargement historique: $e');
       return [];
+    }
+  }
+
+  /// Genere les cotisations initiales pour un nouveau membre.
+  /// Crée une cotisation non payee pour chaque culte futur.
+  Future<void> generateInitialCotisationsForMembre(Membre membre) async {
+    final cultes = await _cache.getAllCultes();
+    final deviceId = await _deviceService.getDeviceId();
+    final now = DateTime.now();
+
+    for (final culte in cultes) {
+      // Ne créer que pour les cultes futurs
+      if (culte.isDeleted || culte.dateCulte.isBefore(membre.createdAt)) continue;
+
+      final cotisation = Cotisation()
+        ..id = UuidUtils.generate()
+        ..membreId = membre.id
+        ..culteId = culte.id
+        ..montantObligatoire = culte.montantCotisation
+        ..montantPaye = 0.0
+        ..montantDon = 0.0
+        ..statut = StatutCotisation.nonPaye
+        ..deviceId = deviceId
+        ..createdAt = now;
+
+      await _cache.saveCotisation(cotisation);
     }
   }
 }

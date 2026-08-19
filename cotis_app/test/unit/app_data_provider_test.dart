@@ -7,6 +7,7 @@ import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/services/sync_service.dart';
 import 'package:kased_app/models/sync_operation.dart';
+import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockInsForgeService extends Mock implements InsForgeService {}
@@ -17,8 +18,14 @@ class TestAppData extends AppData {
   final AppState? initialState;
   final InsForgeService mockApi;
   final LocalCache mockCache;
+  final DeviceServicePort mockDeviceService;
 
-  TestAppData({required this.mockApi, required this.mockCache, this.initialState});
+  TestAppData({
+    required this.mockApi,
+    required this.mockCache,
+    required this.mockDeviceService,
+    this.initialState,
+  });
 
   @override
   Future<AppState> build() async {
@@ -26,6 +33,7 @@ class TestAppData extends AppData {
     this.api = mockApi;
     this.cache = mockCache;
     this.syncService = SyncService(mockApi, mockCache);
+    this.deviceServicePort = mockDeviceService;
     return initialState ?? AppState();
   }
 }
@@ -48,10 +56,12 @@ void main() {
   group('AppData Provider (Riverpod)', () {
     late MockInsForgeService mockApi;
     late MockLocalCache mockCache;
+    late FakeDeviceService mockDeviceService;
 
     setUp(() {
       mockApi = MockInsForgeService();
       mockCache = MockLocalCache();
+      mockDeviceService = FakeDeviceService(deviceId: 'test-device-123');
 
       when(() => mockCache.saveCotisation(any())).thenAnswer((_) async => {});
       when(() => mockCache.saveSyncOp(any())).thenAnswer((_) async => {});
@@ -80,7 +90,12 @@ void main() {
         cotisations: [cotisation],
       );
 
-      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, initialState: initialState);
+      final notifier = TestAppData(
+        mockApi: mockApi,
+        mockCache: mockCache,
+        mockDeviceService: mockDeviceService,
+        initialState: initialState,
+      );
       final container = ProviderContainer(
         overrides: [
           appDataProvider.overrideWith(() => notifier),
@@ -130,7 +145,12 @@ void main() {
         cotisations: [cotisation],
       );
 
-      final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, initialState: initialState);
+      final notifier = TestAppData(
+        mockApi: mockApi,
+        mockCache: mockCache,
+        mockDeviceService: mockDeviceService,
+        initialState: initialState,
+      );
       final container = ProviderContainer(
         overrides: [
           appDataProvider.overrideWith(() => notifier),

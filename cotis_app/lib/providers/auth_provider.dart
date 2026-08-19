@@ -63,10 +63,7 @@ FlutterSecureStorage secureStorage(SecureStorageRef ref) {
       // Cela empêche la perte de session quand l'utilisateur change de compte
       // biométrique ou désactive le verrouillage d'écran
     ),
-    iOptions: IOSOptions(
-      // Utiliser Keychain avec accès跨app pour plus de stabilité
-      accessible: IOSAccessible.whenUnlockedThisDeviceOnly,
-    ),
+    iOptions: IOSOptions(),
   );
 }
 

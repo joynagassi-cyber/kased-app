@@ -9,31 +9,56 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-// ── Mocks ──────────────────────────────────────────────────────────────────────
 class MockAuthService extends Mock implements AuthService {}
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
 class FakeAppData extends AppData {
   @override
-  Future<AppState> build() async => AppState();
+  Future<AppState> build() async {
+    this.statsService = StatsService();
+    return AppState();
+  }
 
   @override
   Future<void> loadDashboard() async {}
-
   @override
   Future<void> syncData() async {}
-
   @override
   DashboardStats getDashboardStats() => DashboardStats(
-        totalMembres: 2,
-        totalCultes: 2,
-        totalCollecte: 10000,
-        membresEnRetard: 0,
-        totalDu: 0,
+        totalMembres: 10,
+        totalCultes: 5,
+        totalCollecte: 50000,
+        membresEnRetard: 2,
+        totalDu: 15000,
       );
+  @override
+  Future<List<Map<String, dynamic>>> loadRetardsMembres() async => [];
 }
 
-// ── E2E Tests ──────────────────────────────────────────────────────────────────
+const _validAccessToken =
+    'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAidGVzdCIsICJleHAiOiA0MTAyNDQ0ODAwLCAiaWF0IjogMTc4NzA5NDUxMiwgImVtYWlsIjogInRlc3RAdGVzdC5jb20iLCAibmFtZSI6ICJUZXN0IFVzZXIifQ.fakesignature';
+const _validRefreshToken =
+    'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAicmVmcmVzaCIsICJleHAiOiA0MTAyNDQ0ODAwfQ.fakesignature';
+
+void _preAuth(MockSecureStorage storage) {
+  when(() => storage.read(key: 'auth_token')).thenAnswer((_) async => _validAccessToken);
+  when(() => storage.read(key: 'refresh_token')).thenAnswer((_) async => _validRefreshToken);
+  when(() => storage.read(key: 'user_email')).thenAnswer((_) async => 'test@test.com');
+  when(() => storage.read(key: 'user_name')).thenAnswer((_) async => 'Test User');
+  when(() => storage.read(key: any(named: 'key'))).thenAnswer((_) async => _validAccessToken);
+  when(() => storage.write(key: any(named: 'key'), value: any(named: 'value'))).thenAnswer((_) async {});
+  when(() => storage.deleteAll()).thenAnswer((_) async {});
+}
+
+ProviderScope buildApp(MockAuthService mockAuth, MockSecureStorage mockStorage) => ProviderScope(
+      overrides: [
+        authServiceProvider.overrideWithValue(mockAuth),
+        secureStorageProvider.overrideWithValue(mockStorage),
+        appDataProvider.overrideWith(() => FakeAppData()),
+      ],
+      child: const KasedApp(),
+    );
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -44,116 +69,105 @@ void main() {
     setUp(() {
       mockAuth = MockAuthService();
       mockStorage = MockSecureStorage();
-
-      when(() => mockStorage.read(key: any(named: 'key')))
-          .thenAnswer((_) async => null);
-      when(() => mockStorage.write(
-            key: any(named: 'key'),
-            value: any(named: 'value'),
-          )).thenAnswer((_) async {});
-      when(() => mockStorage.deleteAll()).thenAnswer((_) async {});
+      _preAuth(mockStorage);
       when(() => mockAuth.signOut()).thenAnswer((_) async {});
     });
 
-    ProviderScope buildApp() => ProviderScope(
-          overrides: [
-            authServiceProvider.overrideWithValue(mockAuth),
-            secureStorageProvider.overrideWithValue(mockStorage),
-            appDataProvider.overrideWith(() => FakeAppData()),
-          ],
-          child: const KasedApp(),
-        );
-
     testWidgets('Flow 1: Dashboard loads correctly', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Dashboard Kased'), findsOneWidget);
+      expect(find.textContaining('Dashboard Kased'), findsOneWidget);
       expect(find.textContaining('MEMBRES'), findsOneWidget);
       expect(find.textContaining('CULTES'), findsOneWidget);
       expect(find.textContaining('COLLECTE TOTALE'), findsOneWidget);
-
     });
 
     testWidgets('Flow 2: Navigate to Members screen', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.tap(find.byIcon(Icons.people));
-      await tester.pumpAndSettle();
+      await tester.tap(find.text('Membres'));
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Membres'), findsOneWidget);
     });
 
     testWidgets('Flow 3: Navigate to Cultes screen', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.tap(find.byIcon(Icons.church));
-      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cultes'));
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Gestion des Cultes'), findsOneWidget);
     });
 
     testWidgets('Flow 4: Navigate to Stats screen', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.tap(find.byIcon(Icons.bar_chart));
-      await tester.pumpAndSettle();
+      await tester.tap(find.text('Stats'));
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Statistiques'), findsOneWidget);
     });
 
     testWidgets('Flow 5: Navigate to Retards screen', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.tap(find.byIcon(Icons.warning_amber));
-      await tester.pumpAndSettle();
+      await tester.tap(find.text('Retards'));
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Retards'), findsOneWidget);
     });
 
     testWidgets('Flow 6: Return to Dashboard from any screen', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      // Navigate to Members
-      await tester.tap(find.byIcon(Icons.people));
-      await tester.pumpAndSettle();
+      await tester.tap(find.text('Membres'));
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Membres'), findsOneWidget);
 
-      // Return to Dashboard
-      await tester.tap(find.byIcon(Icons.home));
-      await tester.pumpAndSettle();
-      expect(find.text('Dashboard Kased'), findsOneWidget);
-
+      await tester.tap(find.text('Accueil'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.textContaining('Dashboard Kased'), findsOneWidget);
     });
 
     testWidgets('Flow 7: Notification icon present', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
     });
 
     testWidgets('Flow 8: Menu drawer accessible', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       await tester.tap(find.byIcon(Icons.menu_rounded));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Mon profil'), findsOneWidget);
     });
 
     testWidgets('Flow 9: Trash navigation', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(buildApp(mockAuth, mockStorage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       await tester.tap(find.byIcon(Icons.delete_outline));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Corbeille'), findsOneWidget);
     });

@@ -380,16 +380,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 reduceMotion: reduceMotion,
                                 child: Center(
                                   child: Row(
-                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.lock_outline, size: 14, color: colorScheme.onSurfaceVariant),
                                       const SizedBox(width: 6),
-                                      Text(
-                                        'Vos données sont chiffrées et stockées en sécurité',
-                                        style: GoogleFonts.dmSans(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: colorScheme.onSurfaceVariant,
+                                      Flexible(
+                                        child: Text(
+                                          'Vos données sont chiffrées et stockées en sécurité',
+                                          style: GoogleFonts.dmSans(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
                                         ),
                                       ),
                                     ],
