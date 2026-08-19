@@ -106,6 +106,11 @@ class StatsService {
       }
     }
 
+    // Ajouter le crédit avance réel des membres (solde disponible)
+    for (final membre in membres.where((m) => m.isActive && !m.isDeleted)) {
+      montantEnAvance += membre.montantEnAvance;
+    }
+
     return DashboardStats(
       totalMembres: membres.where((m) => m.isActive && !m.isDeleted).length,
       totalCultes: cultes.where((c) => !c.isDeleted).length,

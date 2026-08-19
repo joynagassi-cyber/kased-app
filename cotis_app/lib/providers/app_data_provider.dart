@@ -1128,7 +1128,7 @@ class AppData extends _$AppData {
 
     final now = DateTime.now();
     final deviceId = await _deviceServicePort.getDeviceId();
-    final montantParCulte = montantTotal / culteIds.length;
+    final montantParCulte = (montantTotal / culteIds.length).roundToDouble();
 
     final updatedCotisations = List<Cotisation>.from(previousState.cotisations);
     final syncOps = <SyncOperation>[];
@@ -1273,8 +1273,9 @@ class AppData extends _$AppData {
         .whereType<Culte>()
         .map((c) => c.dateFormatee)
         .join(', ');
+    NotificationCoordinator.notifierPaiementAvance(montantTotal, notifMembre?.nomComplet ?? membreId);
     unawaited(_notifierPush(
-      'cotisation_payee',
+      'cotisation_en_avance',
       notifMembre?.nomComplet ?? membreId,
       extra: '$montantTotal.toStringAsFixed(0)F pour $culteLabels',
     ));

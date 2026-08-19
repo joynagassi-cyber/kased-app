@@ -95,6 +95,19 @@ class _BatchPaymentDialogState extends State<BatchPaymentDialog> {
     // Utiliser le montant saisí ou le montant par culte
     final montantSaisi =
         double.tryParse(_montantController.text.trim()) ?? _montantParCulte;
+    if (montantSaisi < widget.montantParCulte) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Le montant doit être d\'au moins ${widget.montantParCulte.toStringAsFixed(0)} F par culte',
+            ),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+      return;
+    }
     final totalAmount = montantSaisi * selectedCultes.length;
 
     await widget.onPay(selectedCultes, totalAmount);

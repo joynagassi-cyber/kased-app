@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+﻿import 'package:isar/isar.dart';
 
 part 'culte.g.dart';
 
@@ -20,6 +20,12 @@ class Culte {
   bool isDeleted = false;
   DateTime? deletedAt;
   String? deletedBy;
+
+  /// IDs des membres actifs au moment de la création du culte.
+  /// Les membres ajoutés après cette date n'apparaîtront pas dans l'UI du culte.
+  /// Liste vide signifie ancien culte (avant cette correction) :
+  /// l'UI utilise alors le fallback sur les cotisations.
+  @Index()
   List<String> memberIds = [];
 
   @ignore
@@ -28,7 +34,7 @@ class Culte {
                    'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
     final wd = dateCulte.weekday;
     final nomJour = wd == 7 ? 'Dimanche' : ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][wd-1];
-    return '$nomJour ${dateCulte.day} ${mois[dateCulte.month - 1]} ${dateCulte.year}';
+    return '   ';
   }
 
   // Helper for JSON (InsForge)
@@ -44,7 +50,7 @@ class Culte {
     'is_deleted': isDeleted,
     if (deletedAt != null) 'deleted_at': deletedAt!.toIso8601String(),
     if (deletedBy != null) 'deleted_by': deletedBy,
-    if (memberIds.isNotEmpty) 'member_ids': memberIds,
+    'member_ids': memberIds,
   };
 
   static Culte fromJson(Map<String, dynamic> json) {

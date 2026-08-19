@@ -101,6 +101,19 @@ const CulteSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'memberIds': IndexSchema(
+      id: -6144070982180750112,
+      name: r'memberIds',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'memberIds',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -407,6 +420,51 @@ extension CulteQueryWhere on QueryBuilder<Culte, Culte, QWhereClause> {
               indexName: r'id',
               lower: [],
               upper: [id],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterWhereClause> memberIdsEqualTo(
+      List<String> memberIds) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'memberIds',
+        value: [memberIds],
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterWhereClause> memberIdsNotEqualTo(
+      List<String> memberIds) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'memberIds',
+              lower: [],
+              upper: [memberIds],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'memberIds',
+              lower: [memberIds],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'memberIds',
+              lower: [memberIds],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'memberIds',
+              lower: [],
+              upper: [memberIds],
               includeUpper: false,
             ));
       }
