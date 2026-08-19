@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Déploie les fonctions edge InsForge de Kased.
 #
-# La clé REST OneSignal n'est jamais commitée : elle est injectée ici dans le
-# code déployé, à la place du placeholder __ONESIGNAL_REST_API_KEY__.
+# Les clés sont injectées dans le code via sed avant le déploiement :
+#   - __INSFORGE_ANON_KEY__     → INSFORGE_ANON_KEY (clé anon InsForge)
+#   - __ONESIGNAL_REST_API_KEY__ → ONESIGNAL_REST_API_KEY
 #
 # Usage :
-#   INSFORGE_ADMIN_API_KEY=xxx ONESIGNAL_REST_API_KEY=yyy ./scripts/deploy-insforge-functions.sh
+#   INSFORGE_ANON_KEY=xxx ONESIGNAL_REST_API_KEY=yyy ./scripts/deploy-insforge-functions.sh
 set -euo pipefail
 
 BASE_URL="${INSFORGE_BASE_URL:-https://pu74z8pe.us-east.insforge.app}"
-: "${INSFORGE_ADMIN_API_KEY:?INSFORGE_ADMIN_API_KEY requis (console InsForge → API keys)}"
+: "${INSFORGE_ANON_KEY:?INSFORGE_ANON_KEY requis (console InsForge → API keys → clé anon)}"
 : "${ONESIGNAL_REST_API_KEY:?ONESIGNAL_REST_API_KEY requis (OneSignal → Settings → Keys & IDs)}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -29,11 +30,11 @@ PY
 
   local status
   status="$(curl -s -o "$TMP/out" -w '%{http_code}' -X PUT "$BASE_URL/api/functions/$slug" \
-    -H "Authorization: Bearer $INSFORGE_ADMIN_API_KEY" \
+    -H "Authorization: Bearer $INSFORGE_ANON_KEY" \
     -H 'Content-Type: application/json' -d "$payload")"
   if [ "$status" = "404" ]; then
     status="$(curl -s -o "$TMP/out" -w '%{http_code}' -X POST "$BASE_URL/api/functions" \
-      -H "Authorization: Bearer $INSFORGE_ADMIN_API_KEY" \
+      -H "Authorization: Bearer $INSFORGE_ANON_KEY" \
       -H 'Content-Type: application/json' -d "$payload")"
   fi
   echo "$slug → HTTP $status"
@@ -43,7 +44,10 @@ PY
 sed "s|__ONESIGNAL_REST_API_KEY__|$ONESIGNAL_REST_API_KEY|" \
   "$ROOT/cotis_app/functions/push-notify.js" > "$TMP/push-notify.js"
 
+sed "s|__INSFORGE_ANON_KEY__|$INSFORGE_ANON_KEY|" \
+  "$ROOT/cotis_app/functions/google-auth-bridge.js" > "$TMP/google-auth-bridge.js"
+
 deploy push-notify "$TMP/push-notify.js"
-deploy google-auth-bridge "$ROOT/cotis_app/functions/google-auth-bridge.js"
+deploy google-auth-bridge "$TMP/google-auth-bridge.js"
 
 echo "OK — fonctions déployées sur $BASE_URL/functions/<slug>"
