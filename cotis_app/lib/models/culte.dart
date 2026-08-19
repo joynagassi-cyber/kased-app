@@ -20,6 +20,7 @@ class Culte {
   bool isDeleted = false;
   DateTime? deletedAt;
   String? deletedBy;
+  List<String> memberIds = [];
 
   @ignore
   String get dateFormatee {
@@ -43,6 +44,7 @@ class Culte {
     'is_deleted': isDeleted,
     if (deletedAt != null) 'deleted_at': deletedAt!.toIso8601String(),
     if (deletedBy != null) 'deleted_by': deletedBy,
+    if (memberIds.isNotEmpty) 'member_ids': memberIds,
   };
 
   static Culte fromJson(Map<String, dynamic> json) {
@@ -64,6 +66,9 @@ class Culte {
       ..deletedAt = json['deleted_at'] == null
           ? null
           : DateTime.parse(json['deleted_at'] as String)
-      ..deletedBy = json['deleted_by'] as String?;
+      ..deletedBy = json['deleted_by'] as String?
+      ..memberIds = (json['member_ids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ?? [];
   }
 }

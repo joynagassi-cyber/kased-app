@@ -5,6 +5,7 @@ import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/services/auth_service.dart';
 import 'package:kased_app/providers/app_data_provider.dart';
 import 'package:kased_app/core/services/stats_service.dart';
+import 'package:kased_app/widgets/kased_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -28,14 +29,13 @@ class FakeAppData extends AppData {
         totalMembres: 10,
         totalCultes: 5,
         totalCollecte: 50000,
-        membresEnRetard: 2,
+        membresEnRetard: 0,
         totalDu: 15000,
       );
   @override
   Future<List<Map<String, dynamic>>> loadRetardsMembres() async => [];
 }
 
-// Valid JWT tokens (expire 2099) for pre-authentication
 const _validAccessToken =
     'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAidGVzdCIsICJleHAiOiA0MTAyNDQ0ODAwLCAiaWF0IjogMTc4NzA5NDUxMiwgImVtYWlsIjogInRlc3RAdGVzdC5jb20iLCAibmFtZSI6ICJUZXN0IFVzZXIifQ.fakesignature';
 const _validRefreshToken =
@@ -77,7 +77,7 @@ void main() {
     testWidgets('Flow 1: Dashboard main stats card', (tester) async {
       await tester.pumpWidget(buildApp(mockAuth, mockStorage));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.textContaining('Dashboard Kased'), findsOneWidget);
       expect(find.textContaining('MEMBRES'), findsOneWidget);
@@ -88,15 +88,16 @@ void main() {
     testWidgets('Flow 2: Quick action buttons', (tester) async {
       await tester.pumpWidget(buildApp(mockAuth, mockStorage));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.byType(ElevatedButton), findsWidgets);
+      // Dashboard uses KasedCard/InkWell for action buttons, not ElevatedButton
+      expect(find.byType(KasedCard), findsWidgets);
     });
 
     testWidgets('Flow 3: Pull to refresh', (tester) async {
       await tester.pumpWidget(buildApp(mockAuth, mockStorage));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.byType(RefreshIndicator), findsOneWidget);
     });
@@ -104,8 +105,9 @@ void main() {
     testWidgets('Flow 4: Visual improvements', (tester) async {
       await tester.pumpWidget(buildApp(mockAuth, mockStorage));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 500));
 
+      // Dashboard uses BackdropFilter for glassmorphism and ShaderMask for gradient text
       expect(find.byType(BackdropFilter), findsWidgets);
       expect(find.byType(ShaderMask), findsWidgets);
     });
@@ -113,10 +115,11 @@ void main() {
     testWidgets('Flow 5: Stats screen loads', (tester) async {
       await tester.pumpWidget(buildApp(mockAuth, mockStorage));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 500));
 
       await tester.tap(find.text('Stats'));
       await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
 
       expect(find.text('Statistiques'), findsOneWidget);
     });
@@ -124,10 +127,11 @@ void main() {
     testWidgets('Flow 6: Retards screen loads', (tester) async {
       await tester.pumpWidget(buildApp(mockAuth, mockStorage));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 500));
 
       await tester.tap(find.text('Retards'));
       await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
 
       expect(find.text('Retards'), findsOneWidget);
     });

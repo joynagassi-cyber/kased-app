@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
@@ -52,9 +52,9 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
           }
 
           final totalCultes = cultes.length;
-           final totalGlobalCollecte = state.cotisations
-               .where((c) => c.estPaye)
-               .fold(0.0, (sum, c) => sum + c.montantPaye);
+          final totalGlobalCollecte = state.cotisations
+              .where((c) => c.estPaye)
+              .fold(0.0, (sum, c) => sum + c.montantPaye);
 
           return CustomScrollView(
             slivers: [
@@ -67,11 +67,11 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                       children: [
                         Text(
                           'TOTAL HISTORIQUE',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.5,
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -88,14 +88,14 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                         const SizedBox(height: 24),
                         Row(
                           children: [
-                            Icon(Icons.church, color: Colors.white.withValues(alpha: 0.9), size: 20),
+                            Icon(Icons.church, color: Colors.white, size: 20),
                             const SizedBox(width: 8),
                             Text(
                               '$totalCultes cultes organisés',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.9),
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -116,12 +116,16 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                           .toList();
 
                       final payeursCount = cotisations.where((c) => c.estPaye).length;
-                      final totalMembres = membres.length;
+                      // Filtrer le total par les membres présents à la création du culte
+                      final culteMemberIds = culte.memberIds;
+                      final totalMembres = culteMemberIds.isNotEmpty
+                          ? membres.where((m) => culteMemberIds.contains(m.id)).length
+                          : membres.length;
                       final percentage =
                           totalMembres > 0 ? payeursCount / totalMembres : 0.0;
-                       final totalCollecte = cotisations
-                           .where((c) => c.estPaye)
-                           .fold(0.0, (sum, c) => sum + c.montantPaye);
+                      final totalCollecte = cotisations
+                          .where((c) => c.estPaye)
+                          .fold(0.0, (sum, c) => sum + c.montantPaye);
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
@@ -208,13 +212,9 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                                                   value: 'edit_locked',
                                                   child: Row(
                                                     children: [
-                                                      Icon(Icons.lock_outline,
-                                                          size: 18, color: Colors.grey),
+                                                      Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                                                       SizedBox(width: 8),
-                                                      Text(
-                                                        'Verrouillé (>30j)',
-                                                        style: TextStyle(color: Colors.grey),
-                                                      ),
+                                                      Text('Verrouillé (>30j)', style: TextStyle(color: Colors.grey)),
                                                     ],
                                                   ),
                                                 ),
@@ -223,13 +223,9 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                                                   value: 'delete',
                                                   child: Row(
                                                     children: [
-                                                      Icon(Icons.delete_outline,
-                                                          size: 18, color: AppColors.danger),
+                                                      Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
                                                       SizedBox(width: 8),
-                                                      Text(
-                                                        'Supprimer',
-                                                        style: TextStyle(color: AppColors.danger),
-                                                      ),
+                                                      Text('Supprimer', style: TextStyle(color: AppColors.danger)),
                                                     ],
                                                   ),
                                                 )
@@ -239,13 +235,9 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                                                   value: 'delete_locked',
                                                   child: Row(
                                                     children: [
-                                                      Icon(Icons.lock_outline,
-                                                          size: 18, color: Colors.grey),
+                                                      Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                                                       SizedBox(width: 8),
-                                                      Text(
-                                                        'Verrouillé (>30j)',
-                                                        style: TextStyle(color: Colors.grey),
-                                                      ),
+                                                      Text('Verrouillé (>30j)', style: TextStyle(color: Colors.grey)),
                                                     ],
                                                   ),
                                                 ),
@@ -277,9 +269,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                                         value: percentage,
                                         backgroundColor: colorScheme.surfaceContainerHighest,
                                         valueColor: AlwaysStoppedAnimation<Color>(
-                                          percentage == 1.0
-                                              ? AppColors.gradientEnd
-                                              : colorScheme.primary,
+                                          percentage == 1.0 ? AppColors.gradientEnd : colorScheme.primary,
                                         ),
                                         minHeight: 8,
                                       ),
@@ -306,15 +296,13 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
       floatingActionButton: SpringButton(
         onTap: () => _showAddCulteDialog(context, ref),
         child: FloatingActionButton(
-          onPressed: () {}, // Géré par SpringButton
+          onPressed: () {},
           tooltip: 'Nouveau culte',
           child: const Icon(Icons.add_task),
         ),
       ),
     );
   }
-
-  // ────────────────────── Dialogs ──────────────────────
 
   void _showAddCulteDialog(BuildContext context, WidgetRef ref) async {
     final theme = Theme.of(context);
@@ -349,8 +337,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                         hintText: '50',
                       ),
                       validator: (value) {
-                        final montant =
-                            int.tryParse((value ?? '').trim()) ?? 0;
+                        final montant = int.tryParse((value ?? '').trim()) ?? 0;
                         if (montant <= 0) return 'Montant invalide';
                         return null;
                       },
@@ -371,9 +358,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                       await ref.read(appDataProvider.notifier).addCulte(
                             date: selectedDate,
                             titre: null,
-                            montant: double.tryParse(
-                                    montantController.text.trim()) ??
-                                50.0,
+                            montant: double.tryParse(montantController.text.trim()) ?? 50.0,
                           );
                       if (dialogContext.mounted) {
                         Navigator.pop(dialogContext);
@@ -388,9 +373,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                         }
                       }
                     } catch (e) {
-                      if (dialogContext.mounted) {
-                        Navigator.pop(dialogContext);
-                      }
+                      if (dialogContext.mounted) Navigator.pop(dialogContext);
                       if (context.mounted) {
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
                           SnackBar(content: Text('Erreur: $e')),
@@ -401,11 +384,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                     }
                   },
                   child: _isCreatingCulte
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Créer'),
                 ),
               ],
@@ -417,12 +396,10 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
     montantController.dispose();
   }
 
-  void _showEditCulteDialog(
-      BuildContext context, WidgetRef ref, Culte culte) async {
+  void _showEditCulteDialog(BuildContext context, WidgetRef ref, Culte culte) async {
     final theme = Theme.of(context);
     final formKey = GlobalKey<FormState>();
-    final montantController =
-        TextEditingController(text: culte.montantCotisation.toInt().toString());
+    final montantController = TextEditingController(text: culte.montantCotisation.toInt().toString());
     DateTime selectedDate = culte.dateCulte;
 
     await showDialog<void>(
@@ -448,12 +425,9 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                     TextFormField(
                       controller: montantController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Montant de cotisation (FCFA)',
-                      ),
+                      decoration: const InputDecoration(labelText: 'Montant de cotisation (FCFA)'),
                       validator: (value) {
-                        final montant =
-                            int.tryParse((value ?? '').trim()) ?? 0;
+                        final montant = int.tryParse((value ?? '').trim()) ?? 0;
                         if (montant <= 0) return 'Montant invalide';
                         return null;
                       },
@@ -467,39 +441,28 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                   child: const Text('Annuler'),
                 ),
                 FilledButton(
-                  // ignore: dead_code
-                  onPressed: isSaving
-                      // ignore: dead_code
-                      ? null
-                      : () async {
-                          if (!formKey.currentState!.validate()) return;
-                          setLocalState(() => isSaving = true);
-                          try {
-                            await ref.read(appDataProvider.notifier).updateCulte(
-                                  id: culte.id,
-                                  dateCulte: selectedDate,
-                                  montantCotisation:
-                                      double.tryParse(montantController.text.trim()) ??
-                                          culte.montantCotisation,
-                                );
-                            if (dialogContext.mounted) {
-                              Navigator.pop(dialogContext);
-                            }
-                          } catch (e) {
-                            if (dialogContext.mounted) {
-                              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Erreur: $e')),
-                              );
-                            }
-                          } finally {
-                            if (dialogContext.mounted) setLocalState(() => isSaving = false);
-                          }
-                        },
+                  onPressed: isSaving ? null : () async {
+                    if (!formKey.currentState!.validate()) return;
+                    setLocalState(() => isSaving = true);
+                    try {
+                      await ref.read(appDataProvider.notifier).updateCulte(
+                            id: culte.id,
+                            dateCulte: selectedDate,
+                            montantCotisation: double.tryParse(montantController.text.trim()) ?? culte.montantCotisation,
+                          );
+                      if (dialogContext.mounted) Navigator.pop(dialogContext);
+                    } catch (e) {
+                      if (dialogContext.mounted) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(content: Text('Erreur: $e')),
+                        );
+                      }
+                    } finally {
+                      if (dialogContext.mounted) setLocalState(() => isSaving = false);
+                    }
+                  },
                   child: isSaving
-                      ? const SizedBox(
-                          width: 20, height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Enregistrer'),
                 ),
               ],
@@ -511,8 +474,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
     montantController.dispose();
   }
 
-  void _confirmDeleteCulte(
-      BuildContext context, WidgetRef ref, Culte culte) async {
+  void _confirmDeleteCulte(BuildContext context, WidgetRef ref, Culte culte) async {
     bool isDeleting = false;
 
     final confirmed = await showDialog<bool>(
@@ -531,18 +493,14 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                 child: const Text('Annuler'),
               ),
               FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.danger,
-                ),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
                 onPressed: isDeleting
                     ? null
                     : () async {
                         setLocalState(() => isDeleting = true);
                         try {
                           await ref.read(appDataProvider.notifier).deleteCulte(culte.id);
-                          if (ctx.mounted) {
-                            Navigator.pop(dialogContext, true);
-                          }
+                          if (ctx.mounted) Navigator.pop(dialogContext, true);
                         } catch (e) {
                           if (ctx.mounted) {
                             ScaffoldMessenger.of(ctx).showSnackBar(
@@ -554,10 +512,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                         }
                       },
                 child: isDeleting
-                    ? const SizedBox(
-                        width: 20, height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Text('Supprimer'),
               ),
             ],
@@ -588,8 +543,6 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
   }
 }
 
-// ────────────────────── Helpers ──────────────────────
-
 class _DatePickerTile extends StatelessWidget {
   const _DatePickerTile({
     required this.theme,
@@ -615,13 +568,11 @@ class _DatePickerTile extends StatelessWidget {
       child: ListTile(
         title: Text(
           'Date du culte',
-          style:
-              theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         subtitle: Text(
           DateFormat('dd MMMM yyyy', 'fr_FR').format(selectedDate),
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
         trailing: const Icon(Icons.calendar_today),
         onTap: () async {

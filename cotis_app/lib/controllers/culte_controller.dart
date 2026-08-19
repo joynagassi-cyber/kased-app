@@ -75,6 +75,7 @@ class CulteController {
 
     final membres = await _cache.getAllMembres();
     final activeMembres = membres.where((m) => m.isActive).toList();
+    newCulte.memberIds = activeMembres.map((m) => m.id).toList();
     final localCotisations = activeMembres.map((m) {
       return Cotisation()
         ..id = UuidUtils.generate()

@@ -52,28 +52,33 @@ const CulteSchema = CollectionSchema(
       name: r'isDeleted',
       type: IsarType.bool,
     ),
-    r'montantCotisation': PropertySchema(
+    r'memberIds': PropertySchema(
       id: 7,
+      name: r'memberIds',
+      type: IsarType.stringList,
+    ),
+    r'montantCotisation': PropertySchema(
+      id: 8,
       name: r'montantCotisation',
       type: IsarType.double,
     ),
     r'notes': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'notes',
       type: IsarType.string,
     ),
     r'titre': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'titre',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'version': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'version',
       type: IsarType.long,
     )
@@ -120,6 +125,13 @@ int _culteEstimateSize(
   }
   bytesCount += 3 + object.deviceId.length * 3;
   bytesCount += 3 + object.id.length * 3;
+  bytesCount += 3 + object.memberIds.length * 3;
+  {
+    for (var i = 0; i < object.memberIds.length; i++) {
+      final value = object.memberIds[i];
+      bytesCount += value.length * 3;
+    }
+  }
   {
     final value = object.notes;
     if (value != null) {
@@ -148,11 +160,12 @@ void _culteSerialize(
   writer.writeString(offsets[4], object.deviceId);
   writer.writeString(offsets[5], object.id);
   writer.writeBool(offsets[6], object.isDeleted);
-  writer.writeDouble(offsets[7], object.montantCotisation);
-  writer.writeString(offsets[8], object.notes);
-  writer.writeString(offsets[9], object.titre);
-  writer.writeDateTime(offsets[10], object.updatedAt);
-  writer.writeLong(offsets[11], object.version);
+  writer.writeStringList(offsets[7], object.memberIds);
+  writer.writeDouble(offsets[8], object.montantCotisation);
+  writer.writeString(offsets[9], object.notes);
+  writer.writeString(offsets[10], object.titre);
+  writer.writeDateTime(offsets[11], object.updatedAt);
+  writer.writeLong(offsets[12], object.version);
 }
 
 Culte _culteDeserialize(
@@ -170,11 +183,12 @@ Culte _culteDeserialize(
   object.id = reader.readString(offsets[5]);
   object.isDeleted = reader.readBool(offsets[6]);
   object.isarId = id;
-  object.montantCotisation = reader.readDouble(offsets[7]);
-  object.notes = reader.readStringOrNull(offsets[8]);
-  object.titre = reader.readStringOrNull(offsets[9]);
-  object.updatedAt = reader.readDateTimeOrNull(offsets[10]);
-  object.version = reader.readLong(offsets[11]);
+  object.memberIds = reader.readStringList(offsets[7]) ?? [];
+  object.montantCotisation = reader.readDouble(offsets[8]);
+  object.notes = reader.readStringOrNull(offsets[9]);
+  object.titre = reader.readStringOrNull(offsets[10]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[11]);
+  object.version = reader.readLong(offsets[12]);
   return object;
 }
 
@@ -200,14 +214,16 @@ P _culteDeserializeProp<P>(
     case 6:
       return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 8:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 9:
       return (reader.readStringOrNull(offset)) as P;
     case 10:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 11:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 12:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1040,6 +1056,221 @@ extension CulteQueryFilter on QueryBuilder<Culte, Culte, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'memberIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'memberIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'memberIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'memberIds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'memberIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'memberIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'memberIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'memberIds',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'memberIds',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition>
+      memberIdsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'memberIds',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'memberIds',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'memberIds',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'memberIds',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'memberIds',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'memberIds',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Culte, Culte, QAfterFilterCondition> memberIdsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'memberIds',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<Culte, Culte, QAfterFilterCondition> montantCotisationEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -1867,6 +2098,12 @@ extension CulteQueryWhereDistinct on QueryBuilder<Culte, Culte, QDistinct> {
     });
   }
 
+  QueryBuilder<Culte, Culte, QDistinct> distinctByMemberIds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'memberIds');
+    });
+  }
+
   QueryBuilder<Culte, Culte, QDistinct> distinctByMontantCotisation() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'montantCotisation');
@@ -1946,6 +2183,12 @@ extension CulteQueryProperty on QueryBuilder<Culte, Culte, QQueryProperty> {
   QueryBuilder<Culte, bool, QQueryOperations> isDeletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isDeleted');
+    });
+  }
+
+  QueryBuilder<Culte, List<String>, QQueryOperations> memberIdsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'memberIds');
     });
   }
 

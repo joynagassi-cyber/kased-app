@@ -1,4 +1,4 @@
-import 'package:kased_app/core/pdf/pdf_service.dart';
+﻿import 'package:kased_app/core/pdf/pdf_service.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/membre.dart';
@@ -48,15 +48,19 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
         final culte = state.cultes[culteIndex];
 
         final cotisations = state.cotisations.where((c) => c.culteId == widget.culteId).toList();
-        final membres = state.membres.where((m) => m.isActive).toList();
+        // Filtrer par les membres présents au moment de la création du culte.
+        // Fallback (memberIds vide = ancien culte) : utiliser tous les membres actifs.
+        final culteMemberIds = culte.memberIds;
+        final membres = culteMemberIds.isNotEmpty
+            ? state.membres.where((m) => m.isActive && culteMemberIds.contains(m.id)).toList()
+            : state.membres.where((m) => m.isActive).toList();
         final payes = cotisations.where((c) => c.estPaye).length;
         final total = membres.length;
-         final totalCollecte = cotisations.where((c) => c.estPaye).fold(0.0, (sum, c) => sum + c.montantPaye);
+        final totalCollecte = cotisations.where((c) => c.estPaye).fold(0.0, (sum, c) => sum + c.montantPaye);
         final membresPayesIds = cotisations.where((c) => c.estPaye).map((c) => c.membreId).toSet();
         final membresNonPayes = membres.where((m) => !membresPayesIds.contains(m.id)).toList();
         final tousPayes = membres.isNotEmpty && membresNonPayes.isEmpty;
 
-        // Verrouillage à 30 jours : interdit de modifier les paiements validés
         final isOlderThan30Days = DateTime.now().difference(culte.dateCulte).inDays > 30;
         return Scaffold(
           appBar: AppBar(
@@ -99,19 +103,13 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       currentMontant: culte.montantCotisation,
                       onSave: (newMontant) => ref
                           .read(appDataProvider.notifier)
-                          .updateCulte(
-                            id: culte.id,
-                            montantCotisation: newMontant,
-                          ),
+                          .updateCulte(id: culte.id, montantCotisation: newMontant),
                     );
                   },
                 ),
               IconButton(
                 icon: _isPdfExporting
-                    ? const SizedBox(
-                        width: 20, height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.picture_as_pdf),
                 tooltip: 'Exporter en PDF',
                 onPressed: _isPdfExporting
@@ -119,14 +117,11 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                     : () async {
                         setState(() => _isPdfExporting = true);
                         final statuses = membres
-                            .map(
-                              (m) => MembrePaiementStatus(
-                                membre: m,
-                                estPaye: cotisations.any((c) => c.membreId == m.id && c.estPaye),
-                              ),
-                            )
+                            .map((m) => MembrePaiementStatus(
+                                  membre: m,
+                                  estPaye: cotisations.any((c) => c.membreId == m.id && c.estPaye),
+                                ))
                             .toList();
-
                         try {
                           final path = await PdfService.generateCultePdf(
                             culte: culte,
@@ -138,18 +133,13 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                               SnackBar(
                                 content: Text('Rapport de culte enregistré dans :\n$path'),
                                 duration: const Duration(seconds: 5),
-                                action: SnackBarAction(
-                                  label: 'OK',
-                                  onPressed: () {},
-                                ),
+                                action: SnackBarAction(label: 'OK', onPressed: () {}),
                               ),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Erreur: $e')),
-                            );
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
                           }
                         }
                       },
@@ -167,10 +157,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                   label: Text('${_selectedMembres.length}'),
                   child: IconButton(
                     icon: _isValidingSelection
-                        ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.check_circle),
                     tooltip: 'Valider la sélection',
                     onPressed: _isValidingSelection ? null : () => _validerSelection(),
@@ -178,10 +165,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                 ),
               IconButton(
                 icon: _isSyncing
-                    ? const SizedBox(
-                        width: 20, height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.sync),
                 tooltip: 'Synchroniser',
                 onPressed: _isSyncing
@@ -198,66 +182,59 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
               if (!isOlderThan30Days)
                 IconButton(
                   icon: _isBulkPaymentProcessing
-                      ? const SizedBox(
-                          width: 20, height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.flash_on, color: Colors.blue),
                   tooltip: 'Payer en avance pour tous les membres',
                   onPressed: _isBulkPaymentProcessing
                       ? null
                       : () async {
-                    // Get future cultes for this member
-                    final futureCultes = state.cultes
-                        .where((c) => !c.isDeleted && c.dateCulte.isAfter(DateTime.now()))
-                        .take(10)
-                        .toList();
-
-                    if (futureCultes.isEmpty) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Aucun culte futur à payer en avance'),
-                            backgroundColor: AppColors.warning,
-                          ),
-                        );
-                      }
-                      return;
-                    }
-
-                    await BatchPaymentDialog.show(
-                      context,
-                      futureCultes: futureCultes,
-                      montantParCulte: culte.montantCotisation,
-                      onPay: (selectedCultes, totalAmount) async {
-                        setState(() => _isBulkPaymentProcessing = true);
-                        try {
-                          // Pay for each member
-                          for (final membre in membres) {
-                            await ref.read(appDataProvider.notifier).payerPlusieursCultesEnAvance(
-                              membreId: membre.id,
-                              culteIds: selectedCultes.map((c) => c.id).toList(),
-                              montantTotal: totalAmount,
-                            );
-                          }
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                    '✅ ${selectedCultes.length} culte(s) payé(s) en avance pour ${membres.length} membre(s)\n'
-                                    'Total: ${totalAmount.toStringAsFixed(0)} F par membre',
-                                  ),
-                                  backgroundColor: AppColors.success,
-                                  duration: const Duration(seconds: 4),
+                          final futureCultes = state.cultes
+                              .where((c) => !c.isDeleted && c.dateCulte.isAfter(DateTime.now()))
+                              .take(10)
+                              .toList();
+                          if (futureCultes.isEmpty) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Aucun culte futur à payer en avance'),
+                                  backgroundColor: AppColors.warning,
                                 ),
                               );
                             }
-                        } finally {
-                          if (mounted) setState(() => _isBulkPaymentProcessing = false);
-                        }
-                      },
-                    );
-                  },
+                            return;
+                          }
+                          await BatchPaymentDialog.show(
+                            context,
+                            futureCultes: futureCultes,
+                            montantParCulte: culte.montantCotisation,
+                            onPay: (selectedCultes, totalAmount) async {
+                              setState(() => _isBulkPaymentProcessing = true);
+                              try {
+                                for (final membre in membres) {
+                                  await ref.read(appDataProvider.notifier).payerPlusieursCultesEnAvance(
+                                        membreId: membre.id,
+                                        culteIds: selectedCultes.map((c) => c.id).toList(),
+                                        montantTotal: totalAmount,
+                                      );
+                                }
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${selectedCultes.length} culte(s) payé(s) en avance pour ${membres.length} membre(s)\n'
+                                        'Total: ${totalAmount.toStringAsFixed(0)} F par membre',
+                                      ),
+                                      backgroundColor: AppColors.success,
+                                      duration: const Duration(seconds: 4),
+                                    ),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) setState(() => _isBulkPaymentProcessing = false);
+                              }
+                            },
+                          );
+                        },
                 ),
             ],
           ),
@@ -302,10 +279,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                             if (culte.montantCotisation != 50.0)
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white24,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
+                                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
                                 child: Text(
                                   'Spécial: ${culte.montantCotisation.toInt()} F',
                                   style: theme.textTheme.labelSmall?.copyWith(
@@ -323,37 +297,15 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Collecté',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.textInverse.withValues(alpha: 0.8),
-                                  ),
-                                ),
-                                Text(
-                                  '${totalCollecte.toInt()} FCFA',
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    color: AppColors.textInverse,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
+                                Text('Collecté', style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textInverse.withValues(alpha: 0.8))),
+                                Text('${totalCollecte.toInt()} FCFA', style: theme.textTheme.headlineSmall?.copyWith(color: AppColors.textInverse, fontWeight: FontWeight.w900)),
                               ],
                             ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(
-                                  'Membres',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.textInverse.withValues(alpha: 0.8),
-                                  ),
-                                ),
-                                Text(
-                                  '$payes / $total',
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    color: AppColors.textInverse,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                Text('Membres', style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textInverse.withValues(alpha: 0.8))),
+                                Text('$payes / $total', style: theme.textTheme.titleLarge?.copyWith(color: AppColors.textInverse, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ],
@@ -381,116 +333,80 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       Expanded(
                         child: SpringButton(
                           onTap: () async {
-                                    try {
-                                      final result = await ConfirmActionDialog.show(
-                                        context,
-                                        title: 'Tout valider',
-                                        message: 'Marquer les ${membresNonPayes.length} membres restants comme payés ?',
-                                        onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
-                                              culteId: widget.culteId,
-                                              newStatut: StatutCotisation.paye,
-                                              membreIds: membresNonPayes.map((m) => m.id).toList(),
-                                            ),
-                                      );
-                                      if (result != null && context.mounted) {
-                                        if (result.isComplete) {
-                                          setState(() {});
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: const Row(
-                                                children: [
-                                                  Icon(Icons.stars, color: Colors.white),
-                                                  SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Text(
-                                                      'Tout le monde a payé ! 🌟 Gloire à Dieu !',
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              behavior: SnackBarBehavior.floating,
-                                              backgroundColor: AppColors.success,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                              margin: const EdgeInsets.all(16),
-                                              duration: const Duration(seconds: 4),
-                                            ),
-                                          );
-                                        } else if (result.isPartial) {
-                                          ConfirmActionDialog.showResultSnackBar(context, result);
-                                        }
-                                        // isFailed: local optimistic update already applied,
-                                        // no red snackbar needed.
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Erreur: $e')),
-                                        );
-                                      }
-                                    }
-                                  },
-
+                            try {
+                              final result = await ConfirmActionDialog.show(
+                                context,
+                                title: 'Tout valider',
+                                message: 'Marquer les ${membresNonPayes.length} membres restants comme payés ?',
+                                onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+                                      culteId: widget.culteId,
+                                      newStatut: StatutCotisation.paye,
+                                      membreIds: membresNonPayes.map((m) => m.id).toList(),
+                                    ),
+                              );
+                              if (result != null && context.mounted) {
+                                if (result.isComplete) {
+                                  setState(() {});
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Row(
+                                        children: [
+                                          Icon(Icons.stars, color: Colors.white),
+                                          SizedBox(width: 12),
+                                          Expanded(child: Text('Tout le monde a payé ! Gloire à Dieu !', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                                        ],
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: AppColors.success,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      margin: const EdgeInsets.all(16),
+                                      duration: const Duration(seconds: 4),
+                                    ),
+                                  );
+                                } else if (result.isPartial) {
+                                  ConfirmActionDialog.showResultSnackBar(context, result);
+                                }
+                              }
+                            } catch (e) {
+                              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+                            }
+                          },
                           child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              side: const BorderSide(color: AppColors.primary),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
+                            style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 12)),
                             icon: const Icon(Icons.done_all),
                             label: Text('Tout valider (${membresNonPayes.length})'),
-                            onPressed: () {}, // Géré par SpringButton
+                            onPressed: () {},
                           ),
                         ),
                       ),
-                    // MembresNonPayes.isNotEmpty && tousPayes is impossible (dead code)
                     if (tousPayes)
                       Expanded(
                         child: SpringButton(
                           onTap: () async {
-                                    try {
-                                      final result = await ConfirmActionDialog.show(
-                                        context,
-                                        title: 'Tout annuler',
-                                        message: 'Supprimer tous les paiements de ce culte ?',
-                                        onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
-                                              culteId: widget.culteId,
-                                              newStatut: StatutCotisation.nonPaye,
-                                              membreIds: cotisations
-                                                  .where((c) => c.estPaye)
-                                                  .map((c) => c.membreId)
-                                                  .toList(),
-                                            ),
-                                      );
-                                      if (result != null && context.mounted) {
-                                        setState(() {});
-                                        ConfirmActionDialog.showResultSnackBar(context, result);
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Erreur: $e')),
-                                        );
-                                      }
-                                    }
-                                  },
-
+                            try {
+                              final result = await ConfirmActionDialog.show(
+                                context,
+                                title: 'Tout annuler',
+                                message: 'Supprimer tous les paiements de ce culte ?',
+                                onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+                                      culteId: widget.culteId,
+                                      newStatut: StatutCotisation.nonPaye,
+                                      membreIds: cotisations.where((c) => c.estPaye).map((c) => c.membreId).toList(),
+                                    ),
+                              );
+                              if (result != null && context.mounted) {
+                                setState(() {});
+                                ConfirmActionDialog.showResultSnackBar(context, result);
+                              }
+                            } catch (e) {
+                              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+                            }
+                          },
                           child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.danger,
-                              side: const BorderSide(color: AppColors.danger),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
+                            style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger, side: const BorderSide(color: AppColors.danger), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 12)),
                             icon: const Icon(Icons.remove_done),
                             label: const Text('Tout annuler'),
-                            onPressed: () {}, // Géré par SpringButton
+                            onPressed: () {},
                           ),
                         ),
                       ),
@@ -505,10 +421,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: AppColors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
                 onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
@@ -529,16 +442,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                         backgroundColor: AppColors.surface,
                         selectedColor: AppColors.primary.withValues(alpha: 0.15),
                         checkmarkColor: AppColors.primary,
-                        labelStyle: TextStyle(
-                          color: selected ? AppColors.primary : AppColors.textSecondary,
-                          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: selected ? AppColors.primary : AppColors.border,
-                          ),
-                        ),
+                        labelStyle: TextStyle(color: selected ? AppColors.primary : AppColors.textSecondary, fontWeight: selected ? FontWeight.bold : FontWeight.normal),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: selected ? AppColors.primary : AppColors.border)),
                       ),
                     );
                   }).toList(),
@@ -546,24 +451,16 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
               ),
               const SizedBox(height: 16),
               if (membres.isEmpty)
-                const EmptyState(
-                  icon: Icons.people_outline,
-                  titre: 'Aucun membre enregistré',
-                  sousTitre: 'Ajoutez des membres pour gérer les paiements.',
-                )
+                const EmptyState(icon: Icons.people_outline, titre: 'Aucun membre enregistré', sousTitre: 'Ajoutez des membres pour gérer les paiements.')
               else
                 ...(() {
                   final filteredMembres = membres.where((m) {
                     final matchesSearch = m.nomComplet.toLowerCase().contains(_searchQuery);
                     final cotisation = cotisations.firstWhere(
                       (c) => c.membreId == m.id,
-                      orElse: () => Cotisation()
-                        ..membreId = m.id
-                        ..culteId = widget.culteId
-                        ..statut = StatutCotisation.nonPaye,
+                      orElse: () => Cotisation()..membreId = m.id..culteId = widget.culteId..statut = StatutCotisation.nonPaye,
                     );
                     final estPaye = cotisation.estPaye;
-
                     if (!matchesSearch) return false;
                     if (_filter == 'Payés') return estPaye;
                     if (_filter == 'Non payés') return cotisation.statut == StatutCotisation.nonPaye;
@@ -572,58 +469,25 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                   }).toList();
 
                   if (filteredMembres.isEmpty) {
-                    return [
-                      const Padding(
-                        padding: EdgeInsets.only(top: 32),
-                        child: EmptyState(
-                          icon: Icons.search_off,
-                          titre: 'Aucun membre trouvé',
-                          sousTitre: 'Essayez une autre recherche ou un autre filtre.',
-                        ),
-                      ),
-                    ];
+                    return [const Padding(padding: EdgeInsets.only(top: 32), child: EmptyState(icon: Icons.search_off, titre: 'Aucun membre trouvé', sousTitre: 'Essayez une autre recherche ou un autre filtre.'))];
                   }
 
                   return filteredMembres.asMap().entries.map((entry) {
-                    // final index = entry.key;
                     final membre = entry.value;
                     final cotisation = cotisations.firstWhere(
                       (c) => c.membreId == membre.id,
-                      orElse: () => Cotisation()
-                        ..membreId = membre.id
-                        ..culteId = widget.culteId
-                        ..statut = StatutCotisation.nonPaye,
+                      orElse: () => Cotisation()..membreId = membre.id..culteId = widget.culteId..statut = StatutCotisation.nonPaye,
                     );
-                    // Le paiement est verrouillé si le culte a > 30 jours ET qu'il est payé
                     final memberIsLocked = isOlderThan30Days && cotisation.estPaye;
-
                     return MemberPayTile(
                       membre: membre,
                       statut: cotisation.statut,
                       isLocked: memberIsLocked,
                       montantPaye: cotisation.montantPaye,
                       montantObligatoire: cotisation.montantObligatoire,
-                      onToggle: () {
-                        if (memberIsLocked) return;
-                        ref.read(appDataProvider.notifier).togglePaiement(
-                              membreId: membre.id,
-                              culteId: widget.culteId,
-                            );
-                      },
-                      onMarkAbsent: () {
-                        if (memberIsLocked) return;
-                        ref.read(appDataProvider.notifier).marquerAbsent(
-                              membreId: membre.id,
-                              culteId: widget.culteId,
-                            );
-                      },
-                      onCustomPayment: memberIsLocked
-                          ? null
-                          : () => _showCustomPayment(context,
-                                membre: membre,
-                                culteId: widget.culteId,
-                                montantObligatoire: cotisation.montantObligatoire,
-                                montantActuel: cotisation.montantPaye),
+                      onToggle: () { if (memberIsLocked) return; ref.read(appDataProvider.notifier).togglePaiement(membreId: membre.id, culteId: widget.culteId); },
+                      onMarkAbsent: () { if (memberIsLocked) return; ref.read(appDataProvider.notifier).marquerAbsent(membreId: membre.id, culteId: widget.culteId); },
+                      onCustomPayment: memberIsLocked ? null : () => _showCustomPayment(context, membre: membre, culteId: widget.culteId, montantObligatoire: cotisation.montantObligatoire, montantActuel: cotisation.montantPaye),
                     );
                   }).toList();
                 }()),
@@ -636,10 +500,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
     );
   }
 
-  /// Valide en masse les membres sélectionnés
   Future<void> _validerSelection() async {
     if (_selectedMembres.isEmpty || _isValidingSelection) return;
-
     setState(() => _isValidingSelection = true);
     try {
       final result = await ConfirmActionDialog.show(
@@ -652,69 +514,36 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
               membreIds: _selectedMembres.toList(),
             ),
       );
-
       if (result != null && context.mounted) {
         ConfirmActionDialog.showResultSnackBar(context, result);
-        setState(() {
-          _selectedMembres.clear();
-          _selectionMode = false;
-        });
+        setState(() { _selectedMembres.clear(); _selectionMode = false; });
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
-      }
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
     } finally {
       if (mounted) setState(() => _isValidingSelection = false);
     }
   }
 
-  /// Ouvre la boîte de dialogue de paiement personnalisé via
-  /// [PaiementPersonnelDialog], puis persiste via
-  /// [AppData.enregistrerPaiementPersonnel] et affiche le résultat.
-  Future<void> _showCustomPayment(
-    BuildContext context, {
+  Future<void> _showCustomPayment(BuildContext context, {
     required Membre membre,
     required String culteId,
     required double montantObligatoire,
     required double montantActuel,
   }) async {
     if (_isProcessing) return;
-
-    final result = await PaiementPersonnelDialog.show(
-      context,
-      membreNom: membre.nomComplet,
-      montantObligatoire: montantObligatoire,
-      montantActuel: montantActuel,
-    );
-
+    final result = await PaiementPersonnelDialog.show(context, membreNom: membre.nomComplet, montantObligatoire: montantObligatoire, montantActuel: montantActuel);
     if (result == null || !context.mounted) return;
-
     setState(() => _isProcessing = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
-            membreId: membre.id,
-            culteId: culteId,
-            montant: result,
-          );
+      await ref.read(appDataProvider.notifier).enregistrerPaiementPersonnel(membreId: membre.id, culteId: culteId, montant: result);
       final don = result - montantObligatoire;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(don > 0
-              ? 'Paiement de ${result.toStringAsFixed(0)} F enregistré (don : ${don.toStringAsFixed(0)} F).'
-              : 'Paiement de ${result.toStringAsFixed(0)} F enregistré.'),
-        ),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(don > 0 ? 'Paiement de ${result.toStringAsFixed(0)} F enregistré (don : ${don.toStringAsFixed(0)} F).' : 'Paiement de ${result.toStringAsFixed(0)} F enregistré.')));
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))));
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 }
-
