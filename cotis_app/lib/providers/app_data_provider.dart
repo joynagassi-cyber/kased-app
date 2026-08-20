@@ -184,6 +184,21 @@ class AppData extends _$AppData {
     ref.onDispose(() {
       _connectivitySubscription?.cancel();
       _realtimeService.removeListener((event) {});
+      _realtimeService.disconnect();
+    });
+
+    // S'abonner aux changements d'auth pour connecter/déconnecter le realtime
+    ref.listen(authProvider, (previous, next) {
+      if (next.isAuthenticated && next.token != null && next.userEmail != null) {
+        debugPrint('[AppData] Auth connecté, initialization du realtime');
+        _realtimeService.connect(
+          token: next.token!,
+          email: next.userEmail!,
+        );
+      } else if (!next.isAuthenticated) {
+        debugPrint('[AppData] Auth déconnecté, déconnexion du realtime');
+        _realtimeService.disconnect();
+      }
     });
 
     // Charger d'abord les données locales
