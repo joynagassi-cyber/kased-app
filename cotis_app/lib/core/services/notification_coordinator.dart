@@ -11,8 +11,9 @@ import 'package:kased_app/models/membre.dart';
 /// Centralise tous les appels a [NotificationService] pour eviter de les
 /// disperser dans les providers et controllers.
 ///
-/// Pour les notifications in-app (panneau), un callback [onInAppNotify]
-/// peut etre fourni — il est appelle avec les donnees de notification.
+/// Les methodes sont statiques pour etre utilisees depuis les controllers
+/// (qui n'ont pas acces a un provider Riverpod). Pour les notifications
+/// in-app, le provider AppData cree une instance avec un callback.
 class NotificationCoordinator {
   final void Function({
     required String titre,
@@ -22,6 +23,8 @@ class NotificationCoordinator {
   })? onInAppNotify;
 
   NotificationCoordinator({this.onInAppNotify});
+
+  // ─── Static methods for controllers ────────────────────────────────────────
 
   /// Planifie les notifications d anniversaire pour une liste de membres.
   static void planifierAnniversairesMembres(List<Membre> membres) {
@@ -44,8 +47,8 @@ class NotificationCoordinator {
     unawaited(NotificationService.annulerAnniversaire(membreId));
   }
 
-  /// Affiche une notification de creation de membre.
-  void notifierCreationMembre(Membre membre) {
+  /// Affiche une notification de creation de membre (systeme uniquement).
+  static void notifierCreationMembre(Membre membre) {
     final nomComplet = '${membre.prenom} ${membre.nom}';
     _showSystem(
       title: 'Nouveau membre',
@@ -53,16 +56,10 @@ class NotificationCoordinator {
       channelId: 'membres',
       channelName: 'Membres',
     );
-    _showInApp(
-      titre: 'Nouveau membre',
-      message: '$nomComplet a rejoint l\'eglise',
-      typeEvenement: 'membre_ajoute',
-      entiteId: membre.id,
-    );
   }
 
-  /// Affiche une notification de creation de culte.
-  void notifierCreationCulte(Culte culte) {
+  /// Affiche une notification de creation de culte (systeme uniquement).
+  static void notifierCreationCulte(Culte culte) {
     final titreCulte = culte.titre != null ? ' : ${culte.titre}' : '';
     final body = 'Nouveau culte${titreCulte.isNotEmpty ? titreCulte : ''} - ${DateFormat('dd/MM/yyyy').format(culte.dateCulte)}';
     _showSystem(
@@ -71,6 +68,59 @@ class NotificationCoordinator {
       channelId: 'cultes',
       channelName: 'Cultes',
     );
+  }
+
+  /// Affiche une notification de don enregistre (systeme uniquement).
+  static void notifierDonEnregistre(double montantDon, String membreNom) {
+    _showSystem(
+      title: 'Don enregistre',
+      body: '$membreNom a fait un don de ${montantDon.toStringAsFixed(0)} F',
+      channelId: 'paiements',
+      channelName: 'Paiements',
+    );
+  }
+
+  /// Affiche une notification de paiement par avance (systeme uniquement).
+  static void notifierPaiementAvance(double montant, String membreNom) {
+    _showSystem(
+      title: 'Paiement en avance',
+      body: '$membreNom a paye ${montant.toStringAsFixed(0)} F en avance',
+      channelId: 'paiements',
+      channelName: 'Paiements',
+    );
+  }
+
+  /// Affiche une notification de mise a jour de paiements (bulk).
+  static void notifierPaiementsEnMasse(int success, String actionText) {
+    if (success > 0) {
+      _showSystem(
+        title: 'Paiements mis a jour',
+        body: '$success paiement(s) $actionText',
+        channelId: 'paiements',
+        channelName: 'Paiements',
+      );
+    }
+  }
+
+  // ─── Instance methods (system + in-app) ────────────────────────────────────
+
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierCreationMembreFull(Membre membre) {
+    notifierCreationMembre(membre);
+    final nomComplet = '${membre.prenom} ${membre.nom}';
+    _showInApp(
+      titre: 'Nouveau membre',
+      message: '$nomComplet a rejoint l\'eglise',
+      typeEvenement: 'membre_ajoute',
+      entiteId: membre.id,
+    );
+  }
+
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierCreationCulteFull(Culte culte) {
+    notifierCreationCulte(culte);
+    final titreCulte = culte.titre != null ? ' : ${culte.titre}' : '';
+    final body = 'Nouveau culte${titreCulte.isNotEmpty ? titreCulte : ''} - ${DateFormat('dd/MM/yyyy').format(culte.dateCulte)}';
     _showInApp(
       titre: 'Nouveau culte',
       message: body,
@@ -79,14 +129,9 @@ class NotificationCoordinator {
     );
   }
 
-  /// Affiche une notification de don enregistre.
-  void notifierDonEnregistre(double montantDon, String membreNom) {
-    _showSystem(
-      title: 'Don enregistre',
-      body: '$membreNom a fait un don de ${montantDon.toStringAsFixed(0)} F',
-      channelId: 'paiements',
-      channelName: 'Paiements',
-    );
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierDonEnregistreFull(double montantDon, String membreNom) {
+    notifierDonEnregistre(montantDon, membreNom);
     _showInApp(
       titre: 'Don enregistre',
       message: '$membreNom a fait un don de ${montantDon.toStringAsFixed(0)} F',
@@ -94,14 +139,9 @@ class NotificationCoordinator {
     );
   }
 
-  /// Affiche une notification de paiement par avance.
-  void notifierPaiementAvance(double montant, String membreNom) {
-    _showSystem(
-      title: 'Paiement en avance',
-      body: '$membreNom a paye ${montant.toStringAsFixed(0)} F en avance',
-      channelId: 'paiements',
-      channelName: 'Paiements',
-    );
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierPaiementAvanceFull(double montant, String membreNom) {
+    notifierPaiementAvance(montant, membreNom);
     _showInApp(
       titre: 'Paiement en avance',
       message: '$membreNom a paye ${montant.toStringAsFixed(0)} F en avance',
@@ -109,15 +149,10 @@ class NotificationCoordinator {
     );
   }
 
-  /// Affiche une notification de mise a jour de paiements (bulk).
-  void notifierPaiementsEnMasse(int success, String actionText) {
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierPaiementsEnMasseFull(int success, String actionText) {
+    notifierPaiementsEnMasse(success, actionText);
     if (success > 0) {
-      _showSystem(
-        title: 'Paiements mis a jour',
-        body: '$success paiement(s) $actionText',
-        channelId: 'paiements',
-        channelName: 'Paiements',
-      );
       _showInApp(
         titre: 'Paiements mis a jour',
         message: '$success paiement(s) $actionText',
@@ -126,8 +161,9 @@ class NotificationCoordinator {
     }
   }
 
-  /// Affiche une notification systeme (status bar).
-  void _showSystem({
+  // ─── Helpers ───────────────────────────────────────────────────────────────
+
+  static void _showSystem({
     required String title,
     required String body,
     String channelId = 'default',
@@ -141,7 +177,6 @@ class NotificationCoordinator {
     ));
   }
 
-  /// Ajoute une notification in-app (panneau de notifications).
   void _showInApp({
     required String titre,
     required String message,

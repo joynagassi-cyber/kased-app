@@ -119,7 +119,7 @@ class AppData extends _$AppData {
 
     // Notification coordinator — connect system + in-app notifications
     _notifCoordinator = NotificationCoordinator(
-      onInAppNotify: (titre, message, typeEvenement, entiteId) {
+      onInAppNotify: ({required titre, required message, required typeEvenement, entiteId}) {
         ref.read(notificationsProvider.notifier).ajouter(
           titre: titre,
           message: message,
@@ -196,7 +196,7 @@ class AppData extends _$AppData {
     await _cache.purgeOldCorbeilleItems(limitePurge);
 
     // Planifier les notifications d'anniversaire
-    _notifCoordinator.planifierAnniversairesMembres(localMembres);
+    NotificationCoordinator.planifierAnniversairesMembres(localMembres);
 
     final initialState = AppState(
       membres: localMembres,
@@ -282,7 +282,7 @@ class AppData extends _$AppData {
     ));
 
     // Planifier les notifications anniversaires pour les membres mergés
-    _notifCoordinator.planifierAnniversairesMembres(result.mergedMembres);
+    NotificationCoordinator.planifierAnniversairesMembres(result.mergedMembres);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -369,8 +369,8 @@ class AppData extends _$AppData {
         ..sort((a, b) => a.nom.compareTo(b.nom)),
     ));
 
-    _notifCoordinator.planifierAnniversaireMembre(newMembre);
-    _notifCoordinator.notifierCreationMembre(newMembre);
+    NotificationCoordinator.planifierAnniversaireMembre(newMembre);
+    _notifCoordinator.notifierCreationMembreFull(newMembre);
     await loadDashboard();
     unawaited(_notifierPush('membre_ajoute', newMembre.nomComplet));
 
@@ -423,9 +423,9 @@ class AppData extends _$AppData {
     state = AsyncValue.data(current.copyWith(membres: sortedMembres));
 
     if (updated.dateNaissance != null) {
-      _notifCoordinator.planifierAnniversaireMembre(updated);
+      NotificationCoordinator.planifierAnniversaireMembre(updated);
     } else {
-      _notifCoordinator.annulerAnniversaireMembre(id);
+      NotificationCoordinator.annulerAnniversaireMembre(id);
     }
     unawaited(_notifierPush('membre_modifie', updated.nomComplet));
   }
@@ -494,7 +494,7 @@ class AppData extends _$AppData {
     }
     
     // Notification
-    _notifCoordinator.notifierPaiementAvance(montant, updated.nomComplet);
+    _notifCoordinator.notifierPaiementAvanceFull(montant, updated.nomComplet);
   }
 
   Future<void> deleteMembre(String id) async {
@@ -546,7 +546,7 @@ class AppData extends _$AppData {
       membres: updatedMembres,
     ));
 
-    _notifCoordinator.notifierCreationCulte(newCulte);
+    _notifCoordinator.notifierCreationCulteFull(newCulte);
     await loadDashboard();
     unawaited(_notifierPush('culte_cree', _formatDate(newCulte.dateCulte)));
   }
@@ -904,7 +904,7 @@ class AppData extends _$AppData {
         state = AsyncValue.data(currentAfterCot.copyWith(membres: updatedMembres));
       }
       final membreNom = membreWithDon?.nomComplet ?? membreId;
-      _notifCoordinator.notifierDonEnregistre(montantDon, membreId, membreNom: membreNom);
+      _notifCoordinator.notifierDonEnregistreFull(montantDon, membreNom);
     }
 
     // Synchroniser avec le serveur
@@ -1037,7 +1037,7 @@ class AppData extends _$AppData {
     // Notification de mise à jour des paiements
     final actionText =
         newStatut == StatutCotisation.paye ? 'payé(s)' : 'annulé(s)';
-    _notifCoordinator.notifierPaiementsEnMasse(success, actionText);
+    _notifCoordinator.notifierPaiementsEnMasseFull(success, actionText);
 
     // Notification push aux autres utilisateurs (non bloquant)
     unawaited(_notifierPush(
@@ -1290,7 +1290,7 @@ class AppData extends _$AppData {
         .whereType<Culte>()
         .map((c) => c.dateFormatee)
         .join(', ');
-    _notifCoordinator.notifierPaiementAvance(montantTotal, notifMembre?.nomComplet ?? membreId);
+    _notifCoordinator.notifierPaiementAvanceFull(montantTotal, notifMembre?.nomComplet ?? membreId);
     unawaited(_notifierPush(
       'cotisation_en_avance',
       notifMembre?.nomComplet ?? membreId,

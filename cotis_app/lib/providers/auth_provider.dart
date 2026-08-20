@@ -141,8 +141,8 @@ class Auth extends _$Auth {
   /// Appelé périodiquement pour éviter les déconnexions dues
   /// à l'expiry du JWT (15 min par défaut sur InsForge).
   Future<void> refreshTokenIfNeeded() async {
-    final current = state.value;
-    if (current == null || !current.isAuthenticated) return;
+    final current = state;
+    if (!current.isAuthenticated) return;
     if (current.token == null || current.refreshToken == null) return;
 
     final expired = _isTokenExpired(current.token!);
@@ -451,11 +451,8 @@ class Auth extends _$Auth {
     _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
       await refreshTokenIfNeeded();
     });
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    super.dispose();
+    ref.onDispose(() {
+      _refreshTimer?.cancel();
+    });
   }
 }
