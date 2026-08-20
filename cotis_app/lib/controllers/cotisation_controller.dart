@@ -213,7 +213,7 @@ class CotisationController {
         await _cache.saveMembreWithSyncOp(updatedMembre, syncOp);
       }
       final membreNom = membreWithDon?.nomComplet ?? membreId;
-      NotificationCoordinator.notifierDonEnregistre(montantDon, membreId, membreNom: membreNom);
+      NotificationCoordinator.notifierDonEnregistre(montantDon, membreNom);
     }
 
     // Synchroniser avec le serveur
