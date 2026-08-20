@@ -174,16 +174,16 @@ class AppData extends _$AppData {
     });
 
     // Écouter les événements temps réel → forcer un rechargement
-    _realtimeService.addListener(() {
+    _realtimeService.addListener((event) {
       if (state.value?.isOffline != true) {
-        debugPrint('[AppData] Événement realtime reçu → rechargement');
+        debugPrint('[AppData] Événement realtime reçu → rechargement (${event.table}: ${event.action})');
         syncData();
       }
     });
 
     ref.onDispose(() {
       _connectivitySubscription?.cancel();
-      _realtimeService.removeListener(() {});
+      _realtimeService.removeListener((event) {});
     });
 
     // Charger d'abord les données locales
