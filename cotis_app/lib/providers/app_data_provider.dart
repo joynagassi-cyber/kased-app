@@ -10,6 +10,7 @@ import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/isar_local_cache.dart';
 import 'package:kased_app/core/realtime/realtime_service.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
+import 'notifications_provider.dart';
 import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/services/stats_service.dart';
 import 'package:kased_app/core/services/sync_service.dart';
@@ -83,6 +84,7 @@ class AppData extends _$AppData {
   late CotisationController _cotisationController;
   late SystemController _systemController;
   late DeviceServicePort _deviceServicePort;
+  late NotificationCoordinator _notifCoordinator;
   StreamSubscription? _connectivitySubscription;
 
   @visibleForTesting
@@ -114,6 +116,18 @@ class AppData extends _$AppData {
     _syncService = SyncService(_api, _cache);
     _statsService = StatsService();
     _realtimeService = RealtimeService();
+
+    // Notification coordinator — connect system + in-app notifications
+    _notifCoordinator = NotificationCoordinator(
+      onInAppNotify: (titre, message, typeEvenement, entiteId) {
+        ref.read(notificationsProvider.notifier).ajouter(
+          titre: titre,
+          message: message,
+          typeEvenement: typeEvenement,
+          entiteId: entiteId,
+        );
+      },
+    );
 
     // Initialize controllers
     _membreController = MembreController(
@@ -182,7 +196,7 @@ class AppData extends _$AppData {
     await _cache.purgeOldCorbeilleItems(limitePurge);
 
     // Planifier les notifications d'anniversaire
-    NotificationCoordinator.planifierAnniversairesMembres(localMembres);
+    _notifCoordinator.planifierAnniversairesMembres(localMembres);
 
     final initialState = AppState(
       membres: localMembres,
@@ -268,7 +282,7 @@ class AppData extends _$AppData {
     ));
 
     // Planifier les notifications anniversaires pour les membres mergés
-    NotificationCoordinator.planifierAnniversairesMembres(result.mergedMembres);
+    _notifCoordinator.planifierAnniversairesMembres(result.mergedMembres);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -355,8 +369,8 @@ class AppData extends _$AppData {
         ..sort((a, b) => a.nom.compareTo(b.nom)),
     ));
 
-    NotificationCoordinator.planifierAnniversaireMembre(newMembre);
-    NotificationCoordinator.notifierCreationMembre(newMembre);
+    _notifCoordinator.planifierAnniversaireMembre(newMembre);
+    _notifCoordinator.notifierCreationMembre(newMembre);
     await loadDashboard();
     unawaited(_notifierPush('membre_ajoute', newMembre.nomComplet));
 
@@ -409,9 +423,9 @@ class AppData extends _$AppData {
     state = AsyncValue.data(current.copyWith(membres: sortedMembres));
 
     if (updated.dateNaissance != null) {
-      NotificationCoordinator.planifierAnniversaireMembre(updated);
+      _notifCoordinator.planifierAnniversaireMembre(updated);
     } else {
-      NotificationCoordinator.annulerAnniversaireMembre(id);
+      _notifCoordinator.annulerAnniversaireMembre(id);
     }
     unawaited(_notifierPush('membre_modifie', updated.nomComplet));
   }
@@ -480,7 +494,7 @@ class AppData extends _$AppData {
     }
     
     // Notification
-    NotificationCoordinator.notifierPaiementAvance(montant, updated.nomComplet);
+    _notifCoordinator.notifierPaiementAvance(montant, updated.nomComplet);
   }
 
   Future<void> deleteMembre(String id) async {
@@ -532,7 +546,7 @@ class AppData extends _$AppData {
       membres: updatedMembres,
     ));
 
-    NotificationCoordinator.notifierCreationCulte(newCulte);
+    _notifCoordinator.notifierCreationCulte(newCulte);
     await loadDashboard();
     unawaited(_notifierPush('culte_cree', _formatDate(newCulte.dateCulte)));
   }
@@ -890,7 +904,7 @@ class AppData extends _$AppData {
         state = AsyncValue.data(currentAfterCot.copyWith(membres: updatedMembres));
       }
       final membreNom = membreWithDon?.nomComplet ?? membreId;
-      NotificationCoordinator.notifierDonEnregistre(montantDon, membreId, membreNom: membreNom);
+      _notifCoordinator.notifierDonEnregistre(montantDon, membreId, membreNom: membreNom);
     }
 
     // Synchroniser avec le serveur
@@ -1023,7 +1037,7 @@ class AppData extends _$AppData {
     // Notification de mise à jour des paiements
     final actionText =
         newStatut == StatutCotisation.paye ? 'payé(s)' : 'annulé(s)';
-    NotificationCoordinator.notifierPaiementsEnMasse(success, actionText);
+    _notifCoordinator.notifierPaiementsEnMasse(success, actionText);
 
     // Notification push aux autres utilisateurs (non bloquant)
     unawaited(_notifierPush(
@@ -1276,7 +1290,7 @@ class AppData extends _$AppData {
         .whereType<Culte>()
         .map((c) => c.dateFormatee)
         .join(', ');
-    NotificationCoordinator.notifierPaiementAvance(montantTotal, notifMembre?.nomComplet ?? membreId);
+    _notifCoordinator.notifierPaiementAvance(montantTotal, notifMembre?.nomComplet ?? membreId);
     unawaited(_notifierPush(
       'cotisation_en_avance',
       notifMembre?.nomComplet ?? membreId,

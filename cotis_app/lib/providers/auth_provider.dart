@@ -71,6 +71,7 @@ FlutterSecureStorage secureStorage(SecureStorageRef ref) {
 class Auth extends _$Auth {
   late FlutterSecureStorage _storage;
   late AuthService _authService;
+  Timer? _refreshTimer;
 
   @override
   AuthState build() {
@@ -81,12 +82,19 @@ class Auth extends _$Auth {
     // Le provider retourne isLoading=true immédiatement, puis met à jour
     unawaited(_checkPersistedAuth());
 
+    // Démarrer le timer de refresh proactif (toutes les 5 min)
+    // Pour éviter les déconnexions dues au JWT expire à 15 min
+    _startRefreshTimer();
+
     return const AuthState(isLoading: true);
   }
 
-  /// Décode un JWT et retourne true si le token est expiré.
-  /// Ne fait aucun appel réseau.
-  bool _isTokenExpired(String token) {
+  /// Décode un JWT et retourne true si le token est expiré OU va expirer
+  /// dans les prochaines [graceMinutes] minutes.
+  ///
+  /// On anticipa le refresh pour éviter de déconnecter l'utilisateur
+  /// pendant qu'il utilise l'app.
+  bool _isTokenExpired(String token, {int graceMinutes = 5}) {
     try {
       final parts = token.split('.');
       if (parts.length != 3) return true;
@@ -103,10 +111,13 @@ class Auth extends _$Auth {
 
       final expiryDate =
           DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
-      return DateTime.now().toUtc().isAfter(expiryDate);
+      final now = DateTime.now().toUtc();
+      // Retirer la marge de grace pour anticiper le refresh
+      final effectiveExpiry = expiryDate.subtract(Duration(minutes: graceMinutes));
+      return now.isAfter(effectiveExpiry);
     } catch (e) {
       debugPrint('[AUTH] Erreur décodage JWT : $e');
-      return false; // En cas d'erreur, ne pas déconnecter
+      return false;
     }
   }
 
@@ -124,6 +135,24 @@ class Auth extends _$Auth {
   /// et au retour du background.
   Future<void> checkPersistedAuth() async {
     await _checkPersistedAuth();
+  }
+
+  /// Force un refresh du token si le device est en ligne.
+  /// Appelé périodiquement pour éviter les déconnexions dues
+  /// à l'expiry du JWT (15 min par défaut sur InsForge).
+  Future<void> refreshTokenIfNeeded() async {
+    final current = state.value;
+    if (current == null || !current.isAuthenticated) return;
+    if (current.token == null || current.refreshToken == null) return;
+
+    final expired = _isTokenExpired(current.token!);
+    if (!expired) return; // Token encore valide
+
+    final online = await _isOnline();
+    if (!online) return; // Pas réseau → on garde le token local
+
+    debugPrint('[AUTH] Refresh proactif du token (grace period)');
+    await refreshSession(current.refreshToken!);
   }
 
   Future<void> _checkPersistedAuth() async {
@@ -415,5 +444,18 @@ class Auth extends _$Auth {
       isAuthenticated: false,
       isLoading: false,
     );
+  }
+
+  void _startRefreshTimer() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
+      await refreshTokenIfNeeded();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 }
