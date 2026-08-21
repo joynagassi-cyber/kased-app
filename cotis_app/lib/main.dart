@@ -57,13 +57,10 @@ Future<void> main() async {
           ..tracesSampleRate = 0.1
           ..beforeSend = (event, hint) {
             // Ne pas envoyer les erreurs de timeout OneSignal/Realtime
-            final exception = hint?.exception;
-            if (exception != null) {
-              final msg = exception.toString();
-              if (msg.contains('timeout') ||
-                  msg.contains('TimeoutException')) {
-                return null;
-              }
+            final exception = event.exceptions?.firstOrNull?.toString() ?? '';
+            if (exception.contains('timeout') ||
+                exception.contains('TimeoutException')) {
+              return null;
             }
             return event;
           };
