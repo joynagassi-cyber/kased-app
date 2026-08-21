@@ -212,8 +212,8 @@ class StatsService {
       }
     }
 
-    result.sort((a, b) => (b['montant_du_fcfa'] as double)
-        .compareTo(a['montant_du_fcfa'] as double));
+    result.sort((a, b) => ((b['montant_du_fcfa'] as num?)?.toDouble() ?? 0.0)
+        .compareTo((a['montant_du_fcfa'] as num?)?.toDouble() ?? 0.0));
     return result;
   }
 

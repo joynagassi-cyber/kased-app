@@ -62,18 +62,13 @@ const SyncOperationSchema = CollectionSchema(
       name: r'payloadJson',
       type: IsarType.string,
     ),
-    r'retryCount': PropertySchema(
-      id: 9,
-      name: r'retryCount',
-      type: IsarType.long,
-    ),
     r'type': PropertySchema(
-      id: 10,
+      id: 9,
       name: r'type',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 11,
+      id: 10,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -83,7 +78,47 @@ const SyncOperationSchema = CollectionSchema(
   deserialize: _syncOperationDeserialize,
   deserializeProp: _syncOperationDeserializeProp,
   idName: r'isarId',
-  indexes: {},
+  indexes: {
+    r'entityType': IndexSchema(
+      id: -5109706325448941117,
+      name: r'entityType',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'entityType',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'entityId': IndexSchema(
+      id: 745355021660786263,
+      name: r'entityId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'entityId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'isSynced': IndexSchema(
+      id: -39763503327887510,
+      name: r'isSynced',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'isSynced',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _syncOperationGetId,
@@ -128,9 +163,8 @@ void _syncOperationSerialize(
   writer.writeString(offsets[6], object.lastError);
   writer.writeString(offsets[7], object.operationId);
   writer.writeString(offsets[8], object.payloadJson);
-  writer.writeLong(offsets[9], object.retryCount);
-  writer.writeString(offsets[10], object.type);
-  writer.writeDateTime(offsets[11], object.updatedAt);
+  writer.writeString(offsets[9], object.type);
+  writer.writeDateTime(offsets[10], object.updatedAt);
 }
 
 SyncOperation _syncOperationDeserialize(
@@ -150,9 +184,8 @@ SyncOperation _syncOperationDeserialize(
   object.lastError = reader.readStringOrNull(offsets[6]);
   object.operationId = reader.readString(offsets[7]);
   object.payloadJson = reader.readString(offsets[8]);
-  object.retryCount = reader.readLong(offsets[9]);
-  object.type = reader.readString(offsets[10]);
-  object.updatedAt = reader.readDateTimeOrNull(offsets[11]);
+  object.type = reader.readString(offsets[9]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[10]);
   return object;
 }
 
@@ -182,10 +215,8 @@ P _syncOperationDeserializeProp<P>(
     case 8:
       return (reader.readString(offset)) as P;
     case 9:
-      return (reader.readLong(offset)) as P;
-    case 10:
       return (reader.readString(offset)) as P;
-    case 11:
+    case 10:
       return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -210,6 +241,14 @@ extension SyncOperationQueryWhereSort
   QueryBuilder<SyncOperation, SyncOperation, QAfterWhere> anyIsarId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterWhere> anyIsSynced() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'isSynced'),
+      );
     });
   }
 }
@@ -281,6 +320,141 @@ extension SyncOperationQueryWhere
         upper: upperIsarId,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterWhereClause>
+      entityTypeEqualTo(String entityType) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'entityType',
+        value: [entityType],
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterWhereClause>
+      entityTypeNotEqualTo(String entityType) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityType',
+              lower: [],
+              upper: [entityType],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityType',
+              lower: [entityType],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityType',
+              lower: [entityType],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityType',
+              lower: [],
+              upper: [entityType],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterWhereClause> entityIdEqualTo(
+      String entityId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'entityId',
+        value: [entityId],
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterWhereClause>
+      entityIdNotEqualTo(String entityId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityId',
+              lower: [],
+              upper: [entityId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityId',
+              lower: [entityId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityId',
+              lower: [entityId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityId',
+              lower: [],
+              upper: [entityId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterWhereClause> isSyncedEqualTo(
+      bool isSynced) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'isSynced',
+        value: [isSynced],
+      ));
+    });
+  }
+
+  QueryBuilder<SyncOperation, SyncOperation, QAfterWhereClause>
+      isSyncedNotEqualTo(bool isSynced) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'isSynced',
+              lower: [],
+              upper: [isSynced],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'isSynced',
+              lower: [isSynced],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'isSynced',
+              lower: [isSynced],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'isSynced',
+              lower: [],
+              upper: [isSynced],
+              includeUpper: false,
+            ));
+      }
     });
   }
 }
@@ -1253,62 +1427,6 @@ extension SyncOperationQueryFilter
     });
   }
 
-  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
-      retryCountEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'retryCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
-      retryCountGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'retryCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
-      retryCountLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'retryCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition>
-      retryCountBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'retryCount',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
   QueryBuilder<SyncOperation, SyncOperation, QAfterFilterCondition> typeEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1644,19 +1762,6 @@ extension SyncOperationQuerySortBy
     });
   }
 
-  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByRetryCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'retryCount', Sort.asc);
-    });
-  }
-
-  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
-      sortByRetryCountDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'retryCount', Sort.desc);
-    });
-  }
-
   QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> sortByType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.asc);
@@ -1814,19 +1919,6 @@ extension SyncOperationQuerySortThenBy
     });
   }
 
-  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByRetryCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'retryCount', Sort.asc);
-    });
-  }
-
-  QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy>
-      thenByRetryCountDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'retryCount', Sort.desc);
-    });
-  }
-
   QueryBuilder<SyncOperation, SyncOperation, QAfterSortBy> thenByType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.asc);
@@ -1915,12 +2007,6 @@ extension SyncOperationQueryWhereDistinct
     });
   }
 
-  QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByRetryCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'retryCount');
-    });
-  }
-
   QueryBuilder<SyncOperation, SyncOperation, QDistinct> distinctByType(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1994,12 +2080,6 @@ extension SyncOperationQueryProperty
   QueryBuilder<SyncOperation, String, QQueryOperations> payloadJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'payloadJson');
-    });
-  }
-
-  QueryBuilder<SyncOperation, int, QQueryOperations> retryCountProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'retryCount');
     });
   }
 

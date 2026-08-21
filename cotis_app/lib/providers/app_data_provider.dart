@@ -418,7 +418,7 @@ class AppData extends _$AppData {
     if (current == null) return;
 
     final membres = current.membres;
-    final existing = membres.firstWhere((m) => m.id == id);
+    final existing = membres.firstWhere((m) => m.id == id, orElse: () => throw Exception('Membre introuvable: $id'));
     final updated = Membre()
       ..id = existing.id
       ..nom = nom ?? existing.nom
@@ -576,7 +576,7 @@ class AppData extends _$AppData {
     final current = state.value;
     if (current == null) return;
 
-    final existing = current.cultes.firstWhere((c) => c.id == id);
+    final existing = current.cultes.firstWhere((c) => c.id == id, orElse: () => throw Exception('Culte introuvable: $id'));
 
     // Verrouillage à 30 jours : interdit de modifier un culte passé
     final isOlderThan30Days =
@@ -669,7 +669,7 @@ class AppData extends _$AppData {
       }
       final existing = existingList.isNotEmpty
           ? existingList.first
-          : current.cultes.firstWhere((c) => c.id == id);
+          : current.cultes.firstWhere((c) => c.id == id, orElse: () => throw Exception('Culte introuvable'));
       final deviceId = await _deviceServicePort.getDeviceId();
       final now = DateTime.now();
 

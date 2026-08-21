@@ -1,12 +1,7 @@
-import 'package:isar/isar.dart';
+// AppNotification is persisted via SharedPreferences in notifications_provider.
+// This model is kept for type compatibility but is NOT an Isar collection.
 
-part 'app_notification.g.dart';
-
-@collection
 class AppNotification {
-  Id isarId = Isar.autoIncrement;
-
-  @Index(unique: true, replace: true)
   late String id;
   late String titre;
   late String message;

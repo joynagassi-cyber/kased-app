@@ -51,13 +51,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
             .where((c) => c.membreId == widget.membreId)
             .toList();
 
-        final cultesPayes = cotisationsMembre.where((c) => c.estPaye).length;
-        final retards = cotisationsMembre
-            .where((c) => c.statut == StatutCotisation.nonPaye)
-            .length;
-        final absences = cotisationsMembre
-            .where((c) => c.statut == StatutCotisation.absent)
-            .length;
+        // ... build method continues
         final totalCultes = state.cultes.where((c) => !c.isDeleted).length;
         final cadence = totalCultes > 0
             ? (cultesPayes / totalCultes) * 100

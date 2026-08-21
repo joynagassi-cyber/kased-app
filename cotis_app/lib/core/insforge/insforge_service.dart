@@ -187,7 +187,7 @@ class InsForgeService {
         'p_montant_cotisation': montantCotisation,
       },
     );
-    return response.data as String; // Retourne l'UUID du culte créé
+    return response.data as String? ?? ''; // Retourne l'UUID du culte créé
   }
 
   Future<void> updateCulte(String id, Map<String, dynamic> data) async {

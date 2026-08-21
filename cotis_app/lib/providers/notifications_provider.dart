@@ -28,10 +28,10 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
         final list = jsonDecode(jsonString) as List;
         final notifs = list
             .map((e) => AppNotification()
-              ..id = e['id'] as String
-              ..titre = e['titre'] as String
-              ..message = e['message'] as String
-              ..date = DateTime.parse(e['date'] as String)
+              ..id = e['id'] as String? ?? ''
+              ..titre = e['titre'] as String? ?? ''
+              ..message = e['message'] as String? ?? ''
+              ..date = DateTime.tryParse(e['date'] as String? ?? '') ?? DateTime.now()
               ..isLue = e['isLue'] as bool? ?? false
               ..typeEvenement = e['typeEvenement'] as String?
               ..entiteId = e['entiteId'] as String?)

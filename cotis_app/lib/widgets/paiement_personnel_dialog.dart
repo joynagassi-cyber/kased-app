@@ -94,7 +94,7 @@ class PaiementPersonnelDialog {
               if (formKey.currentState?.validate() ?? false) {
                 Navigator.pop(
                   dialogContext,
-                  double.parse(controller.text.trim()),
+                  double.tryParse(controller.text.trim()) ?? 0.0,
                 );
               }
             },

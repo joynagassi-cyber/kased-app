@@ -81,20 +81,20 @@ class Cotisation {
       ..montantDon = (json['montant_don'] as num?)?.toDouble() ?? 0.0
       ..datePaiement = json['date_paiement'] == null
           ? null
-          : DateTime.parse(json['date_paiement'] as String)
+          : DateTime.tryParse(json['date_paiement'] as String) ?? DateTime.now()
       ..notes = json['notes'] as String?
       ..updatedAt = json['updated_at'] == null
           ? null
-          : DateTime.parse(json['updated_at'] as String)
+          : DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now()
       ..createdAt = json['created_at'] == null
           ? DateTime.now()
-          : DateTime.parse(json['created_at'] as String)
+          : DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
       ..version = (json['version'] as num?)?.toInt() ?? 1
       ..deviceId = json['device_id'] as String? ?? ''
       ..isDeleted = json['is_deleted'] as bool? ?? false
       ..deletedAt = json['deleted_at'] == null
           ? null
-          : DateTime.parse(json['deleted_at'] as String)
+          : DateTime.tryParse(json['deleted_at'] as String) ?? DateTime.now()
       ..deletedBy = json['deleted_by'] as String?;
   }
 

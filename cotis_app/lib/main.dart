@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'core/notifications/notification_service.dart';
 import 'core/preferences/app_prefs.dart';
@@ -36,84 +37,125 @@ Future<void> main() async {
     debugPrint('[FIREBASE] Initialisation échouée (ignorée, l\'app continue) : $e');
   }
 
-  // Passer les erreurs Flutter à Crashlytics (si Firebase est disponible)
-  if (firebaseReady) {
-    FlutterError.onError = (errorDetails) {
-      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-    };
+  // Sentry est OPTIONNEL : si son initialisation échoue, l'app continue.
+  // Sentry capture les erreurs Flutter/Dart + les crashs natifs.
+  var sentryReady = false;
+  try {
+    await SentryFlutter.init(
+      (options) {
+        options
+          ..dsn = const String.fromEnvironment(
+            'SENTRY_DSN',
+            defaultValue: '',
+          )
+          ..environment = const String.fromEnvironment(
+            'FLUTTER_ENV',
+            defaultValue: 'production',
+          )
+          ..release = 'kased@1.1.9+1'
+          ..dist = '1.1.9+1'
+          ..tracesSampleRate = 0.1
+          ..beforeSend = (event, hint) {
+            // Ne pas envoyer les erreurs de timeout OneSignal/Realtime
+            final exception = hint?.exception;
+            if (exception != null) {
+              final msg = exception.toString();
+              if (msg.contains('timeout') ||
+                  msg.contains('TimeoutException')) {
+                return null;
+              }
+            }
+            return event;
+          };
+      },
+      appRunner: () async {
+        // Passer les erreurs Flutter à Crashlytics (si Firebase est disponible)
+        if (firebaseReady) {
+          FlutterError.onError = (errorDetails) {
+            FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+          };
 
-    // Passer les erreurs non capturées à Crashlytics
-    ui.PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
+          // Passer les erreurs non capturées à Crashlytics
+          ui.PlatformDispatcher.instance.onError = (error, stack) {
+            FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+            return true;
+          };
+        }
+
+        await initializeDateFormatting('fr_FR', null);
+
+        try {
+          await NotificationService.init().timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              debugPrint('[WARN] NotificationService timeout — ignoré');
+            },
+          );
+        } catch (e, stack) {
+          debugPrint('[WARN] NotificationService.init() échoué : $e');
+          if (firebaseReady) {
+            FirebaseCrashlytics.instance.recordError(e, stack);
+          }
+        }
+
+        // OneSignal (push multi-utilisateurs) — initialisation non bloquante :
+        // un échec ne doit jamais empêcher le démarrage de l'application.
+        try {
+          await OneSignalService.instance.initialize().timeout(
+                const Duration(seconds: 5),
+                onTimeout: () {
+                  debugPrint('[WARN] OneSignal initialize timeout — ignoré');
+                },
+              );
+        } catch (e, stack) {
+          debugPrint('[ONESIGNAL] Initialisation échouée (ignorée) : $e');
+          if (firebaseReady) {
+            FirebaseCrashlytics.instance.recordError(e, stack);
+          }
+        }
+
+        // Realtime (Socket.IO) — initialisation non bloquante :
+        // un échec ne doit jamais empêcher le démarrage de l'application.
+        try {
+          RealtimeService().connect().timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              debugPrint('[WARN] RealtimeService.connect timeout — ignoré');
+            },
+          );
+        } catch (e, stack) {
+          debugPrint('[REALTIME] Initialisation échouée (ignorée) : $e');
+          if (firebaseReady) {
+            FirebaseCrashlytics.instance.recordError(e, stack);
+          }
+        }
+
+        runApp(
+          ProviderScope(
+            overrides: [
+              // Initialiser le coordinateur de notifications
+              // Ce provider est utilisé par NotificationCoordinator.init()
+            ],
+            child: const KasedApp(),
+          ),
+        );
+      },
+    );
+    sentryReady = true;
+  } catch (e) {
+    debugPrint('[SENTRY] Initialisation échouée (ignorée, l\'app continue) : $e');
   }
 
   await runZonedGuarded(
-    () async {
-      await initializeDateFormatting('fr_FR', null);
-
-      try {
-        await NotificationService.init().timeout(
-          const Duration(seconds: 5),
-          onTimeout: () {
-            debugPrint('[WARN] NotificationService timeout — ignoré');
-          },
-        );
-      } catch (e, stack) {
-        debugPrint('[WARN] NotificationService.init() échoué : $e');
-        if (firebaseReady) {
-          FirebaseCrashlytics.instance.recordError(e, stack);
-        }
-      }
-
-      // OneSignal (push multi-utilisateurs) — initialisation non bloquante :
-      // un échec ne doit jamais empêcher le démarrage de l'application.
-      try {
-        await OneSignalService.instance.initialize().timeout(
-              const Duration(seconds: 5),
-              onTimeout: () {
-                debugPrint('[WARN] OneSignal initialize timeout — ignoré');
-              },
-            );
-      } catch (e, stack) {
-        debugPrint('[ONESIGNAL] Initialisation échouée (ignorée) : $e');
-        if (firebaseReady) {
-          FirebaseCrashlytics.instance.recordError(e, stack);
-        }
-      }
-
-      // Realtime (Socket.IO) — initialisation non bloquante :
-      // un échec ne doit jamais empêcher le démarrage de l'application.
-      try {
-        RealtimeService().connect().timeout(
-          const Duration(seconds: 5),
-          onTimeout: () {
-            debugPrint('[WARN] RealtimeService.connect timeout — ignoré');
-          },
-        );
-      } catch (e, stack) {
-        debugPrint('[REALTIME] Initialisation échouée (ignorée) : $e');
-        if (firebaseReady) {
-          FirebaseCrashlytics.instance.recordError(e, stack);
-        }
-      }
-
-      runApp(
-        ProviderScope(
-          overrides: [
-            // Initialiser le coordinateur de notifications
-            // Ce provider est utilisé par NotificationCoordinator.init()
-          ],
-          child: const KasedApp(),
-        ),
-      );
-    },
+    () async {},
     (Object error, StackTrace stack) {
       debugPrint('══ ZONE ERROR (non géré) ══');
       debugPrint('Exception : $error');
       if (firebaseReady) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      }
+      if (sentryReady) {
+        Sentry.captureException(error, stackTrace: stack);
       }
     },
   );

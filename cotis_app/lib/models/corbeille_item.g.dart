@@ -53,7 +53,47 @@ const CorbeilleItemSchema = CollectionSchema(
   deserialize: _corbeilleItemDeserialize,
   deserializeProp: _corbeilleItemDeserializeProp,
   idName: r'isarId',
-  indexes: {},
+  indexes: {
+    r'entityId': IndexSchema(
+      id: 745355021660786263,
+      name: r'entityId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'entityId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'entityType': IndexSchema(
+      id: -5109706325448941117,
+      name: r'entityType',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'entityType',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'deletedAt': IndexSchema(
+      id: -8969437169173379604,
+      name: r'deletedAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'deletedAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _corbeilleItemGetId,
@@ -148,6 +188,14 @@ extension CorbeilleItemQueryWhereSort
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhere> anyDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'deletedAt'),
+      );
+    });
+  }
 }
 
 extension CorbeilleItemQueryWhere
@@ -215,6 +263,189 @@ extension CorbeilleItemQueryWhere
         lower: lowerIsarId,
         includeLower: includeLower,
         upper: upperIsarId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause> entityIdEqualTo(
+      String entityId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'entityId',
+        value: [entityId],
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause>
+      entityIdNotEqualTo(String entityId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityId',
+              lower: [],
+              upper: [entityId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityId',
+              lower: [entityId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityId',
+              lower: [entityId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityId',
+              lower: [],
+              upper: [entityId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause>
+      entityTypeEqualTo(String entityType) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'entityType',
+        value: [entityType],
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause>
+      entityTypeNotEqualTo(String entityType) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityType',
+              lower: [],
+              upper: [entityType],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityType',
+              lower: [entityType],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityType',
+              lower: [entityType],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'entityType',
+              lower: [],
+              upper: [entityType],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause>
+      deletedAtEqualTo(DateTime deletedAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'deletedAt',
+        value: [deletedAt],
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause>
+      deletedAtNotEqualTo(DateTime deletedAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'deletedAt',
+              lower: [],
+              upper: [deletedAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'deletedAt',
+              lower: [deletedAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'deletedAt',
+              lower: [deletedAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'deletedAt',
+              lower: [],
+              upper: [deletedAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause>
+      deletedAtGreaterThan(
+    DateTime deletedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'deletedAt',
+        lower: [deletedAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause>
+      deletedAtLessThan(
+    DateTime deletedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'deletedAt',
+        lower: [],
+        upper: [deletedAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<CorbeilleItem, CorbeilleItem, QAfterWhereClause>
+      deletedAtBetween(
+    DateTime lowerDeletedAt,
+    DateTime upperDeletedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'deletedAt',
+        lower: [lowerDeletedAt],
+        includeLower: includeLower,
+        upper: [upperDeletedAt],
         includeUpper: includeUpper,
       ));
     });

@@ -50,22 +50,22 @@ class Culte {
   static Culte fromJson(Map<String, dynamic> json) {
     return Culte()
       ..id = json['id'] as String
-      ..dateCulte = DateTime.parse(json['date_culte'] as String)
+      ..dateCulte = DateTime.tryParse(json['date_culte'] as String) ?? DateTime.now()
       ..titre = json['titre'] as String?
       ..montantCotisation = (json['montant_cotisation'] as num?)?.toDouble() ?? 50.0
       ..notes = json['notes'] as String?
       ..updatedAt = json['updated_at'] == null
           ? null
-          : DateTime.parse(json['updated_at'] as String)
+          : DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now()
       ..createdAt = json['created_at'] == null
           ? DateTime.now()
-          : DateTime.parse(json['created_at'] as String)
+          : DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
       ..version = (json['version'] as num?)?.toInt() ?? 1
       ..deviceId = json['device_id'] as String? ?? ''
       ..isDeleted = json['is_deleted'] as bool? ?? false
       ..deletedAt = json['deleted_at'] == null
           ? null
-          : DateTime.parse(json['deleted_at'] as String)
+          : DateTime.tryParse(json['deleted_at'] as String) ?? DateTime.now()
       ..deletedBy = json['deleted_by'] as String?
       ..memberIds = (json['member_ids'] as List<dynamic>?)
           ?.map((e) => e as String)

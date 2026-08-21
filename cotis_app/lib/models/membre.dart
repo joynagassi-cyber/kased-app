@@ -83,10 +83,10 @@ class Membre {
       ..id = json['id'] as String
       ..nom = json['nom'] as String
       ..prenom = json['prenom'] as String
-      ..dateAdhesion = DateTime.parse(json['date_adhesion'] as String)
+      ..dateAdhesion = DateTime.tryParse(json['date_adhesion'] as String) ?? DateTime.now()
       ..dateNaissance = json['date_naissance'] == null
           ? null
-          : DateTime.parse(json['date_naissance'] as String)
+          : DateTime.tryParse(json['date_naissance'] as String) ?? DateTime.now()
       ..montantEnAvance = (json['montant_en_avance'] as num?)?.toDouble() ?? 0.0
       ..totalDons = (json['total_dons'] as num?)?.toDouble() ?? 0.0
       ..telephone = json['telephone'] as String?
@@ -94,16 +94,16 @@ class Membre {
       ..isActive = json['is_active'] as bool? ?? true
       ..updatedAt = json['updated_at'] == null
           ? null
-          : DateTime.parse(json['updated_at'] as String)
+          : DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now()
       ..createdAt = json['created_at'] == null
           ? DateTime.now()
-          : DateTime.parse(json['created_at'] as String)
+          : DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
       ..version = (json['version'] as num?)?.toInt() ?? 1
       ..deviceId = json['device_id'] as String? ?? ''
       ..isDeleted = json['is_deleted'] as bool? ?? false
       ..deletedAt = json['deleted_at'] == null
           ? null
-          : DateTime.parse(json['deleted_at'] as String)
+          : DateTime.tryParse(json['deleted_at'] as String) ?? DateTime.now()
       ..deletedBy = json['deleted_by'] as String?;
   }
 }

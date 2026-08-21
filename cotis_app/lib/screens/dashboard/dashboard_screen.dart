@@ -695,7 +695,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     for (final r in retards) {
       final label = '${r['prenom']} ${r['nom']}';
-      final montant = (r['montant_du_fcfa'] as num).toInt();
+      final montant = (r['montant_du_fcfa'] as num?)?.toInt() ?? 0;
       // Note: using local notification system instead of private push method
       await ref.read(notificationsProvider.notifier).ajouter(
         titre: 'Rappel de paiement',
@@ -1311,8 +1311,8 @@ class _RetardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nom = '${membre['prenom']} ${membre['nom']}';
-    final montant = (membre['montant_du_fcfa'] as num).toInt();
-    final cultes = (membre['cultes_en_retard'] as num).toInt();
+    final montant = (membre['montant_du_fcfa'] as num?)?.toInt() ?? 0;
+    final cultes = (membre['cultes_en_retard'] as num?)?.toInt() ?? 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

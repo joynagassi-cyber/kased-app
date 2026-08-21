@@ -81,6 +81,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
           );
         }
 
+        if (remainingMembers.isEmpty) return;
         final currentMember = remainingMembers.first;
         final payesCount = state.cotisations.where((c) => c.culteId == widget.culteId && c.estPaye).length;
 
