@@ -200,7 +200,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
             content: Text('Voulez-vous vraiment supprimer ${membre.nomComplet} ?'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 child: const Text('Annuler'),
               ),
               TextButton(
@@ -304,7 +304,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 child: const Text('Annuler'),
               ),
               ElevatedButton(
