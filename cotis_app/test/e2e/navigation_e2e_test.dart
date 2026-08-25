@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/main.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/services/auth_service.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/core/services/stats_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
@@ -12,7 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class MockAuthService extends Mock implements AuthService {}
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
-class FakeAppData extends AppData {
+class FakeAppData extends KasedApp {
   @override
   Future<AppState> build() async {
     this.statsService = StatsService();
@@ -53,7 +53,7 @@ ProviderScope buildApp(MockAuthService mockAuth, MockSecureStorage mockStorage) 
       overrides: [
         authServiceProvider.overrideWithValue(mockAuth),
         secureStorageProvider.overrideWithValue(mockStorage),
-        appDataProvider.overrideWith(() => FakeAppData()),
+        kasedAppProvider.overrideWith(() => FakeAppData()),
       ],
       child: const KasedApp(),
     );

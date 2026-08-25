@@ -47,3 +47,6 @@ cotis_app/android/app/client_secret_*.json
 cotis_app/android/upload-keystore.jks
 cotis_app/android/key.properties
 cotis_app/.env.local
+
+# WDS session state
+progress/

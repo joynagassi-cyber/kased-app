@@ -3,7 +3,8 @@ import 'package:kased_app/core/export/cotisation_export_service.dart';
 import 'package:kased_app/core/pdf/registre_pdf_service.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/core/theme/motion_tokens.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/store/app_state.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/providers/stats_graphiques_provider.dart';
 import 'package:kased_app/widgets/motion/motion_aware.dart';
 import 'package:kased_app/widgets/motion/animated_appear.dart';
@@ -17,7 +18,7 @@ class StatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appDataAsync = ref.watch(appDataProvider);
+    final appDataAsync = ref.watch(kasedAppProvider);
     final donnees = ref.watch(statsGraphiquesProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -83,7 +84,7 @@ class StatsScreen extends ConsumerWidget {
                 ),
               IconButton(
                 icon: const Icon(Icons.sync),
-                onPressed: () => ref.read(appDataProvider.notifier).syncData(),
+                onPressed: () => ref.read(kasedAppProvider.notifier).syncData(),
               ),
             ],
           ),

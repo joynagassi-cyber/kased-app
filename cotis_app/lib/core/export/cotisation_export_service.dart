@@ -1,5 +1,5 @@
 import 'package:share_plus/share_plus.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/store/app_state.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/core/utils/storage_helper.dart';
 

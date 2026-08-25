@@ -12,13 +12,13 @@ import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/sync_operation.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockInsForgeService extends Mock implements InsForgeService {}
 class MockLocalCache extends Mock implements LocalCache {}
 
-class TestAppData extends AppData {
+class TestAppData extends KasedApp {
   final AppState? initialState;
   final InsForgeService mockApi;
   final LocalCache mockCache;
@@ -100,12 +100,12 @@ void main() {
 
       final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, mockDeviceService: mockDeviceService);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
-      await container.read(appDataProvider.notifier).supprimerDefinitivement(42);
+      await container.read(kasedAppProvider.notifier).supprimerDefinitivement(42);
 
       verify(() => mockCache.deleteCorbeilleItem(42)).called(1);
       verifyNever(() => mockApi.updateMembre(any(), any()));
@@ -119,12 +119,12 @@ void main() {
 
       final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, mockDeviceService: mockDeviceService);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
-      await container.read(appDataProvider.notifier).viderCorbeille();
+      await container.read(kasedAppProvider.notifier).viderCorbeille();
 
       verify(() => mockCache.deleteAllCorbeilleItems()).called(1);
     });
@@ -146,19 +146,19 @@ void main() {
 
       final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, mockDeviceService: mockDeviceService);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
-      await container.read(appDataProvider.notifier).restaurerElement(7);
+      await container.read(kasedAppProvider.notifier).restaurerElement(7);
 
       // La restauration locale a bien eu lieu.
       verify(() => mockCache.restoreMembreAndDeleteCorbeilleItem(any(), 7)).called(1);
       // Une sync op a été mise en file pour le retry.
       verify(() => mockCache.saveSyncOp(any())).called(1);
       // L'état local reflète le membre restauré.
-      final state = container.read(appDataProvider).value!;
+      final state = container.read(kasedAppProvider).value!;
       expect(state.membres.length, 1);
     });
 
@@ -175,12 +175,12 @@ void main() {
 
       final notifier = TestAppData(mockApi: mockApi, mockCache: mockCache, mockDeviceService: mockDeviceService);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
-      await container.read(appDataProvider.notifier).restaurerElement(8);
+      await container.read(kasedAppProvider.notifier).restaurerElement(8);
 
       verify(() => mockCache.restoreMembreAndDeleteCorbeilleItem(any(), 8)).called(1);
       verify(() => mockApi.updateMembre(any(), any())).called(1);

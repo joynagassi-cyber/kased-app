@@ -3,7 +3,7 @@ import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/store/app_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Statistiques globales du tableau de bord.

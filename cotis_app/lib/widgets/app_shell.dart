@@ -6,7 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/widgets/app_drawer.dart';
 import 'package:kased_app/widgets/spring_nav_icon.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 
 class AppShell extends ConsumerWidget {
   final Widget child;
@@ -37,9 +37,9 @@ class AppShell extends ConsumerWidget {
     final currentIndex = _currentIndex(context);
 
     // Watch AppData state to get active delay counts
-    final appStateAsync = ref.watch(appDataProvider);
+    final appStateAsync = ref.watch(kasedAppProvider);
     final stats = appStateAsync.maybeWhen(
-      data: (state) => ref.read(appDataProvider.notifier).getDashboardStats(),
+      data: (state) => ref.read(kasedAppProvider.notifier).getDashboardStats(),
       orElse: () => null,
     );
     final retardsCount = stats?.membresEnRetard ?? 0;

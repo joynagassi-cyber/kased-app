@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kased_app/providers/notifications_provider.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/widgets/kased_card.dart';
 import 'package:kased_app/widgets/kased_gradient_card.dart';
@@ -15,7 +15,6 @@ import 'package:kased_app/widgets/motion/animated_appear.dart';
 import 'package:kased_app/widgets/motion/skeleton_loading.dart';
 import 'package:kased_app/core/theme/motion_tokens.dart';
 import 'package:kased_app/core/services/stats_service.dart';
-import 'package:kased_app/widgets/batch_payment_dialog.dart';
 import 'package:kased_app/models/culte.dart';
 
 // ── Widget principal ──────────────────────────────────────────────────────────
@@ -34,7 +33,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ref.read(appDataProvider.notifier).loadDashboard();
+      ref.read(kasedAppProvider.notifier).loadDashboard();
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString('kased_objectif_mensuel');
       if (raw != null) {
@@ -155,7 +154,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appDataAsync = ref.watch(appDataProvider);
+    final appDataAsync = ref.watch(kasedAppProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -224,8 +223,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           body: appDataAsync.when(
             data: (state) {
-              final stats = ref.read(appDataProvider.notifier).getDashboardStats();
-              final topRetards = ref.read(appDataProvider.notifier).getRetardsMembresLocally().take(3).toList();
+              final stats = ref.read(kasedAppProvider.notifier).getDashboardStats();
+              final topRetards = ref.read(kasedAppProvider.notifier).getRetardsMembresLocally().take(3).toList();
 
               return Stack(
                 children: [
@@ -287,8 +286,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: () async {
-                      await ref.read(appDataProvider.notifier).syncData();
-                      await ref.read(appDataProvider.notifier).loadDashboard();
+                      await ref.read(kasedAppProvider.notifier).syncData();
+                      await ref.read(kasedAppProvider.notifier).loadDashboard();
                     },
                     child: CustomScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -346,9 +345,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                               children: [
                                                 Row(
                                                   mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    const Icon(Icons.flash_on, size: 14, color: Colors.yellow),
-                                                    const SizedBox(width: 4),
+                                                  children: const [
+                                                    Icon(Icons.flash_on, size: 14, color: Colors.yellow),
+                                                    SizedBox(width: 4),
                                                     Text(
                                                       'EN AVANCE',
                                                       style: const TextStyle(
@@ -512,9 +511,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   const SizedBox(height: 16),
                                   if (stats.membresEnRetard > 0)
                                     _ActionButton(
-                                      icon: Icons.flash_on,
-                                      label: 'Payer en avance',
-                                      onTap: () => _showBatchPaymentDialog(context, ref, stats),
+                                      icon: Icons.savings,
+                                      label: 'Paiements en avance',
+                                      onTap: () => context.push('/membres/en-avance'),
                                       isPrimary: stats.membresEnAvance == 0,
                                     ),
                                   if (stats.membresEnRetard > 0) const SizedBox(height: 10),
@@ -601,59 +600,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  void _showBatchPaymentDialog(BuildContext context, WidgetRef ref, DashboardStats stats) async {
-    final state = ref.read(appDataProvider).value;
-    if (state == null) return;
-
-    final futureCultes = state.cultes
-        .where((c) => !c.isDeleted && c.dateCulte.isAfter(DateTime.now()))
-        .take(10)
-        .toList();
-    if (futureCultes.isEmpty) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Aucun culte futur disponible'),
-            backgroundColor: AppColors.warning,
-          ),
-        );
-      }
-      return;
-    }
-    final montantDefault = futureCultes.first.montantCotisation;
-    await BatchPaymentDialog.show(
-      context,
-      futureCultes: futureCultes,
-      montantParCulte: montantDefault,
-      onPay: (selectedCultes, totalAmount) async {
-        final membres = state.membres
-            .where((m) => m.isActive && !m.isDeleted)
-            .toList();
-        for (final membre in membres) {
-          await ref
-              .read(appDataProvider.notifier)
-              .payerPlusieursCultesEnAvance(
-                membreId: membre.id,
-                culteIds: selectedCultes.map((c) => c.id).toList(),
-                montantTotal: totalAmount,
-              );
-        }
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '✅ ${selectedCultes.length} culte(s) payé(s) en avance\n'
-                'pour ${membres.length} membre(s)',
-              ),
-              backgroundColor: AppColors.success,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
-      },
     );
   }
 

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/core/pdf/member_report_pdf_service.dart';
 import 'package:kased_app/core/export/member_report_export_service.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
@@ -23,7 +23,7 @@ class MembreReportScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appDataAsync = ref.watch(appDataProvider);
+    final appDataAsync = ref.watch(kasedAppProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/models/culte.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/widgets/empty_state.dart';
 import 'package:kased_app/widgets/kased_card.dart';
 import 'package:kased_app/widgets/kased_status_badge.dart';
@@ -23,7 +23,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appDataAsync = ref.watch(appDataProvider);
+    final appDataAsync = ref.watch(kasedAppProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -34,7 +34,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
           IconButton(
             icon: const Icon(Icons.sync),
             tooltip: 'Synchroniser',
-            onPressed: () => ref.read(appDataProvider.notifier).syncData(),
+            onPressed: () => ref.read(kasedAppProvider.notifier).syncData(),
           ),
         ],
       ),
@@ -355,7 +355,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                     if (!formKey.currentState!.validate()) return;
                     setState(() => _isCreatingCulte = true);
                     try {
-                      await ref.read(appDataProvider.notifier).addCulte(
+                      await ref.read(kasedAppProvider.notifier).addCulte(
                             date: selectedDate,
                             titre: null,
                             montant: double.tryParse(montantController.text.trim()) ?? 50.0,
@@ -445,7 +445,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                     if (!formKey.currentState!.validate()) return;
                     setLocalState(() => isSaving = true);
                     try {
-                      await ref.read(appDataProvider.notifier).updateCulte(
+                      await ref.read(kasedAppProvider.notifier).updateCulte(
                             id: culte.id,
                             dateCulte: selectedDate,
                             montantCotisation: double.tryParse(montantController.text.trim()) ?? culte.montantCotisation,
@@ -499,7 +499,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                     : () async {
                         setLocalState(() => isDeleting = true);
                         try {
-                          await ref.read(appDataProvider.notifier).deleteCulte(culte.id);
+                          await ref.read(kasedAppProvider.notifier).deleteCulte(culte.id);
                           if (ctx.mounted) Navigator.pop(dialogContext, true);
                         } catch (e) {
                           if (ctx.mounted) {
@@ -524,7 +524,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
     if (confirmed != true || !context.mounted) return;
 
     try {
-      await ref.read(appDataProvider.notifier).deleteCulte(culte.id);
+      await ref.read(kasedAppProvider.notifier).deleteCulte(culte.id);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

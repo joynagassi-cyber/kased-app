@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/realtime/realtime_models.dart';
 import 'package:kased_app/core/realtime/realtime_service.dart';
 import 'package:kased_app/core/services/sync_service.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/store/app_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'realtime_handler.g.dart';

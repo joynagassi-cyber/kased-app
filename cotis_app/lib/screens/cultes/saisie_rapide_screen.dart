@@ -1,7 +1,8 @@
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/store/app_state.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/widgets/paiement_personnel_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +23,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appDataAsync = ref.watch(appDataProvider);
+    final appDataAsync = ref.watch(kasedAppProvider);
 
     return appDataAsync.when(
       data: (state) {
@@ -230,7 +231,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
     final currentId = _queueIds.isNotEmpty ? _queueIds.first : null;
     if (currentId == null) return;
     try {
-      await ref.read(appDataProvider.notifier).togglePaiement(
+      await ref.read(kasedAppProvider.notifier).togglePaiement(
             membreId: currentId,
             culteId: widget.culteId,
           );
@@ -265,7 +266,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
     if (result == null || !context.mounted) return;
 
     try {
-      await ref.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+      await ref.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
             membreId: membre.id,
             culteId: widget.culteId,
             montant: result,

@@ -15,7 +15,7 @@ import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/sync_operation.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockInsForgeService extends Mock implements InsForgeService {}
@@ -175,7 +175,7 @@ class StubLocalCache implements LocalCache {
 }
 
 // Custom AppData subclass to inject mocks and manage initial state
-class TestAppData extends AppData {
+class TestAppData extends KasedApp {
   final AppState? initialState;
   final InsForgeService mockApi;
   final LocalCache mockCache;
@@ -307,22 +307,22 @@ void main() {
           mockDeviceService: mockDeviceService,
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         when(() => mockApi.createMembre(any())).thenThrow(Exception('No Internet'));
         when(() => mockApi.getDashboard()).thenThrow(Exception('No Internet'));
 
-        final membre = await container.read(appDataProvider.notifier).addMembre(
+        final membre = await container.read(kasedAppProvider.notifier).addMembre(
           nom: 'Turing',
           prenom: 'Alan',
           dateAdhesion: DateTime(2026, 1, 1),
           notes: 'Pionnier',
         );
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.membres.length, equals(1));
         expect(state.membres.first.nom, equals('Turing'));
         expect(state.membres.first.id, equals(membre.id));
@@ -343,21 +343,21 @@ void main() {
           initialState: AppState(membres: [existingMembre], isOffline: true),
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         when(() => mockApi.updateMembre(any(), any())).thenThrow(Exception('No Internet'));
         when(() => mockCache.getAllMembres()).thenAnswer((_) async => [existingMembre]);
 
-        await container.read(appDataProvider.notifier).updateMembre(
+        await container.read(kasedAppProvider.notifier).updateMembre(
           id: 'm-uuid',
           nom: 'Lovelace-New',
           notes: 'Ada changed',
         );
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.membres.first.nom, equals('Lovelace-New'));
 
         verify(() => mockCache.saveMembreWithSyncOp(any(), any())).called(1);
@@ -379,18 +379,18 @@ void main() {
           initialState: AppState(membres: [existingMembre], isOffline: true),
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         when(() => mockApi.deleteMembre(any())).thenThrow(Exception('No Internet'));
         when(() => mockApi.getDashboard()).thenThrow(Exception('No Internet'));
         when(() => mockCache.getAllMembres()).thenAnswer((_) async => [existingMembre]);
 
-        await container.read(appDataProvider.notifier).deleteMembre('m-uuid-del');
+        await container.read(kasedAppProvider.notifier).deleteMembre('m-uuid-del');
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.membres, isEmpty);
 
         verify(() => mockCache.softDeleteMembreWithSyncOp(any(), any())).called(1);
@@ -417,10 +417,10 @@ void main() {
           initialState: AppState(membres: [m1, m2], isOffline: true),
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         when(() => mockApi.createCulte(any())).thenThrow(Exception('No Internet'));
         when(() => mockApi.getDashboard()).thenThrow(Exception('No Internet'));
@@ -434,13 +434,13 @@ void main() {
             ..statut = StatutCotisation.nonPaye,
         ]);
 
-        await container.read(appDataProvider.notifier).addCulte(
+        await container.read(kasedAppProvider.notifier).addCulte(
           date: DateTime(2026, 5, 24),
           titre: 'Culte Pentecote',
           montant: 100.0,
         );
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.cultes.length, equals(1));
         expect(state.cotisations.length, equals(1));
         expect(state.cotisations.first.membreId, equals('m1'));
@@ -485,21 +485,21 @@ void main() {
           ),
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         when(() => mockApi.updateCulte(any(), any())).thenThrow(Exception('No Internet'));
         when(() => mockApi.getDashboard()).thenThrow(Exception('No Internet'));
 
-        await container.read(appDataProvider.notifier).updateCulte(
+        await container.read(kasedAppProvider.notifier).updateCulte(
           id: 'c-uuid',
           titre: 'Culte Dimanche Modifie',
           montantCotisation: 75.0, 
         );
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.cultes.first.montantCotisation, equals(75.0));
         expect(state.cotisations.first.montantObligatoire, equals(75.0));
 
@@ -527,13 +527,13 @@ void main() {
           ),
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         await expectLater(
-          () => container.read(appDataProvider.notifier).updateCulte(
+          () => container.read(kasedAppProvider.notifier).updateCulte(
                 id: 'c-locked',
                 montantCotisation: 75.0,
               ),
@@ -570,18 +570,18 @@ void main() {
           ),
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         // togglePaiement appelle en interne enregistrerPaiementPersonnel qui
         // utilise _api.createCotisations (cas nouveau) ou updateCotisation.
         when(() => mockApi.updateCotisation(any(), any())).thenThrow(Exception('No Internet'));
 
-        await container.read(appDataProvider.notifier).togglePaiement(membreId: 'm1', culteId: 'c1');
+        await container.read(kasedAppProvider.notifier).togglePaiement(membreId: 'm1', culteId: 'c1');
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.cotisations.first.statut, equals(StatutCotisation.paye));
 
         verify(() => mockCache.saveCotisation(any())).called(1);
@@ -616,21 +616,21 @@ void main() {
           initialState: AppState(cotisations: [cot1, cot2], isOffline: true),
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         // bulkSetPaiements appelle _api.updateCotisation pour chaque cotisation.
         when(() => mockApi.updateCotisation(any(), any())).thenThrow(Exception('No Internet'));
 
-        await container.read(appDataProvider.notifier).bulkSetPaiements(
+        await container.read(kasedAppProvider.notifier).bulkSetPaiements(
           culteId: 'c1',
           newStatut: StatutCotisation.paye,
           membreIds: ['m1', 'm2'],
         );
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.cotisations.every((c) => c.statut == StatutCotisation.paye), isTrue);
 
         verify(() => mockCache.saveAllCotisations(any())).called(1);
@@ -656,16 +656,16 @@ void main() {
           initialState: AppState(cotisations: [cot], isOffline: true),
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         when(() => mockApi.marquerAbsent(membreId: 'm1', culteId: 'c1')).thenThrow(Exception('No Internet'));
 
-        await container.read(appDataProvider.notifier).marquerAbsent(membreId: 'm1', culteId: 'c1');
+        await container.read(kasedAppProvider.notifier).marquerAbsent(membreId: 'm1', culteId: 'c1');
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.cotisations.first.statut, equals(StatutCotisation.absent));
 
         verify(() => mockCache.saveCotisation(any())).called(1);
@@ -703,10 +703,10 @@ void main() {
           initialState: AppState(isOffline: false), // online
         );
         final container = ProviderContainer(
-          overrides: [appDataProvider.overrideWith(() => notifier)],
+          overrides: [kasedAppProvider.overrideWith(() => notifier)],
         );
         addTearDown(container.dispose);
-        await container.read(appDataProvider.future);
+        await container.read(kasedAppProvider.future);
 
         when(() => mockApi.createMembre(any())).thenAnswer((_) async => {});
         when(() => mockApi.updateCotisation(any(), any())).thenAnswer((_) async => {});
@@ -732,7 +732,7 @@ void main() {
           when(() => mockCache.getAllCotisations()).thenAnswer((_) async => []);
         });
 
-        await container.read(appDataProvider.notifier).syncData();
+        await container.read(kasedAppProvider.notifier).syncData();
 
         verify(() => mockApi.createMembre(any())).called(1);
         verify(() => mockApi.updateCotisation('cot-upd', any())).called(1);
@@ -749,7 +749,7 @@ void main() {
           pendingCotisationIds: any(named: 'pendingCotisationIds'),
         )).called(1);
 
-        final state = container.read(appDataProvider).value!;
+        final state = container.read(kasedAppProvider).value!;
         expect(state.membres.length, equals(1));
         expect(state.membres.first.nom, equals('Leibniz'));
         expect(state.isLoading, isFalse);
@@ -783,10 +783,10 @@ void main() {
             initialState: AppState(isOffline: false), // online
           );
           final container = ProviderContainer(
-            overrides: [appDataProvider.overrideWith(() => notifier)],
+            overrides: [kasedAppProvider.overrideWith(() => notifier)],
           );
           addTearDown(container.dispose);
-          await container.read(appDataProvider.future);
+          await container.read(kasedAppProvider.future);
 
           when(() => mockApi.createMembre(any()))
               .thenThrow(Exception('API Temporary Server Error'));
@@ -818,7 +818,7 @@ void main() {
                 .thenAnswer((_) async => <Cotisation>[]);
           });
 
-          await container.read(appDataProvider.notifier).syncData();
+          await container.read(kasedAppProvider.notifier).syncData();
 
           // Chaque opération est retentée 5 fois (syncMaxRetries = 5)
           verify(() => mockApi.createMembre(any())).called(greaterThanOrEqualTo(5));

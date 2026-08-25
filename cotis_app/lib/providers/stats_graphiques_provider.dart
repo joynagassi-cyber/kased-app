@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kased_app/store/app_state.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 
 final statsGraphiquesProvider = Provider<DonneesGraphiques>((ref) {
-  final state = ref.watch(appDataProvider).value;
+  final state = ref.watch(kasedAppProvider).value;
   if (state == null) return DonneesGraphiques.empty();
   return DonneesGraphiques.fromState(state);
 });

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/widgets/empty_state.dart';
 import 'package:kased_app/widgets/kased_avatar.dart';
@@ -14,8 +14,8 @@ class RetardsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Surveille l'état global — l'écran se reconstruit automatiquement
-    // après un togglePaiement/marquerAbsent car appDataProvider est invalidé.
-    final appDataAsync = ref.watch(appDataProvider);
+    // après un togglePaiement/marquerAbsent car kasedAppProvider est invalidé.
+    final appDataAsync = ref.watch(kasedAppProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -23,7 +23,7 @@ class RetardsScreen extends ConsumerWidget {
       data: (state) {
         // Calcul local depuis Isar — fonctionne offline
         final retards =
-            ref.read(appDataProvider.notifier).getRetardsMembresLocally();
+            ref.read(kasedAppProvider.notifier).getRetardsMembresLocally();
 
         return Scaffold(
           backgroundColor: colorScheme.surface,
@@ -64,7 +64,7 @@ class RetardsScreen extends ConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.sync),
                 onPressed: () async {
-                  await ref.read(appDataProvider.notifier).syncData();
+                  await ref.read(kasedAppProvider.notifier).syncData();
                 },
               ),
             ],
@@ -78,7 +78,7 @@ class RetardsScreen extends ConsumerWidget {
                 )
               : RefreshIndicator(
                   onRefresh: () async {
-                    await ref.read(appDataProvider.notifier).syncData();
+                    await ref.read(kasedAppProvider.notifier).syncData();
                   },
                   child: ListView.separated(
                     itemCount: retards.length,

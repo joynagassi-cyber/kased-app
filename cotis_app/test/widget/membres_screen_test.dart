@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/screens/membres/membres_screen.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -19,7 +19,7 @@ void main() {
   Widget createMembresScreen() {
     return ProviderScope(
       overrides: [
-        appDataProvider.overrideWith(() => mockNotifier),
+        kasedAppProvider.overrideWith(() => mockNotifier),
       ],
       child: const MaterialApp(
         home: MembresScreen(),

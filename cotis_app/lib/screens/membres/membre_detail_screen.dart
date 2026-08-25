@@ -2,7 +2,7 @@ import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
 
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -28,21 +28,18 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
   String _searchQuery = '';
   StatutCotisation? _statutFilter;
 
-  void _filterHistorique() {
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
-    final appDataAsync = ref.watch(appDataProvider);
+    final appDataAsync = ref.watch(kasedAppProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
     return appDataAsync.when(
       data: (state) {
-        final currentMembre = widget.membre ??
-            state.membres.firstWhere(
+        // Toujours relire depuis le provider pour être à jour (bugfix: widget.membre
+        // est un snapshot de navigation, pas la version la plus récente après ajout d'avance)
+        final currentMembre = state.membres.firstWhere(
               (m) => m.id == widget.membreId,
               orElse: () => throw Exception('Membre non trouvé'),
             );
@@ -614,7 +611,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
     setState(() => _isSavingAvance = true);
     try {
       await ref
-          .read(appDataProvider.notifier)
+          .read(kasedAppProvider.notifier)
           .ajouterPaiementAvance(membreId: membre.id, montant: montant);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

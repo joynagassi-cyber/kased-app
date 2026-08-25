@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:kased_app/models/membre.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/widgets/empty_state.dart';
 import 'package:kased_app/widgets/kased_avatar.dart';
@@ -32,7 +32,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
   Future<void> _loadRetards() async {
     try {
       final data =
-          await ref.read(appDataProvider.notifier).loadRetardsMembres();
+          await ref.read(kasedAppProvider.notifier).loadRetardsMembres();
       setState(() {
         retards = data;
       });
@@ -43,7 +43,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appDataAsync = ref.watch(appDataProvider);
+    final appDataAsync = ref.watch(kasedAppProvider);
     final theme = Theme.of(context);
     final retardsById = {for (final r in retards) r['membre_id']: r};
 
@@ -51,10 +51,16 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
       appBar: AppBar(
         title: const Text('Membres'),
         actions: [
+          // Bouton « Membres en avance »
+          IconButton(
+            icon: const Icon(Icons.savings),
+            tooltip: 'Membres en avance',
+            onPressed: () => context.push('/membres/en-avance'),
+          ),
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () async {
-              await ref.read(appDataProvider.notifier).syncData();
+              await ref.read(kasedAppProvider.notifier).syncData();
               await _loadRetards();
             },
           ),
@@ -212,7 +218,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                         setLocalState(() => isDeleting = true);
                         try {
                           await ref
-                              .read(appDataProvider.notifier)
+                              .read(kasedAppProvider.notifier)
                               .deleteMembre(membre.id);
 
                           if (ctx.mounted) {
@@ -315,7 +321,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> {
                     : () async {
                         setLocalState(() => isSaving = true);
                         try {
-                          await ref.read(appDataProvider.notifier).updateMembre(
+                          await ref.read(kasedAppProvider.notifier).updateMembre(
                             id: membre.id,
                             nom: nomController.text.trim(),
                             prenom: prenomController.text.trim(),

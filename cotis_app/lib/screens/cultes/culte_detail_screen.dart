@@ -2,7 +2,7 @@
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/membre.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/screens/cultes/saisie_rapide_screen.dart';
 import 'package:kased_app/widgets/empty_state.dart';
 import 'package:kased_app/widgets/member_pay_tile.dart';
@@ -36,7 +36,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appDataAsync = ref.watch(appDataProvider);
+    final appDataAsync = ref.watch(kasedAppProvider);
     final theme = Theme.of(context);
 
     return appDataAsync.when(
@@ -102,7 +102,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       context,
                       currentMontant: culte.montantCotisation,
                       onSave: (newMontant) => ref
-                          .read(appDataProvider.notifier)
+                          .read(kasedAppProvider.notifier)
                           .updateCulte(id: culte.id, montantCotisation: newMontant),
                     );
                   },
@@ -173,7 +173,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                     : () async {
                         setState(() => _isSyncing = true);
                         try {
-                          await ref.read(appDataProvider.notifier).syncData();
+                          await ref.read(kasedAppProvider.notifier).syncData();
                         } finally {
                           if (mounted) setState(() => _isSyncing = false);
                         }
@@ -211,7 +211,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                               setState(() => _isBulkPaymentProcessing = true);
                               try {
                                 for (final membre in membres) {
-                                  await ref.read(appDataProvider.notifier).payerPlusieursCultesEnAvance(
+                                  await ref.read(kasedAppProvider.notifier).payerPlusieursCultesEnAvance(
                                         membreId: membre.id,
                                         culteIds: selectedCultes.map((c) => c.id).toList(),
                                         montantTotal: totalAmount,
@@ -338,7 +338,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                 context,
                                 title: 'Tout valider',
                                 message: 'Marquer les ${membresNonPayes.length} membres restants comme payés ?',
-                                onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+                                onConfirm: () => ref.read(kasedAppProvider.notifier).bulkSetPaiements(
                                       culteId: widget.culteId,
                                       newStatut: StatutCotisation.paye,
                                       membreIds: membresNonPayes.map((m) => m.id).toList(),
@@ -388,7 +388,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                 context,
                                 title: 'Tout annuler',
                                 message: 'Supprimer tous les paiements de ce culte ?',
-                                onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+                                onConfirm: () => ref.read(kasedAppProvider.notifier).bulkSetPaiements(
                                       culteId: widget.culteId,
                                       newStatut: StatutCotisation.nonPaye,
                                       membreIds: cotisations.where((c) => c.estPaye).map((c) => c.membreId).toList(),
@@ -485,8 +485,8 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                       isLocked: memberIsLocked,
                       montantPaye: cotisation.montantPaye,
                       montantObligatoire: cotisation.montantObligatoire,
-                      onToggle: () { if (memberIsLocked) return; ref.read(appDataProvider.notifier).togglePaiement(membreId: membre.id, culteId: widget.culteId); },
-                      onMarkAbsent: () { if (memberIsLocked) return; ref.read(appDataProvider.notifier).marquerAbsent(membreId: membre.id, culteId: widget.culteId); },
+                      onToggle: () { if (memberIsLocked) return; ref.read(kasedAppProvider.notifier).togglePaiement(membreId: membre.id, culteId: widget.culteId); },
+                      onMarkAbsent: () { if (memberIsLocked) return; ref.read(kasedAppProvider.notifier).marquerAbsent(membreId: membre.id, culteId: widget.culteId); },
                       onCustomPayment: memberIsLocked ? null : () => _showCustomPayment(context, membre: membre, culteId: widget.culteId, montantObligatoire: cotisation.montantObligatoire, montantActuel: cotisation.montantPaye),
                     );
                   }).toList();
@@ -508,7 +508,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
         context,
         title: 'Valider la sélection',
         message: 'Marquer ${_selectedMembres.length} membre(s) comme payés ?',
-        onConfirm: () => ref.read(appDataProvider.notifier).bulkSetPaiements(
+        onConfirm: () => ref.read(kasedAppProvider.notifier).bulkSetPaiements(
               culteId: widget.culteId,
               newStatut: StatutCotisation.paye,
               membreIds: _selectedMembres.toList(),
@@ -537,7 +537,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
     setState(() => _isProcessing = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(appDataProvider.notifier).enregistrerPaiementPersonnel(membreId: membre.id, culteId: culteId, montant: result);
+      await ref.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(membreId: membre.id, culteId: culteId, montant: result);
       final don = result - montantObligatoire;
       messenger.showSnackBar(SnackBar(content: Text(don > 0 ? 'Paiement de ${result.toStringAsFixed(0)} F enregistré (don : ${don.toStringAsFixed(0)} F).' : 'Paiement de ${result.toStringAsFixed(0)} F enregistré.')));
     } catch (e) {

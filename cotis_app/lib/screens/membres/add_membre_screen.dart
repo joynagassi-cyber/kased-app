@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:kased_app/widgets/kased_avatar.dart';
@@ -192,7 +192,7 @@ class _AddMembreScreenState extends ConsumerState<AddMembreScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         setState(() => _isSaving = true);
-        final notifier = ref.read(appDataProvider.notifier);
+        final notifier = ref.read(kasedAppProvider.notifier);
         final newMembre = await notifier.addMembre(
               nom: _nomController.text.trim(),
               prenom: _prenomController.text.trim(),

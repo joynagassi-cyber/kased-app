@@ -5,7 +5,7 @@ import 'package:kased_app/core/router/app_router.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:kased_app/core/services/stats_service.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 
 class FakeAuthNotifier extends Auth {
   final AuthState fixedState;
@@ -40,12 +40,12 @@ void main() {
     container = ProviderContainer(
       overrides: [
         authProvider.overrideWith(() => FakeAuthNotifier(authState)),
-        appDataProvider.overrideWith(() => mockAppData),
+        kasedAppProvider.overrideWith(() => mockAppData),
       ],
     );
 
-    // Force initialization of appDataProvider
-    container.read(appDataProvider);
+    // Force initialization of kasedAppProvider
+    container.read(kasedAppProvider);
 
     return UncontrolledProviderScope(
       container: container,

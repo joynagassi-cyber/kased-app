@@ -18,6 +18,7 @@ import '../../screens/retards/retards_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/corbeille/corbeille_screen.dart';
 import '../../screens/membres/membre_report_screen.dart';
+import '../../screens/membres/membres_en_avance_screen.dart';
 import '../../widgets/app_shell.dart';
 import '../../models/membre.dart';
 import '../../core/preferences/app_prefs.dart';
@@ -124,6 +125,14 @@ GoRouter router(RouterRef ref) {
                   context: context,
                   state: state,
                   child: const AddMembreScreen(),
+                ),
+              ),
+              GoRoute(
+                path: 'en-avance',
+                pageBuilder: (context, state) => _buildFadeSlidePage(
+                  context: context,
+                  state: state,
+                  child: const MembresEnAvanceScreen(),
                 ),
               ),
               GoRoute(

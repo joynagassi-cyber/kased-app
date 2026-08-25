@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:isar/isar.dart';
 import 'package:kased_app/models/corbeille_item.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/providers/isar_provider.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +35,7 @@ enum CorbeilleTri {
 final corbeilleProvider =
     FutureProvider.autoDispose<List<CorbeilleItem>>((ref) async {
   final isar = await ref.watch(isarProvider.future);
-  ref.watch(appDataProvider);
+  ref.watch(kasedAppProvider);
 
   final items = await isar.corbeilleItems.where().sortByDeletedAtDesc().findAll();
 
@@ -99,7 +99,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
     if (_processingIds.contains(isarId)) return;
     setState(() => _processingIds.add(isarId));
     try {
-      await ref.read(appDataProvider.notifier).restaurerElement(isarId);
+      await ref.read(kasedAppProvider.notifier).restaurerElement(isarId);
       _refreshCorbeille(ref);
       if (mounted) {
         setState(() => _selectedIds.remove(isarId));
@@ -118,7 +118,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
     try {
       final count = _selectedIds.length;
       for (final id in _selectedIds.toList()) {
-        await ref.read(appDataProvider.notifier).restaurerElement(id);
+        await ref.read(kasedAppProvider.notifier).restaurerElement(id);
       }
       _refreshCorbeille(ref);
       if (mounted) {
@@ -137,7 +137,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
     setState(() => _processingIds.addAll(items.map((i) => i.isarId)));
     try {
       for (final item in items) {
-        await ref.read(appDataProvider.notifier).restaurerElement(item.isarId);
+        await ref.read(kasedAppProvider.notifier).restaurerElement(item.isarId);
       }
       _refreshCorbeille(ref);
       if (mounted) {
@@ -174,7 +174,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                         if (ctx.mounted) {
                           setState(() => _processingIds.add(isarId));
                           try {
-                            await ref.read(appDataProvider.notifier).supprimerDefinitivement(isarId);
+                            await ref.read(kasedAppProvider.notifier).supprimerDefinitivement(isarId);
                             _refreshCorbeille(ref);
                             if (mounted) {
                               setState(() => _selectedIds.remove(isarId));
@@ -223,7 +223,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                         if (ctx.mounted) {
                           setState(() => _processingIds.addAll(items.map((i) => i.isarId)));
                           try {
-                            await ref.read(appDataProvider.notifier).viderCorbeille();
+                            await ref.read(kasedAppProvider.notifier).viderCorbeille();
                             _refreshCorbeille(ref);
                             if (mounted) {
                               setState(_selectedIds.clear);
@@ -274,7 +274,7 @@ class _CorbeilleScreenState extends ConsumerState<CorbeilleScreen> {
                           setState(() => _processingIds.addAll(selectedItems.map((i) => i.isarId)));
                           try {
                             for (final item in selectedItems) {
-                              await ref.read(appDataProvider.notifier).supprimerDefinitivement(item.isarId);
+                              await ref.read(kasedAppProvider.notifier).supprimerDefinitivement(item.isarId);
                             }
                             _refreshCorbeille(ref);
                             if (mounted) {

@@ -11,7 +11,7 @@ import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:kased_app/models/corbeille_item.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/store/app_state.dart';
 
 /// Exception lancee quand un membre est introuvable.
 class MembreNotFoundException implements Exception {

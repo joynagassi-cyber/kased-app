@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/core/local_cache.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
@@ -12,7 +12,7 @@ import 'package:mocktail/mocktail.dart';
 class MockInsForgeService extends Mock implements InsForgeService {}
 class MockLocalCache extends Mock implements LocalCache {}
 
-class TestAppData extends AppData {
+class TestAppData extends KasedApp {
   final AppState? initialState;
   final InsForgeService mockApi;
   final LocalCache mockCache;
@@ -84,21 +84,21 @@ void main() {
       final notifier = TestAppData(
           mockApi: mockApi, mockCache: mockCache, initialState: initialState);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
       when(() => mockApi.updateCotisation(any(), any()))
           .thenAnswer((_) async => {});
 
-      await container.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+      await container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
             membreId: membreId,
             culteId: culteId,
             montant: 50.0,
           );
 
-      final cot = container.read(appDataProvider).value!.cotisations.first;
+      final cot = container.read(kasedAppProvider).value!.cotisations.first;
       expect(cot.statut, StatutCotisation.paye);
       expect(cot.montantPaye, 50.0);
       expect(cot.montantDon, 0.0);
@@ -118,21 +118,21 @@ void main() {
       final notifier = TestAppData(
           mockApi: mockApi, mockCache: mockCache, initialState: initialState);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
       when(() => mockApi.updateCotisation(any(), any()))
           .thenAnswer((_) async => {});
 
-      await container.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+      await container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
             membreId: membreId,
             culteId: culteId,
             montant: 150.0,
           );
 
-      final cot = container.read(appDataProvider).value!.cotisations.first;
+      final cot = container.read(kasedAppProvider).value!.cotisations.first;
       expect(cot.statut, StatutCotisation.paye);
       expect(cot.montantPaye, 150.0);
       expect(cot.montantDon, 100.0); // 150 - 50 = 100 de don
@@ -151,16 +151,16 @@ void main() {
       final notifier = TestAppData(
           mockApi: mockApi, mockCache: mockCache, initialState: initialState);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
       when(() => mockApi.updateCotisation(any(), any()))
           .thenAnswer((_) async => {});
 
       expect(
-        () => container.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+        () => container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
               membreId: membreId,
               culteId: culteId,
               montant: 30.0,
@@ -182,22 +182,22 @@ void main() {
       final notifier = TestAppData(
           mockApi: mockApi, mockCache: mockCache, initialState: initialState);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
       // L'API échoue → la cotisation doit tout de même rester payée localement.
       when(() => mockApi.updateCotisation(any(), any()))
           .thenAnswer((_) async => throw Exception('Network down'));
 
-      await container.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+      await container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
             membreId: membreId,
             culteId: culteId,
             montant: 75.0,
           );
 
-      final cot = container.read(appDataProvider).value!.cotisations.first;
+      final cot = container.read(kasedAppProvider).value!.cotisations.first;
       expect(cot.statut, StatutCotisation.paye);
       expect(cot.montantPaye, 75.0);
       expect(cot.montantDon, 25.0);
@@ -217,21 +217,21 @@ void main() {
       final notifier = TestAppData(
           mockApi: mockApi, mockCache: mockCache, initialState: initialState);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
       when(() => mockApi.createCotisations(any()))
           .thenAnswer((_) async => []);
 
-      await container.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+      await container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
             membreId: membreId,
             culteId: culteId,
             montant: 50.0,
           );
 
-      final cots = container.read(appDataProvider).value!.cotisations;
+      final cots = container.read(kasedAppProvider).value!.cotisations;
       expect(cots.length, 1);
       expect(cots.first.statut, StatutCotisation.paye);
       expect(cots.first.membreId, membreId);
@@ -257,13 +257,13 @@ void main() {
       final notifier = TestAppData(
           mockApi: mockApi, mockCache: mockCache, initialState: initialState);
       final container = ProviderContainer(
-        overrides: [appDataProvider.overrideWith(() => notifier)],
+        overrides: [kasedAppProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
-      await container.read(appDataProvider.future);
+      await container.read(kasedAppProvider.future);
 
       expect(
-        () => container.read(appDataProvider.notifier).enregistrerPaiementPersonnel(
+        () => container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
               membreId: membreId,
               culteId: culteId,
               montant: 100.0,
