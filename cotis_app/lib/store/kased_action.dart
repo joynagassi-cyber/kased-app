@@ -203,6 +203,20 @@ class GetCotisationsDuCulte extends QueryAction {
   GetCotisationsDuCulte(this.culteId);
 }
 
+class GetRetardsMembres extends QueryAction {}
+
+class GetMembresAJour extends QueryAction {}
+
+// ── Corbeille (restore from trash) ───────────────────────────────────────────
+
+sealed class TrashAction extends KasedAction {}
+
+class RestoreFromTrash extends TrashAction {
+  final int isarId;
+
+  RestoreFromTrash(this.isarId);
+}
+
 /// Racine de la hiérarchie d'actions.
 /// Toutes les actions doivent hériter de cette classe scellée.
 sealed class KasedAction {}

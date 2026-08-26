@@ -6,12 +6,12 @@ part of 'realtime_handler.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$realtimeHandlerHash() => r'90f73c6efc7ba63e3802e49299dce87288bdcba6';
+String _$realtimeHandlerHash() => r'dd6b5d3d9e85f0c7a66a6fc4f381ee13ae94b8bb';
 
 /// Gestionnaire d'événements temps réel.
 ///
-/// Reçoit les événements du [RealtimeService] et applique les changements
-/// de manière ciblée (patch) au lieu de recharger toute la base.
+/// Reçoit les événements du [RealtimeService] et déclenche un reload
+/// via un callback configuré au moment de la connexion.
 ///
 /// Le provider est keepAlive car il doit persister pendant toute la durée
 /// de l'application.

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service_port.dart';
@@ -10,6 +11,8 @@ import 'package:kased_app/core/services/sync_service.dart';
 import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/store/app_state.dart';
 import 'package:kased_app/store/app_state_helpers.dart';
+import 'package:kased_app/models/membre.dart';
+import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/store/handlers/culte_handler.dart';
 import 'package:kased_app/store/handlers/cotisation_handler.dart';
 import 'package:kased_app/store/handlers/member_handler.dart';
@@ -164,10 +167,41 @@ class KasedStore {
           final c = await cache.getAllCultes();
           final co = await cache.getAllCotisations();
           _state = withFullData(_state, membres: m, cultes: c, cotisations: co);
+        // Corbeille restore
+        case RestoreFromTrash():
+          final item = await cache.getCorbeilleItem(action.isarId);
+          if (item == null) return;
+          final entityType = item.entityType;
+          final payload = jsonDecode(item.payloadJson) as Map<String, dynamic>;
+          if (entityType == 'membre') {
+            final membre = Membre.fromJson(payload);
+            await cache.restoreMembreAndDeleteCorbeilleItem(membre, action.isarId);
+            final membres = await cache.getAllMembres();
+            _state = _state.copyWith(membres: sortMembres(membres));
+            try {
+              await api.updateMembre(membre.id, {'is_active': true});
+            } catch (e) {
+              debugPrint('[KasedStore] restaurer membre from trash reseau echoue: $e');
+            }
+          } else if (entityType == 'culte') {
+            final culte = Culte.fromJson(payload);
+            await cache.restoreCulteAndDeleteCorbeilleItem(culte, action.isarId);
+            final cultes = await cache.getAllCultes();
+            _state = _state.copyWith(cultes: cultes);
+            try {
+              await api.createCulte({'id': culte.id});
+            } catch (e) {
+              debugPrint('[KasedStore] restaurer culte from trash reseau echoue: $e');
+            }
+          }
         // Queries (read-only, state not mutated)
         case GetHistoriqueMembre():
           try {
-            await api.getHistoriqueMembre(action.membreId);
+            final historique = await api.getHistoriqueMembre(action.membreId);
+            _state = _state.copyWith(
+              historiqueMembre: historique,
+              historiqueMembreId: action.membreId,
+            );
           } catch (e) {
             debugPrint('[KasedStore] Erreur chargement historique: $e');
           }
@@ -176,6 +210,20 @@ class KasedStore {
             await api.getCotisationsDuCulte(action.culteId);
           } catch (e) {
             debugPrint('[KasedStore] Erreur chargement cotisations: $e');
+          }
+        case GetRetardsMembres():
+          try {
+            final retards = await statsService.loadRetardsMembres(api);
+            _state = _state.copyWith(retardsMembres: retards);
+          } catch (e) {
+            debugPrint('[KasedStore] Erreur chargement retards: $e');
+          }
+        case GetMembresAJour():
+          try {
+            final membres = await statsService.loadMembresAJour(api);
+            _state = _state.copyWith(membresAJour: membres);
+          } catch (e) {
+            debugPrint('[KasedStore] Erreur chargement membres a jour: $e');
           }
       }
     } catch (e, stack) {

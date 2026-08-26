@@ -296,15 +296,19 @@ class KasedApp extends _$KasedApp {
   List<Map<String, dynamic>> getRetardsMembresLocally() {
     final stateValue = state.value;
     if (stateValue == null) return [];
-    return StatsService().getRetardsMembresLocally(stateValue);
+    return stateValue.retardsMembres;
   }
 
   Future<List<Map<String, dynamic>>> loadRetardsMembres() async {
-    return []; // TODO: implémenter via le store
+    dispatch(GetRetardsMembres());
+    final stateValue = state.value;
+    return stateValue?.retardsMembres ?? [];
   }
 
   Future<List<Map<String, dynamic>>> loadMembresAJour() async {
-    return []; // TODO: implémenter via le store
+    dispatch(GetMembresAJour());
+    final stateValue = state.value;
+    return stateValue?.membresAJour ?? [];
   }
 
   Future<double> getObjectifMensuel() => StatsService.loadObjectifMensuel();
@@ -316,7 +320,11 @@ class KasedApp extends _$KasedApp {
 
   Future<List<Map<String, dynamic>>> getHistoriqueMembre(String membreId) async {
     dispatch(GetHistoriqueMembre(membreId));
-    return []; // TODO: retourner depuis le store
+    final stateValue = state.value;
+    if (stateValue?.historiqueMembreId == membreId) {
+      return stateValue!.historiqueMembre;
+    }
+    return [];
   }
 
   Future<List<Cotisation>> getCotisationsDuCulte(String culteId) async {
@@ -329,7 +337,7 @@ class KasedApp extends _$KasedApp {
   }
 
   Future<void> restaurerElement(int isarId) async {
-    // TODO: implémenter le restore
+    dispatch(RestoreFromTrash(isarId));
   }
 
   Future<void> supprimerDefinitivement(int isarId) async {
