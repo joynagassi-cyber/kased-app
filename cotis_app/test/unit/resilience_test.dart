@@ -4,7 +4,8 @@ import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/core/services/stats_service.dart';
-import 'package:kased_app/providers/app_data_provider.dart';
+import 'package:kased_app/store/app_state.dart';
+import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 
 // ---------------------------------------------------------------------------
