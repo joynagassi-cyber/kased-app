@@ -355,6 +355,24 @@ class KasedStore {
       error: null,
     );
     await cache.saveCulte(newCulte);
+
+    // Sync op
+    final culteSyncOp = SyncOperation()
+      ..operationId = UuidUtils.generate()
+      ..type = 'CREATE'
+      ..entityType = 'culte'
+      ..entityId = newCulte.id
+      ..payloadJson = jsonEncode(newCulte.toJson())
+      ..createdAt = newCulte.createdAt
+      ..deviceId = await deviceService.getDeviceId();
+    await cache.saveSyncOp(culteSyncOp);
+    try {
+      await api.createCulte(newCulte.toJson());
+      await cache.deleteSyncOp(culteSyncOp.isarId);
+    } catch (e) {
+      debugPrint('[KasedStore] createCulte réseau échoué: $e');
+    }
+
     notifCoordinator.notifierCreationCulteFull(newCulte);
     await _handleLoadDashboard();
     unawaited(_notifierPush('culte_cree', _formatDate(newCulte.dateCulte)));
@@ -390,6 +408,24 @@ class KasedStore {
       error: null,
     );
     await cache.saveCulte(updated);
+
+    // Sync op
+    final culteSyncOp = SyncOperation()
+      ..operationId = UuidUtils.generate()
+      ..type = 'UPDATE'
+      ..entityType = 'culte'
+      ..entityId = action.id
+      ..payloadJson = jsonEncode(updated.toJson())
+      ..createdAt = updated.updatedAt!
+      ..deviceId = await deviceService.getDeviceId();
+    await cache.saveSyncOp(culteSyncOp);
+    try {
+      await api.updateCulte(action.id, updated.toJson());
+      await cache.deleteSyncOp(culteSyncOp.isarId);
+    } catch (e) {
+      debugPrint('[KasedStore] updateCulte réseau échoué: $e');
+    }
+
     await _handleLoadDashboard();
   }
 
