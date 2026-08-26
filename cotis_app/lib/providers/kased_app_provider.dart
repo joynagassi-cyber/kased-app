@@ -17,6 +17,8 @@ import 'package:kased_app/store/app_state.dart';
 import 'package:kased_app/store/kased_action.dart';
 import 'package:kased_app/store/kased_store.dart';
 
+export 'package:kased_app/store/app_state.dart';
+
 part 'kased_app_provider.g.dart';
 
 /// Provider Riverpod adaptateur pour [KasedStore].
