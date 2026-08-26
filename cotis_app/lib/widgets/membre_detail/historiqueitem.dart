@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:kased_app/models/cotisation.dart';
 class _HistoriqueItem {
   final DateTime? date;
   final String titre;

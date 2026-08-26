@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:kased_app/models/cotisation.dart';
+import 'progress.dart';
 class _CadenceCard extends StatelessWidget {
   final double percentage;
   final int paid;
