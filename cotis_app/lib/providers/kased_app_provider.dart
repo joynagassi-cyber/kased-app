@@ -85,8 +85,13 @@ class KasedApp extends _$KasedApp {
       final isOffline = results.contains(ConnectivityResult.none);
       final current = state.value ?? AppState();
       state = AsyncValue.data(current.copyWith(isOffline: isOffline));
-      if (!isOffline && (syncService.shouldSync() || await syncService.hasPendingOps())) {
+      if (!isOffline && syncService.shouldSync()) {
         _store.dispatch(SyncData());
+      } else if (!isOffline) {
+        // Vérifier async les ops en attente
+        syncService.hasPendingOps().then((hasOps) {
+          if (hasOps) _store.dispatch(SyncData());
+        });
       }
     });
 
