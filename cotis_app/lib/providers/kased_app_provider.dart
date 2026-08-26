@@ -331,3 +331,4 @@ class KasedApp extends _$KasedApp {
     dispatch(EmptyTrash());
   }
 }
+export 'app_state.dart';
