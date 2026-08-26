@@ -138,10 +138,10 @@ class CotisationExportService implements KasedExportService {
   }) async => '';
 
   Future<String> _saveAndShareCsv(StringBuffer buffer, String fileName) async {
-    return saveFileToStorage(
+    final file = await StorageHelper.saveStringFileToStorage(
       content: buffer.toString(),
       fileName: fileName,
-      mimeType: 'text/csv',
     );
+    return file.path;
   }
 }

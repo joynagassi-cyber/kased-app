@@ -60,7 +60,7 @@ class StatsScreen extends ConsumerWidget {
                   tooltip: 'Exporter au format CSV',
                   onPressed: () async {
                     try {
-                      final path = await CotisationExportService.exporterCotisationsEtCultes(appDataAsync.value!);
+                      final path = await CotisationExportService().exportCotisationsCsv(appDataAsync.value!.cotisations, appDataAsync.value!.membres, appDataAsync.value!.cultes);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
