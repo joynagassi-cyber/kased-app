@@ -139,7 +139,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Impossible de charger les données. Vérifiez votre connexion.')));
                           }
                         }
                       },
@@ -368,15 +368,10 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                 }
                               }
                             } catch (e) {
-                              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+                              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Impossible de charger les données. Vérifiez votre connexion.')));
                             }
                           },
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 12)),
-                            icon: const Icon(Icons.done_all),
-                            label: Text('Tout valider (${membresNonPayes.length})'),
-                            onPressed: () {},
-                          ),
+                          child: const SizedBox.shrink(),
                         ),
                       ),
                     if (tousPayes)
@@ -399,15 +394,10 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
                                 ConfirmActionDialog.showResultSnackBar(context, result);
                               }
                             } catch (e) {
-                              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+                              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Impossible de charger les données. Vérifiez votre connexion.')));
                             }
                           },
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger, side: const BorderSide(color: AppColors.danger), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 12)),
-                            icon: const Icon(Icons.remove_done),
-                            label: const Text('Tout annuler'),
-                            onPressed: () {},
-                          ),
+                          child: const SizedBox.shrink(),
                         ),
                       ),
                   ],
@@ -496,7 +486,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
         );
       },
       loading: () => const Scaffold(body: CulteDetailSkeleton()),
-      error: (e, _) => Scaffold(body: Center(child: Text('Erreur: $e'))),
+      error: (e, _) => Scaffold(body: Center(child: Text('Impossible de charger les données. Vérifiez votre connexion.'))),
     );
   }
 
@@ -519,7 +509,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
         setState(() { _selectedMembres.clear(); _selectionMode = false; });
       }
     } catch (e) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Impossible de charger les données. Vérifiez votre connexion.')));
     } finally {
       if (mounted) setState(() => _isValidingSelection = false);
     }

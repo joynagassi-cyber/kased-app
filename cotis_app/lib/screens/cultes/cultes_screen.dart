@@ -291,7 +291,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erreur: $e')),
+        error: (e, _) => Center(child: Text('Impossible de supprimer le culte. Vérifiez votre connexion.')),
       ),
       floatingActionButton: SpringButton(
         onTap: () => _showAddCulteDialog(context, ref),
@@ -376,7 +376,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                       if (dialogContext.mounted) Navigator.pop(dialogContext);
                       if (context.mounted) {
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
-                          SnackBar(content: Text('Erreur: $e')),
+                          SnackBar(content: Text('Impossible de supprimer le culte. Vérifiez votre connexion.')),
                         );
                       }
                     } finally {
@@ -454,7 +454,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                     } catch (e) {
                       if (dialogContext.mounted) {
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
-                          SnackBar(content: Text('Erreur: $e')),
+                          SnackBar(content: Text('Impossible de supprimer le culte. Vérifiez votre connexion.')),
                         );
                       }
                     } finally {
@@ -504,7 +504,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                         } catch (e) {
                           if (ctx.mounted) {
                             ScaffoldMessenger.of(ctx).showSnackBar(
-                              SnackBar(content: Text('Erreur: $e')),
+                              SnackBar(content: Text('Impossible de supprimer le culte. Vérifiez votre connexion.')),
                             );
                           }
                         } finally {
@@ -520,26 +520,6 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
         },
       ),
     );
-
-    if (confirmed != true || !context.mounted) return;
-
-    try {
-      await ref.read(kasedAppProvider.notifier).deleteCulte(culte.id);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Culte supprimé'),
-            backgroundColor: AppColors.gradientEnd,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
-      }
-    }
   }
 }
 

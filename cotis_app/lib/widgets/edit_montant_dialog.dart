@@ -76,7 +76,7 @@ class EditMontantDialog {
                 } catch (e) {
                   if (dialogContext.mounted) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text('Erreur: $e')),
+                      SnackBar(content: Text('Impossible de sauvegarder. Veuillez réessayer.')),
                     );
                   }
                 }

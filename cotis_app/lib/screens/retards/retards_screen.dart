@@ -54,7 +54,7 @@ class RetardsScreen extends ConsumerWidget {
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Erreur: $e')),
+                              SnackBar(content: Text('Impossible de générer le rapport PDF. Veuillez réessayer.')),
                             );
                           }
                         }
@@ -183,7 +183,7 @@ class RetardsScreen extends ConsumerWidget {
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
-        body: Center(child: Text('Erreur: $e')),
+        body: Center(child: Text('Impossible de générer le rapport PDF. Veuillez réessayer.')),
       ),
     );
   }

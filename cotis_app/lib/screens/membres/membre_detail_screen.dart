@@ -570,7 +570,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Erreur: $e'))),
+      error: (e, _) => Scaffold(body: Center(child: Text('Impossible d'ajouter le paiement en avance. Veuillez réessayer.'))),
     );
   }
   Future<void> _showAvanceDialog(BuildContext context, Membre membre) async {
@@ -625,7 +625,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text('Impossible d'ajouter le paiement en avance. Veuillez réessayer.')),
         );
       }
     } finally {

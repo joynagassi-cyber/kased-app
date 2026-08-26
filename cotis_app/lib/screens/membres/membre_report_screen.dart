@@ -77,7 +77,7 @@ class MembreReportScreen extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur: $e')),
+                        SnackBar(content: Text('Impossible de générer le rapport. Veuillez réessayer.')),
                       );
                     }
                   }
@@ -105,7 +105,7 @@ class MembreReportScreen extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur: $e')),
+                        SnackBar(content: Text('Impossible de générer le rapport. Veuillez réessayer.')),
                       );
                     }
                   }
@@ -141,7 +141,7 @@ class MembreReportScreen extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Erreur: $e')),
+      error: (e, _) => Center(child: Text('Impossible de générer le rapport. Veuillez réessayer.')),
     );
   }
 

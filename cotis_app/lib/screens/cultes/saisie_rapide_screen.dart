@@ -210,7 +210,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
         );
       },
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Erreur: $e'))),
+      error: (e, _) => Scaffold(body: Center(child: Text('Impossible d'enregistrer le paiement. Veuillez réessayer.'))),
     );
   }
 
@@ -243,7 +243,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text('Impossible d'enregistrer le paiement. Veuillez réessayer.')),
         );
       }
     }
@@ -287,7 +287,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text('Impossible d'enregistrer le paiement. Veuillez réessayer.')),
         );
       }
     }

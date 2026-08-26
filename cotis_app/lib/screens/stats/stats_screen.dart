@@ -436,7 +436,7 @@ class StatsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text('Erreur lors de l'opération. Veuillez réessayer.')),
         );
       }
     }
