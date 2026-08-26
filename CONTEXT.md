@@ -121,3 +121,27 @@ Moteurs (implémentation interne)
 - Toujours `flutter analyze` avant commit (0 error/warning)
 - Toujours générer les `.g.dart` après modification de modèles/providers
 - Les `.g.dart` sont exclus de l'analyse
+
+## Architecture actuelle (post-refactoring 2026-08-26)
+
+```
+Screens
+  └── dispatch(Action)
+        └── KasedStore (250 lignes)
+              ├── MemberHandler      — CreateMember, UpdateMember, AddPaymentAdvance, DeleteMember, RestoreMember
+              ├── CulteHandler       — CreateCulte, UpdateCulte, DeleteCulte, RestoreCulte
+              ├── CotisationHandler  — RegisterPayment, MarkAbsent, BulkSetPaiements, TogglePaiement, PaySeveralCultesInAdvance
+              ├── Query handlers     — GetHistoriqueMembre, GetRetardsMembres, GetMembresAJour
+              └── Corbeille handlers — PermanentlyDelete, EmptyTrash, RestoreFromTrash
+
+Seams (interfaces)
+  ├── InsForgeServicePort         — abstraction du service API (testable sans réseau)
+  ├── KasedExportService          — interface commune export CSV/PDF
+  └── DeviceServicePort           — abstraction identifiant appareil
+
+Providers adaptateurs
+  ├── KasedApp                    — adapteur Riverpod (~200 lignes)
+  ├── RealtimeHandler             — gestion événements temps réel
+  ├── UpdateNotifier              — système de mise à jour auto
+  └── AuthProvider                — authentification
+```
