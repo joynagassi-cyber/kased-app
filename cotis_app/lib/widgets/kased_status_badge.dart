@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class KasedStatusBadge extends StatelessWidget {
   final String text;
   final Color color;
   final Color backgroundColor;
+  final double? fontSize;
 
   const KasedStatusBadge({
     super.key,
     required this.text,
     required this.color,
     required this.backgroundColor,
+    this.fontSize,
   });
 
   factory KasedStatusBadge.success(String text) {
@@ -52,15 +55,24 @@ class KasedStatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Text(
         text,
         style: GoogleFonts.dmSans(
           color: color,
-          fontSize: 12,
+          fontSize: fontSize ?? 12,
           fontWeight: FontWeight.w600,
         ),
       ),
+    ).animate(
+      onPlay: (controller) => controller.repeat(),
+    ).shimmer(
+      duration: 2.ms,
+      color: color.withValues(alpha: 0.1),
     );
   }
 }
