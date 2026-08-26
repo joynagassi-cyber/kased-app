@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme/app_theme.dart';
 
 class KasedGradientCard extends StatelessWidget {
@@ -32,9 +33,15 @@ class KasedGradientCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.gradientStart.withValues(alpha: 0.4),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: AppColors.gradientStart.withValues(alpha: 0.3),
+            blurRadius: 32,
+            offset: const Offset(0, 16),
+            spreadRadius: -8,
+          ),
+          BoxShadow(
+            color: AppColors.gradientEnd.withValues(alpha: 0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
             spreadRadius: -4,
           ),
         ],
@@ -43,37 +50,47 @@ class KasedGradientCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            // Abstract overlapping vector shapes for high-end feel
+            // Animated glow effect
             Positioned(
-              right: -30,
-              top: -30,
+              right: -40,
+              top: -40,
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ).animate(
+                onPlay: (controller) => controller.repeat(),
+              ).shimmer(
+                duration: 3.ms,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+            Positioned(
+              right: 50,
+              bottom: -60,
               child: Container(
                 width: 140,
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.white.withValues(alpha: 0.06),
                 ),
+              ).animate(
+                onPlay: (controller) => controller.repeat(),
+              ).shimmer(
+                duration: 4.ms,
+                color: Colors.white.withValues(alpha: 0.03),
               ),
             ),
             Positioned(
-              right: 40,
-              bottom: -50,
+              left: -30,
+              bottom: -30,
               child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.05),
-                ),
-              ),
-            ),
-            Positioned(
-              left: -20,
-              bottom: -20,
-              child: Container(
-                width: 80,
-                height: 80,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withValues(alpha: 0.04),
@@ -92,6 +109,15 @@ class KasedGradientCard extends StatelessWidget {
             ),
           ],
         ),
+      ).animate(
+        onPlay: (controller) => controller.forward(),
+      ).shake(
+        duration: 500.ms,
+        curve: Curves.easeOutQuad,
+        hz: 2,
+      ).then().scale(
+        duration: 400.ms,
+        curve: Curves.easeOutCubic,
       ),
     );
   }
