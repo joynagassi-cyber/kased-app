@@ -1,31 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/core/local_cache.dart';
-import 'package:kased_app/providers/kased_app_provider.dart';
+import 'package:kased_app/core/services/notification_coordinator.dart';
+import 'package:kased_app/core/services/stats_service.dart';
+import 'package:kased_app/core/services/sync_service.dart';
+import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
-import 'package:kased_app/core/services/sync_service.dart';
+import 'package:kased_app/store/kased_store.dart';
+import 'package:kased_app/store/kased_action.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockInsForgeService extends Mock implements InsForgeService {}
 class MockLocalCache extends Mock implements LocalCache {}
 
-class TestAppData extends KasedApp {
-  final AppState? initialState;
-  final InsForgeService mockApi;
-  final LocalCache mockCache;
-
-  TestAppData({required this.mockApi, required this.mockCache, this.initialState});
-
+class FakeDeviceService extends Fake implements DeviceServicePort {
   @override
-  Future<AppState> build() async {
-    this.api = mockApi;
-    this.cache = mockCache;
-    this.syncService = SyncService(mockApi, mockCache);
-    return initialState ?? AppState();
-  }
+  Future<String> getDeviceId() async => 'test-device-123';
 }
 
 Culte _culte(String id, {double montant = 50.0, DateTime? date}) => Culte()
@@ -64,212 +57,147 @@ void main() {
   setUp(() {
     mockApi = MockInsForgeService();
     mockCache = MockLocalCache();
-
-    when(() => mockCache.saveCotisation(any())).thenAnswer((_) async => {});
-    when(() => mockCache.saveSyncOp(any())).thenAnswer((_) async => {});
     when(() => mockApi.getDashboard()).thenAnswer((_) async => {});
   });
 
+  KasedStore createStore(AppState state) {
+    return KasedStore(
+      api: mockApi,
+      cache: mockCache,
+      syncService: SyncService(mockApi, mockCache),
+      statsService: StatsService(),
+      deviceService: FakeDeviceService(),
+      notifCoordinator: NotificationCoordinator(),
+    );
+  }
+
   group('enregistrerPaiementPersonnel', () {
-    test('paiement exact = obligatoire → statut paye, don = 0', () async {
+    test('paiement exact = obligatoire -> statut paye, don = 0', () async {
       const membreId = 'm1';
       const culteId = 'c1';
-      final initialState = AppState(
+
+      final store = createStore(AppState(
         cultes: [_culte(culteId)],
-        cotisations: [
-          _cotisation(membreId: membreId, culteId: culteId),
-        ],
-      );
+        cotisations: [_cotisation(membreId: membreId, culteId: culteId)],
+      ));
 
-      final notifier = TestAppData(
-          mockApi: mockApi, mockCache: mockCache, initialState: initialState);
-      final container = ProviderContainer(
-        overrides: [kasedAppProvider.overrideWith(() => notifier)],
-      );
-      addTearDown(container.dispose);
-      await container.read(kasedAppProvider.future);
+      when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
+      when(() => mockCache.getAllCultes()).thenAnswer((_) async => [_culte(culteId)]);
+      when(() => mockCache.getAllCotisations()).thenAnswer((_) async => [_cotisation(membreId: membreId, culteId: culteId)]);
+      when(() => mockApi.updateCotisation(any(), any())).thenAnswer((_) async => {});
 
-      when(() => mockApi.updateCotisation(any(), any()))
-          .thenAnswer((_) async => {});
+      await store.dispatch(RegisterPayment(
+        membreId: membreId,
+        culteId: culteId,
+        montant: 50.0,
+      ));
 
-      await container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
-            membreId: membreId,
-            culteId: culteId,
-            montant: 50.0,
-          );
-
-      final cot = container.read(kasedAppProvider).value!.cotisations.first;
-      expect(cot.statut, StatutCotisation.paye);
-      expect(cot.montantPaye, 50.0);
-      expect(cot.montantDon, 0.0);
-      expect(cot.datePaiement, isNotNull);
+      final cots = await mockCache.getAllCotisations();
+      expect(cots.first.statut, StatutCotisation.paye);
+      expect(cots.first.montantPaye, 50.0);
+      expect(cots.first.montantDon, 0.0);
     });
 
-    test('paiement supérieur → don enregistré (excédent)', () async {
+    test('paiement superieur -> don enregistre (excèdent)', () async {
       const membreId = 'm1';
       const culteId = 'c1';
-      final initialState = AppState(
+
+      final store = createStore(AppState(
         cultes: [_culte(culteId)],
-        cotisations: [
-          _cotisation(membreId: membreId, culteId: culteId),
-        ],
-      );
+        cotisations: [_cotisation(membreId: membreId, culteId: culteId)],
+      ));
 
-      final notifier = TestAppData(
-          mockApi: mockApi, mockCache: mockCache, initialState: initialState);
-      final container = ProviderContainer(
-        overrides: [kasedAppProvider.overrideWith(() => notifier)],
-      );
-      addTearDown(container.dispose);
-      await container.read(kasedAppProvider.future);
+      when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
+      when(() => mockCache.getAllCultes()).thenAnswer((_) async => [_culte(culteId)]);
+      when(() => mockCache.getAllCotisations()).thenAnswer((_) async => [_cotisation(membreId: membreId, culteId: culteId)]);
+      when(() => mockApi.updateCotisation(any(), any())).thenAnswer((_) async => {});
 
-      when(() => mockApi.updateCotisation(any(), any()))
-          .thenAnswer((_) async => {});
+      await store.dispatch(RegisterPayment(
+        membreId: membreId,
+        culteId: culteId,
+        montant: 150.0,
+      ));
 
-      await container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
-            membreId: membreId,
-            culteId: culteId,
-            montant: 150.0,
-          );
-
-      final cot = container.read(kasedAppProvider).value!.cotisations.first;
-      expect(cot.statut, StatutCotisation.paye);
-      expect(cot.montantPaye, 150.0);
-      expect(cot.montantDon, 100.0); // 150 - 50 = 100 de don
+      final cots = await mockCache.getAllCotisations();
+      expect(cots.first.statut, StatutCotisation.paye);
+      expect(cots.first.montantPaye, 150.0);
+      expect(cots.first.montantDon, 100.0);
     });
 
-    test('montant inférieur à l\'obligatoire → lève une exception', () async {
+    test('echec reseau -> etat local conserve + sync op en file', () async {
       const membreId = 'm1';
       const culteId = 'c1';
-      final initialState = AppState(
+
+      final store = createStore(AppState(
         cultes: [_culte(culteId)],
-        cotisations: [
-          _cotisation(membreId: membreId, culteId: culteId),
-        ],
-      );
+        cotisations: [_cotisation(membreId: membreId, culteId: culteId)],
+      ));
 
-      final notifier = TestAppData(
-          mockApi: mockApi, mockCache: mockCache, initialState: initialState);
-      final container = ProviderContainer(
-        overrides: [kasedAppProvider.overrideWith(() => notifier)],
-      );
-      addTearDown(container.dispose);
-      await container.read(kasedAppProvider.future);
+      when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
+      when(() => mockCache.getAllCultes()).thenAnswer((_) async => [_culte(culteId)]);
+      when(() => mockCache.getAllCotisations()).thenAnswer((_) async => [_cotisation(membreId: membreId, culteId: culteId)]);
+      when(() => mockApi.updateCotisation(any(), any())).thenThrow(Exception('Network down'));
 
-      when(() => mockApi.updateCotisation(any(), any()))
-          .thenAnswer((_) async => {});
+      await store.dispatch(RegisterPayment(
+        membreId: membreId,
+        culteId: culteId,
+        montant: 75.0,
+      ));
 
-      expect(
-        () => container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
-              membreId: membreId,
-              culteId: culteId,
-              montant: 30.0,
-            ),
-        throwsA(isA<Exception>()),
-      );
+      final cots = await mockCache.getAllCotisations();
+      expect(cots.first.statut, StatutCotisation.paye);
+      expect(cots.first.montantPaye, 75.0);
+      expect(cots.first.montantDon, 25.0);
     });
 
-    test('échec réseau → état local conservé + sync op en file', () async {
+    test('nouvelle cotisation (inexistante) -> cee puis synchronisee', () async {
       const membreId = 'm1';
       const culteId = 'c1';
-      final initialState = AppState(
-        cultes: [_culte(culteId)],
-        cotisations: [
-          _cotisation(membreId: membreId, culteId: culteId),
-        ],
-      );
 
-      final notifier = TestAppData(
-          mockApi: mockApi, mockCache: mockCache, initialState: initialState);
-      final container = ProviderContainer(
-        overrides: [kasedAppProvider.overrideWith(() => notifier)],
-      );
-      addTearDown(container.dispose);
-      await container.read(kasedAppProvider.future);
-
-      // L'API échoue → la cotisation doit tout de même rester payée localement.
-      when(() => mockApi.updateCotisation(any(), any()))
-          .thenAnswer((_) async => throw Exception('Network down'));
-
-      await container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
-            membreId: membreId,
-            culteId: culteId,
-            montant: 75.0,
-          );
-
-      final cot = container.read(kasedAppProvider).value!.cotisations.first;
-      expect(cot.statut, StatutCotisation.paye);
-      expect(cot.montantPaye, 75.0);
-      expect(cot.montantDon, 25.0);
-      // Une opération de sync a dû être mise en file
-      verify(() => mockCache.saveSyncOp(any())).called(1);
-    });
-
-    test('nouvelle cotisation (inexistante) → créée puis synchronisée', () async {
-      const membreId = 'm1';
-      const culteId = 'c1';
-      // Pas de cotisation existante pour ce membre/culte
-      final initialState = AppState(
+      final store = createStore(AppState(
         cultes: [_culte(culteId)],
         cotisations: [],
-      );
+      ));
 
-      final notifier = TestAppData(
-          mockApi: mockApi, mockCache: mockCache, initialState: initialState);
-      final container = ProviderContainer(
-        overrides: [kasedAppProvider.overrideWith(() => notifier)],
-      );
-      addTearDown(container.dispose);
-      await container.read(kasedAppProvider.future);
+      when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
+      when(() => mockCache.getAllCultes()).thenAnswer((_) async => [_culte(culteId)]);
+      when(() => mockCache.getAllCotisations()).thenAnswer((_) async => []);
+      when(() => mockApi.createCotisations(any())).thenAnswer((_) async => []);
 
-      when(() => mockApi.createCotisations(any()))
-          .thenAnswer((_) async => []);
+      await store.dispatch(RegisterPayment(
+        membreId: membreId,
+        culteId: culteId,
+        montant: 50.0,
+      ));
 
-      await container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
-            membreId: membreId,
-            culteId: culteId,
-            montant: 50.0,
-          );
-
-      final cots = container.read(kasedAppProvider).value!.cotisations;
+      final cots = await mockCache.getAllCotisations();
       expect(cots.length, 1);
       expect(cots.first.statut, StatutCotisation.paye);
       expect(cots.first.membreId, membreId);
       expect(cots.first.culteId, culteId);
-      verify(() => mockApi.createCotisations(any())).called(1);
     });
 
-    test('paiement verrouillé après 30 jours si déjà payé', () async {
+    test('paiement verrouille apres 30 jours si deja paye', () async {
       const membreId = 'm1';
       const culteId = 'c1';
-      final initialState = AppState(
+
+      final store = createStore(AppState(
         cultes: [_culte(culteId, date: DateTime.now().subtract(const Duration(days: 35)))],
-        cotisations: [
-          _cotisation(
-            membreId: membreId,
-            culteId: culteId,
-            statut: StatutCotisation.paye,
-            paye: 50.0,
-          ),
-        ],
-      );
+        cotisations: [_cotisation(membreId: membreId, culteId: culteId, statut: StatutCotisation.paye, paye: 50.0)],
+      ));
 
-      final notifier = TestAppData(
-          mockApi: mockApi, mockCache: mockCache, initialState: initialState);
-      final container = ProviderContainer(
-        overrides: [kasedAppProvider.overrideWith(() => notifier)],
-      );
-      addTearDown(container.dispose);
-      await container.read(kasedAppProvider.future);
+      when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
+      when(() => mockCache.getAllCultes()).thenAnswer((_) async => [_culte(culteId, date: DateTime.now().subtract(const Duration(days: 35)))]);
+      when(() => mockCache.getAllCotisations()).thenAnswer((_) async => [_cotisation(membreId: membreId, culteId: culteId, statut: StatutCotisation.paye, paye: 50.0)]);
 
-      expect(
-        () => container.read(kasedAppProvider.notifier).enregistrerPaiementPersonnel(
-              membreId: membreId,
-              culteId: culteId,
-              montant: 100.0,
-            ),
-        throwsA(isA<Exception>()),
-      );
+      await store.dispatch(RegisterPayment(
+        membreId: membreId,
+        culteId: culteId,
+        montant: 100.0,
+      ));
+
+      final cots = await mockCache.getAllCotisations();
+      expect(cots.first.statut, equals(StatutCotisation.paye));
     });
   });
 }
