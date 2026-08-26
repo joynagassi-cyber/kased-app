@@ -64,7 +64,7 @@ class SyncService {
     if (_lastSyncAt == null) return true;
     if (DateTime.now().difference(_lastSyncAt!) > _syncThrottle) return true;
     // Toujours synchroniser s'il y a des ops en attente
-    return false; // Check pending ops in the caller
+    return true; // Pending ops check handled in hasPendingOps()
   }
 
 
