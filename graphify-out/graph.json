@@ -4167,7 +4167,7 @@
       "source_file": "cotis_app\\test\\widget\\login_screen_test.dart",
       "source_location": null,
       "id": "package_kased_app_core_insforge_insforge_service_dart",
-      "community": 5,
+      "community": 0,
       "norm_label": "package:kased_app/core/insforge/insforge_service.dart"
     },
     {
@@ -7542,7 +7542,7 @@
       "source_file": "cotis_app\\test\\unit\\statut_calcul_test.dart",
       "source_location": null,
       "id": "package_kased_app_core_logic_cotisation_logic_dart",
-      "community": 0,
+      "community": 1,
       "norm_label": "package:kased_app/core/logic/cotisation_logic.dart"
     },
     {
@@ -9265,12 +9265,21 @@
       "norm_label": "sizedbox"
     },
     {
+      "label": "progress.dart",
+      "file_type": "code",
+      "source_file": "cotis_app\\lib\\widgets\\membre_detail\\cadencecard.dart",
+      "source_location": null,
+      "id": "progress_dart",
+      "community": 3,
+      "norm_label": "progress.dart"
+    },
+    {
       "label": "historiqueitem.dart",
       "file_type": "code",
       "source_file": "cotis_app\\lib\\widgets\\membre_detail\\historiqueitem.dart",
       "source_location": null,
       "id": "cotis_app_lib_widgets_membre_detail_historiqueitem_dart",
-      "community": 3,
+      "community": 0,
       "norm_label": "historiqueitem.dart"
     },
     {
@@ -9279,7 +9288,7 @@
       "source_file": "cotis_app\\lib\\widgets\\membre_detail\\historiqueitem.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_historiqueitem_dart_historiqueitem",
-      "community": 3,
+      "community": 0,
       "norm_label": "_historiqueitem"
     },
     {
@@ -10422,7 +10431,7 @@
       "source_file": "cotis_app\\test\\integration\\sync_insforge_integration_test.dart",
       "source_location": null,
       "id": "cotis_app_test_integration_sync_insforge_integration_test_dart",
-      "community": 1,
+      "community": 0,
       "norm_label": "sync_insforge_integration_test.dart"
     },
     {
@@ -10431,7 +10440,7 @@
       "source_file": "cotis_app\\test\\integration\\sync_insforge_integration_test.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_test_integration_sync_insforge_integration_test_dart_mockinsforgeservice",
-      "community": 1,
+      "community": 0,
       "norm_label": "mockinsforgeservice"
     },
     {
@@ -10440,7 +10449,7 @@
       "source_file": "cotis_app\\test\\integration\\sync_insforge_integration_test.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_test_integration_sync_insforge_integration_test_dart_main",
-      "community": 1,
+      "community": 0,
       "norm_label": "main"
     },
     {
@@ -10674,7 +10683,7 @@
       "source_file": "cotis_app\\test\\unit\\cotisation_logic_test.dart",
       "source_location": null,
       "id": "cotis_app_test_unit_cotisation_logic_test_dart",
-      "community": 0,
+      "community": 1,
       "norm_label": "cotisation_logic_test.dart"
     },
     {
@@ -10683,7 +10692,7 @@
       "source_file": "cotis_app\\test\\unit\\cotisation_logic_test.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_test_unit_cotisation_logic_test_dart_culte",
-      "community": 0,
+      "community": 1,
       "norm_label": "_culte"
     },
     {
@@ -10692,7 +10701,7 @@
       "source_file": "cotis_app\\test\\unit\\cotisation_logic_test.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_test_unit_cotisation_logic_test_dart_cotisation",
-      "community": 0,
+      "community": 1,
       "norm_label": "_cotisation"
     },
     {
@@ -10701,7 +10710,7 @@
       "source_file": "cotis_app\\test\\unit\\cotisation_logic_test.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_test_unit_cotisation_logic_test_dart_main",
-      "community": 0,
+      "community": 1,
       "norm_label": "main"
     },
     {
@@ -11034,7 +11043,7 @@
       "source_file": "cotis_app\\test\\unit\\statut_calcul_test.dart",
       "source_location": null,
       "id": "cotis_app_test_unit_statut_calcul_test_dart",
-      "community": 0,
+      "community": 1,
       "norm_label": "statut_calcul_test.dart"
     },
     {
@@ -11043,7 +11052,7 @@
       "source_file": "cotis_app\\test\\unit\\statut_calcul_test.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_test_unit_statut_calcul_test_dart_main",
-      "community": 0,
+      "community": 1,
       "norm_label": "main"
     },
     {
@@ -15313,6 +15322,30 @@
       "_tgt": "package_kased_app_models_cotisation_dart",
       "source": "package_kased_app_models_cotisation_dart",
       "target": "cotis_app_lib_widgets_member_pay_tile_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cotis_app\\lib\\widgets\\membre_detail\\cadencecard.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cotis_app_lib_widgets_membre_detail_cadencecard_dart",
+      "_tgt": "package_kased_app_models_cotisation_dart",
+      "source": "package_kased_app_models_cotisation_dart",
+      "target": "cotis_app_lib_widgets_membre_detail_cadencecard_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cotis_app\\lib\\widgets\\membre_detail\\historiqueitem.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cotis_app_lib_widgets_membre_detail_historiqueitem_dart",
+      "_tgt": "package_kased_app_models_cotisation_dart",
+      "source": "package_kased_app_models_cotisation_dart",
+      "target": "cotis_app_lib_widgets_membre_detail_historiqueitem_dart"
     },
     {
       "relation": "imports",
@@ -29317,6 +29350,18 @@
       "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_cadencecard_dart_sizedbox",
       "source": "cotis_app_lib_widgets_membre_detail_cadencecard_dart",
       "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_cadencecard_dart_sizedbox"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cotis_app\\lib\\widgets\\membre_detail\\cadencecard.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cotis_app_lib_widgets_membre_detail_cadencecard_dart",
+      "_tgt": "progress_dart",
+      "source": "cotis_app_lib_widgets_membre_detail_cadencecard_dart",
+      "target": "progress_dart"
     },
     {
       "relation": "defines",

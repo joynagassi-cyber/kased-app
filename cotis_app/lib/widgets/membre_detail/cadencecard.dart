@@ -30,7 +30,7 @@ class _CadenceCard extends StatelessWidget {
             width: 64,
             height: 64,
             child: CustomPaint(
-              painter: _ProgressPainter(percentage, colorScheme),
+              painter: ProgressPainter(percentage: percentage, colorScheme: colorScheme),
               child: Center(
                 child: Text(
                   '${percentage.toStringAsFixed(0)}%',

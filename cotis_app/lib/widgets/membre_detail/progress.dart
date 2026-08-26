@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-class _ProgressPainter extends CustomPainter {
+class ProgressPainter extends CustomPainter {
   final double percentage;
   final ColorScheme colorScheme;
 
-  _ProgressPainter(this.percentage, this.colorScheme);
+  ProgressPainter({required this.percentage, required this.colorScheme});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -37,6 +37,6 @@ class _ProgressPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ProgressPainter oldDelegate) =>
+  bool shouldRepaint(ProgressPainter oldDelegate) =>
       oldDelegate.percentage != percentage;
 }
