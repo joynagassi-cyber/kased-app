@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:kased_app/core/insforge/insforge_service.dart';
+import 'package:kased_app/core/insforge/insforge_service_port.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/logic/cotisation_logic.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
@@ -15,7 +15,7 @@ import 'package:kased_app/store/kased_action.dart';
 /// Handler dédié aux actions [CotisationAction].
 class CotisationHandler {
   final LocalCache cache;
-  final InsForgeService api;
+  final InsForgeServicePort api;
   final DeviceServicePort deviceService;
   final NotificationCoordinator notifCoordinator;
   final Future<void> Function(String event, String label, {String? extra}) onPush;

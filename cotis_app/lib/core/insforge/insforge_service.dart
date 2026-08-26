@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'insforge_config.dart';
+import 'insforge_service_port.dart';
 import '../../providers/auth_provider.dart';
 
 part 'insforge_service.g.dart';
@@ -21,7 +22,7 @@ InsForgeService insForgeService(InsForgeServiceRef ref) {
   );
 }
 
-class InsForgeService {
+class InsForgeService implements InsForgeServicePort {
   late final Dio _dio;
   final Future<bool> Function()? onUnauthorized;
 

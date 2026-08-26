@@ -19,13 +19,21 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'app_update_model.dart';
 import 'update_config.dart';
+import '../insforge/insforge_config.dart';
 
 class UpdateService {
   static const MethodChannel _channel = MethodChannel('kased_app/update');
 
   final Dio _dio;
 
-  UpdateService({Dio? dio}) : _dio = dio ?? Dio();
+  UpdateService({Dio? dio}) : _dio = dio ?? Dio(
+        BaseOptions(
+          headers: {
+            'apikey': InsForgeConfig.anonKey,
+            'Authorization': 'Bearer ${InsForgeConfig.anonKey}',
+          },
+        ),
+      );
 
   // ── Vérification de version ────────────────────────────────────────────────
 

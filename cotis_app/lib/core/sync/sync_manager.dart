@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-import '../insforge/insforge_service.dart';
+import '../insforge/insforge_service_port.dart';
 import '../local_cache.dart';
 import '../constants.dart';
 import '../../models/culte.dart';
@@ -40,7 +40,7 @@ class SyncResult {
 ///
 /// Anti-réentrance : un seul [runSync] à la fois.
 class SyncManager {
-  final InsForgeService _api;
+  final InsForgeServicePort _api;
   final LocalCache _cache;
   bool _isSyncing = false;
 

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:kased_app/core/insforge/insforge_service.dart';
+import 'package:kased_app/core/insforge/insforge_service_port.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/sync/sync_manager.dart';
 import 'package:kased_app/models/culte.dart';
@@ -43,7 +43,7 @@ class SyncDataResult {
 /// - Rechargement local post-sync
 /// - File d'attente d'opérations ([queueSyncOperation])
 class SyncService {
-  final InsForgeService _api;
+  final InsForgeServicePort _api;
   final LocalCache _cache;
   final SyncManager _syncManager;
   final DeviceServicePort _deviceService;

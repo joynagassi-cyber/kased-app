@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:kased_app/core/insforge/insforge_service.dart';
+import 'package:kased_app/core/insforge/insforge_service_port.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
 import 'package:kased_app/core/sync/device_service_port.dart';
@@ -14,7 +14,7 @@ import 'package:kased_app/store/kased_action.dart';
 /// Handler dédié aux actions [MemberAction].
 class MemberHandler {
   final LocalCache cache;
-  final InsForgeService api;
+  final InsForgeServicePort api;
   final DeviceServicePort deviceService;
   final NotificationCoordinator notifCoordinator;
   final Future<void> Function() onLoadDashboard;

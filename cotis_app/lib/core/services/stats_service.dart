@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:kased_app/core/insforge/insforge_service.dart';
+import 'package:kased_app/core/insforge/insforge_service_port.dart';
 import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
@@ -217,7 +217,7 @@ class StatsService {
     return result;
   }
 
-  Future<Map<String, dynamic>> fetchDashboard(InsForgeService api) async {
+  Future<Map<String, dynamic>> fetchDashboard(InsForgeServicePort api) async {
     try {
       return await api.getDashboard();
     } catch (e) {
@@ -227,7 +227,7 @@ class StatsService {
   }
 
   Future<List<Map<String, dynamic>>> loadRetardsMembres(
-      InsForgeService api) async {
+      InsForgeServicePort api) async {
     try {
       return await api.getRetardsMembres();
     } catch (e) {
@@ -236,7 +236,7 @@ class StatsService {
   }
 
   Future<List<Map<String, dynamic>>> loadMembresAJour(
-      InsForgeService api) async {
+      InsForgeServicePort api) async {
     try {
       return await api.getMembresAJour();
     } catch (e) {

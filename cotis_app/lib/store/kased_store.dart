@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:kased_app/core/insforge/insforge_service.dart';
+import 'package:kased_app/core/insforge/insforge_service_port.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
 import 'package:kased_app/core/services/push_notify_service.dart';
@@ -31,7 +31,7 @@ class KasedStore {
   // ── Dependencies ───────────────────────────────────────────────────────────
 
   final LocalCache cache;
-  final InsForgeService api;
+  final InsForgeServicePort api;
   final SyncService syncService;
   final StatsService statsService;
   final DeviceServicePort deviceService;
