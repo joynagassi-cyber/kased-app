@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
@@ -9,7 +8,6 @@ import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/services/stats_service.dart';
 import 'package:kased_app/core/services/sync_service.dart';
 import 'package:kased_app/core/sync/device_service_port.dart';
-import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/store/app_state.dart';
 import 'package:kased_app/store/app_state_helpers.dart';
 import 'package:kased_app/store/handlers/culte_handler.dart';
@@ -91,21 +89,22 @@ class KasedStore {
         // Members
         case CreateMember():
           await _memberHandler.createMember(action);
-          _state = _state.copyWith(membres: sortMembres([..._state.membres, /* member added by handler */]));
-        case UpdateMember():
-          await _memberHandler.createMember(action);
           final membres = await cache.getAllMembres();
           _state = _state.copyWith(membres: sortMembres(membres));
-        case AddPaymentAdvance():
-          await _memberHandler.createMember(action);
+        case UpdateMember():
+          await _memberHandler.updateMember(action);
           final membres2 = await cache.getAllMembres();
           _state = _state.copyWith(membres: sortMembres(membres2));
-        case DeleteMember():
-          await _memberHandler.createMember(action);
+        case AddPaymentAdvance():
+          await _memberHandler.addPaymentAdvance(action);
           final membres3 = await cache.getAllMembres();
-          _state = _state.copyWith(membres: membres3);
+          _state = _state.copyWith(membres: sortMembres(membres3));
+        case DeleteMember():
+          await _memberHandler.deleteMember(action);
+          final membres4 = await cache.getAllMembres();
+          _state = _state.copyWith(membres: membres4);
         case RestoreMember():
-          await _memberHandler.createMember(action);
+          await _memberHandler.restoreMember(action);
           final allMembres = await cache.getAllMembres();
           final allCultes = await cache.getAllCultes();
           final allCotisations = await cache.getAllCotisations();
@@ -116,15 +115,15 @@ class KasedStore {
           final cultes = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes);
         case UpdateCulte():
-          await _culteHandler.createCulte(action);
+          await _culteHandler.updateCulte(action);
           final cultes2 = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes2);
         case DeleteCulte():
-          await _culteHandler.createCulte(action);
+          await _culteHandler.deleteCulte(action);
           final cultes3 = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes3);
         case RestoreCulte():
-          await _culteHandler.createCulte(action);
+          await _culteHandler.restoreCulte(action);
           final allM = await cache.getAllMembres();
           final allC = await cache.getAllCultes();
           final allCo = await cache.getAllCotisations();
@@ -135,25 +134,22 @@ class KasedStore {
           final cots = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots);
         case MarkAbsent():
-          await _cotisationHandler.registerPayment(action);
+          await _cotisationHandler.markAbsent(action);
           final cots2 = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots2);
         case BulkSetPaiements():
-          await _cotisationHandler.registerPayment(action);
+          await _cotisationHandler.bulkSetPaiements(action);
           final cots3 = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots3);
         case TogglePaiement():
-          // Re-dispatch as RegisterPayment
-          await dispatch(RegisterPayment(
-            membreId: action.membreId,
-            culteId: action.culteId,
-            montant: 0, // Will be overridden by handler
-          ));
-        case PaySeveralCultesInAdvance():
-          await _cotisationHandler.registerPayment(action);
+          await _cotisationHandler.togglePaiement(action);
           final cots4 = await cache.getAllCotisations();
-          final membres4 = await cache.getAllMembres();
-          _state = _state.copyWith(cotisations: cots4, membres: membres4);
+          _state = _state.copyWith(cotisations: cots4);
+        case PaySeveralCultesInAdvance():
+          await _cotisationHandler.paySeveralCultesInAdvance(action);
+          final cots5 = await cache.getAllCotisations();
+          final membres5 = await cache.getAllMembres();
+          _state = _state.copyWith(cotisations: cots5, membres: membres5);
         // Sync
         case SyncData():
           await _handleSyncData();

@@ -5,13 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
-import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/core/utils/uuid.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/sync_operation.dart';
-import 'package:kased_app/store/app_state.dart';
-import 'package:kased_app/store/app_state_helpers.dart';
 import 'package:kased_app/store/kased_action.dart';
 
 /// Handler dédié aux actions [MemberAction].
@@ -32,7 +29,7 @@ class MemberHandler {
     required this.onPush,
   });
 
-  Future<void> createMember action) async {
+  Future<void> createMember(CreateMember action) async {
     final deviceId = await deviceService.getDeviceId();
     final now = DateTime.now();
     final newMembre = Membre()
@@ -72,7 +69,7 @@ class MemberHandler {
     await onLoadDashboard();
   }
 
-  Future<void> updateMember action) async {
+  Future<void> updateMember(UpdateMember action) async {
     final membre = (await cache.getAllMembres()).firstWhere(
       (m) => m.id == action.id,
       orElse: () => throw Exception('Membre introuvable: ${action.id}'),
@@ -120,7 +117,7 @@ class MemberHandler {
     unawaited(onPush('membre_modifie', updated.nomComplet));
   }
 
-  Future<void> addPaymentAdvance action) async {
+  Future<void> addPaymentAdvance(AddPaymentAdvance action) async {
     final membre = (await cache.getAllMembres()).firstWhere(
       (m) => m.id == action.membreId,
       orElse: () => throw Exception('Membre introuvable'),
@@ -165,14 +162,13 @@ class MemberHandler {
     await onPush('paiement_avance', updated.nomComplet);
   }
 
-  Future<void> deleteMember action) async {
-    final membres = (await cache.getAllMembres()).where((m) => m.id != action.id).toList();
+  Future<void> deleteMember(DeleteMember action) async {
     await cache.deleteMembreById(action.id);
     NotificationCoordinator.annulerAnniversaireMembre(action.id);
     unawaited(onPush('membre_supprime', action.id));
   }
 
-  Future<void> restoreMember action) async {
+  Future<void> restoreMember(RestoreMember action) async {
     try {
       await api.updateMembre(action.id, {'is_active': true});
     } catch (e) {

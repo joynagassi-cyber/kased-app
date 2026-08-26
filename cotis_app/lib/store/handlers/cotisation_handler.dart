@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/logic/cotisation_logic.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
-import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/core/utils/uuid.dart';
 import 'package:kased_app/models/cotisation.dart';
@@ -32,7 +32,7 @@ class CotisationHandler {
     required this.onGetCotisations,
   });
 
-  Future<void> registerPayment action) async {
+  Future<void> registerPayment(RegisterPayment action) async {
     final culte = (await cache.getAllCultes()).firstWhere(
       (c) => c.id == action.culteId,
       orElse: () => throw Exception('Culte introuvable'),
@@ -114,14 +114,18 @@ class CotisationHandler {
       }
     }
 
+    final membreNom = membres.firstWhere(
+      (m) => m.id == action.membreId,
+      orElse: () => throw Exception('Membre introuvable'),
+    );
     unawaited(onPush(
       statut == StatutCotisation.enAvance ? 'cotisation_en_avance' : 'cotisation_payee',
-      '${membres.firstWhere((m) => m.id == action.membreId).nomComplet} — culte du ${culte.dateCulte.day}/${culte.dateCulte.month}',
+      '${membreNom.nomComplet} — culte du ${culte.dateCulte.day}/${culte.dateCulte.month}',
       extra: action.montant.toStringAsFixed(0),
     ));
   }
 
-  Future<void> markAbsent action) async {
+  Future<void> markAbsent(MarkAbsent action) async {
     final cultes = await cache.getAllCultes();
     final cotisations = await onGetCotisations();
     final membres = await onGetMembres();
@@ -157,6 +161,7 @@ class CotisationHandler {
     );
 
     await cache.saveCotisation(updatedCotisation);
+
     final membre = membres.firstWhere(
       (m) => m.id == action.membreId,
       orElse: () => throw Exception('Membre introuvable'),
@@ -164,7 +169,7 @@ class CotisationHandler {
     unawaited(onPush('cotisation_absente', membre.nomComplet));
   }
 
-  Future<({int success, int total})> handle(BulkSetPaiements action) async {
+  Future<({int success, int total})> bulkSetPaiements(BulkSetPaiements action) async {
     final cotisations = await onGetCotisations();
     List<Cotisation> updatedCotisations = List.from(cotisations);
 
@@ -193,19 +198,29 @@ class CotisationHandler {
     return (success: success, total: action.membreIds.length);
   }
 
-  Future<void> paySeveralCultesInAdvance action) async {
+  Future<void> togglePaiement(TogglePaiement action) async {
+    final culte = (await cache.getAllCultes()).firstWhere(
+      (c) => c.id == action.culteId,
+      orElse: () => throw Exception('Culte introuvable'),
+    );
+    await registerPayment(RegisterPayment(
+      membreId: action.membreId,
+      culteId: action.culteId,
+      montant: culte.montantCotisation,
+    ));
+  }
+
+  Future<void> paySeveralCultesInAdvance(PaySeveralCultesInAdvance action) async {
     final cultes = await cache.getAllCultes();
     final cotisations = await onGetCotisations();
     final membres = await onGetMembres();
-    final deviceId = await deviceService.getDeviceId();
     final now = DateTime.now();
 
     List<Cotisation> updatedCotisations = List.from(cotisations);
 
     for (final culteId in action.culteIds) {
-      final culte = cultes.firstWhere(
+      final culte = cultes.firstWhereOrNull(
         (c) => c.id == culteId && !c.isDeleted,
-        orElse: () => null,
       );
       if (culte == null) continue;
 

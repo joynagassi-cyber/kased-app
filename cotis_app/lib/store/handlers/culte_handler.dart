@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
-import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/core/utils/uuid.dart';
 import 'package:kased_app/models/culte.dart';
@@ -30,7 +29,7 @@ class CulteHandler {
     required this.onPush,
   });
 
-  Future<void> createCulte action) async {
+  Future<void> createCulte(CreateCulte action) async {
     final newCulte = Culte()
       ..id = UuidUtils.generate()
       ..dateCulte = action.date
@@ -63,7 +62,7 @@ class CulteHandler {
     unawaited(onPush('culte_cree', _formatDate(newCulte.dateCulte)));
   }
 
-  Future<void> updateCulte action) async {
+  Future<void> updateCulte(UpdateCulte action) async {
     final existing = (await cache.getAllCultes()).firstWhere(
       (c) => c.id == action.id,
       orElse: () => throw Exception('Culte introuvable: ${action.id}'),
@@ -105,11 +104,11 @@ class CulteHandler {
     await onLoadDashboard();
   }
 
-  Future<void> deleteCulte action) async {
+  Future<void> deleteCulte(DeleteCulte action) async {
     await cache.deleteCulteById(action.id);
   }
 
-  Future<void> restoreCulte action) async {
+  Future<void> restoreCulte(RestoreCulte action) async {
     try {
       await api.createCulte({'id': action.id});
     } catch (e) {
