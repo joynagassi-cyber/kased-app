@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/providers/theme_provider.dart';
+import 'package:kased_app/providers/update_provider.dart';
 import 'package:kased_app/widgets/user_avatar.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -259,6 +260,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 const SizedBox(height: 32),
 
+                // Section — Mise à jour
+                _SectionLabel(label: 'Application', colorScheme: colorScheme),
+                const SizedBox(height: 12),
+                _UpdateBadge(colorScheme: colorScheme),
+
+                const SizedBox(height: 16),
+
                 // Bouton Enregistrer
                 SizedBox(
                   width: double.infinity,
@@ -402,6 +410,64 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 }
 
 // ── Widgets helper ─────────────────────────────────────────────────────────────
+
+/// Widget affichant le badge de mise à jour avec un badge rouge si une MAJ est disponible.
+class _UpdateBadge extends ConsumerWidget {
+  final ColorScheme colorScheme;
+  const _UpdateBadge({required this.colorScheme});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final updateState = ref.watch(updateNotifierProvider);
+    final hasUpdate = updateState.value?.hasUpdate ?? false;
+
+    return _Card(
+      isDark: Theme.of(context).brightness == Brightness.dark,
+      colorScheme: colorScheme,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(
+                Icons.system_update_outlined,
+                color: hasUpdate ? AppColors.warning : colorScheme.onSurfaceVariant,
+                size: 22,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  hasUpdate ? 'Mise à jour disponible' : 'Application à jour',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: hasUpdate ? AppColors.warning : colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              if (hasUpdate)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'NEW',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.warning,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _SectionLabel extends StatelessWidget {
   final String label;

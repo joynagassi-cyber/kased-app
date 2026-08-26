@@ -82,47 +82,42 @@ class CotisationHandler {
 
     await cache.saveCotisation(updatedCotisation);
 
-    if (montantDon == 0) {
-      final membre = membres.firstWhere(
-        (m) => m.id == action.membreId,
-        orElse: () => throw Exception('Membre introuvable'),
-      );
-      if (membre.montantEnAvance >= action.montant) {
-        final deviceId = await deviceService.getDeviceId();
-        final now = DateTime.now();
-        final updatedMembre = Membre()
-          ..id = membre.id
-          ..nom = membre.nom
-          ..prenom = membre.prenom
-          ..dateAdhesion = membre.dateAdhesion
-          ..dateNaissance = membre.dateNaissance
-          ..montantEnAvance = membre.montantEnAvance - action.montant
-          ..totalDons = membre.totalDons
-          ..telephone = membre.telephone
-          ..notes = membre.notes
-          ..isActive = membre.isActive
-          ..deviceId = deviceId
-          ..createdAt = membre.createdAt
-          ..version = membre.version + 1
-          ..updatedAt = now;
-        await cache.saveMembre(updatedMembre);
-        try {
-          await api.consommerAvancePourCulte(membreId: membre.id, culteId: action.culteId);
-        } catch (e) {
-          debugPrint('[CotisationHandler] consommerAvance réseau échoué: $e');
-        }
+    final membre = membres.firstWhereOrNull(
+      (m) => m.id == action.membreId,
+    );
+    if (montantDon == 0 && membre != null && membre.montantEnAvance >= action.montant) {
+      final deviceId = await deviceService.getDeviceId();
+      final now = DateTime.now();
+      final updatedMembre = Membre()
+        ..id = membre.id
+        ..nom = membre.nom
+        ..prenom = membre.prenom
+        ..dateAdhesion = membre.dateAdhesion
+        ..dateNaissance = membre.dateNaissance
+        ..montantEnAvance = membre.montantEnAvance - action.montant
+        ..totalDons = membre.totalDons
+        ..telephone = membre.telephone
+        ..notes = membre.notes
+        ..isActive = membre.isActive
+        ..deviceId = deviceId
+        ..createdAt = membre.createdAt
+        ..version = membre.version + 1
+        ..updatedAt = now;
+      await cache.saveMembre(updatedMembre);
+      try {
+        await api.consommerAvancePourCulte(membreId: membre.id, culteId: action.culteId);
+      } catch (e) {
+        debugPrint('[CotisationHandler] consommerAvance réseau échoué: $e');
       }
     }
 
-    final membreNom = membres.firstWhere(
-      (m) => m.id == action.membreId,
-      orElse: () => throw Exception('Membre introuvable'),
-    );
-    unawaited(onPush(
-      statut == StatutCotisation.enAvance ? 'cotisation_en_avance' : 'cotisation_payee',
-      '${membreNom.nomComplet} — culte du ${culte.dateCulte.day}/${culte.dateCulte.month}',
-      extra: action.montant.toStringAsFixed(0),
-    ));
+    if (membre != null) {
+      unawaited(onPush(
+        statut == StatutCotisation.enAvance ? 'cotisation_en_avance' : 'cotisation_payee',
+        '${membre.nomComplet} — culte du ${culte.dateCulte.day}/${culte.dateCulte.month}',
+        extra: action.montant.toStringAsFixed(0),
+      ));
+    }
   }
 
   Future<void> markAbsent(MarkAbsent action) async {
@@ -162,11 +157,12 @@ class CotisationHandler {
 
     await cache.saveCotisation(updatedCotisation);
 
-    final membre = membres.firstWhere(
+    final membre = membres.firstWhereOrNull(
       (m) => m.id == action.membreId,
-      orElse: () => throw Exception('Membre introuvable'),
     );
-    unawaited(onPush('cotisation_absente', membre.nomComplet));
+    if (membre != null) {
+      unawaited(onPush('cotisation_absente', membre.nomComplet));
+    }
   }
 
   Future<({int success, int total})> bulkSetPaiements(BulkSetPaiements action) async {
@@ -191,7 +187,7 @@ class CotisationHandler {
     }
 
     final success = action.membreIds.length;
-    final actionText = action.newStatut == StatutCotisation.paye ? 'payé(s)' : 'annulé(s)';
+    final actionText = action.newStatut == StatutCotisation.paye ? 'payé(s)' : 'annulé(s)';;
     notifCoordinator.notifierPaiementsEnMasseFull(success, actionText);
     unawaited(onPush('cotisations_bulk', '$success paiement(s) $actionText', extra: action.newStatut.name));
 
@@ -266,11 +262,12 @@ class CotisationHandler {
       debugPrint('[CotisationHandler] payerPlusieursCultesEnAvance réseau échoué: $e');
     }
 
-    final membre = membres.firstWhere(
+    final membre = membres.firstWhereOrNull(
       (m) => m.id == action.membreId,
-      orElse: () => throw Exception('Membre introuvable'),
     );
-    notifCoordinator.notifierPaiementAvanceFull(action.montantTotal, membre.nomComplet);
-    unawaited(onPush('cotisation_en_avance', membre.nomComplet));
+    if (membre != null) {
+      notifCoordinator.notifierPaiementAvanceFull(action.montantTotal, membre.nomComplet);
+      unawaited(onPush('cotisation_en_avance', membre.nomComplet));
+    }
   }
 }

@@ -67,6 +67,10 @@ dependencies:
   # Realtime (Socket.IO pour sync temps réel InsForge)
   socket_io_client: ^3.0.0
 
+  # System info & update management
+  package_info_plus: ^9.0.1
+  apk_installer: ^0.0.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

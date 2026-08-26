@@ -16,7 +16,10 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/update_provider.dart';
 import 'widgets/onesignal_verification_gate.dart';
+import 'widgets/update_dialog.dart';
+import 'core/updates/app_update_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -184,6 +187,8 @@ class _KasedAppState extends ConsumerState<KasedApp> with WidgetsBindingObserver
       // L'app reprend : forcer une vérification de l'auth pour récupérer
       // la session si elle a été perdue (ex: secure storage réinitialisé).
       ref.read(authProvider.notifier).checkPersistedAuth();
+      // Vérifier aussi si une mise à jour est disponible
+      ref.read(updateNotifierProvider.notifier).checkNow();
     }
   }
 
@@ -191,6 +196,7 @@ class _KasedAppState extends ConsumerState<KasedApp> with WidgetsBindingObserver
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final updateState = ref.watch(updateNotifierProvider);
 
     return MaterialApp.router(
       title: 'Kased',
@@ -202,7 +208,10 @@ class _KasedAppState extends ConsumerState<KasedApp> with WidgetsBindingObserver
       builder: (context, child) {
         return ScrollConfiguration(
           behavior: const _BouncingScrollBehavior(),
-          child: OneSignalVerificationGate(child: child!),
+          child: UpdateCheckWrapper(
+            updateState: updateState,
+            child: OneSignalVerificationGate(child: child!),
+          ),
         );
       },
     );
@@ -215,5 +224,43 @@ class _BouncingScrollBehavior extends ScrollBehavior {
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
     return const BouncingScrollPhysics();
+  }
+}
+
+/// Wrapper qui affiche le dialogue de mise à jour si nécessaire.
+class UpdateCheckWrapper extends ConsumerWidget {
+  final Widget child;
+  final AsyncValue<AppUpdateCheckResult> updateState;
+
+  const UpdateCheckWrapper({
+    super.key,
+    required this.child,
+    required this.updateState,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return updateState.when(
+      data: (result) {
+        if (result.hasUpdate && result.update != null) {
+          // Afficher le dialogue de mise à jour
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              showDialog(
+                context: context,
+                barrierDismissible: !result.isRequired,
+                builder: (ctx) => UpdateDialog(
+                  update: result.update!,
+                  forceUpdate: result.isRequired,
+                ),
+              );
+            }
+          });
+        }
+        return child;
+      },
+      loading: () => child,
+      error: (_, __) => child,
+    );
   }
 }

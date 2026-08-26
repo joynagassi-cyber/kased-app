@@ -5,7 +5,7 @@
 /// Les APK sont servis par `/api/storage/object/public/app-updates/<version>.apk`.
 library;
 
-import 'insforge_config.dart';
+import '../insforge/insforge_config.dart';
 
 class UpdateConfig {
   UpdateConfig._();

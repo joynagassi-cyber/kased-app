@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Permet d'accéder aux fichiers du stockage externe pour l'installation APK -->
+    <external-path
+        name="external_files"
+        path="." />
+    <!-- Permet d'accéder au répertoire cache de l'app -->
+    <cache-path
+        name="cache_files"
+        path="." />
+</paths>

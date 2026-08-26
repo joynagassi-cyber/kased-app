@@ -110,23 +110,23 @@ class AppUpdateCheckResult {
   final AppUpdate? update;
   final String? errorMessage;
 
-  const AppUpdateCheckResult({
+  AppUpdateCheckResult({
     this.status = UpdateStatus.none,
     this.update,
     this.errorMessage,
   });
 
   factory AppUpdateCheckResult.checking() =>
-      const AppUpdateCheckResult(status: UpdateStatus.checking);
+      AppUpdateCheckResult(status: UpdateStatus.checking);
 
   factory AppUpdateCheckResult.error(String message) =>
-      AppUpdateCheckResult(status: UpdateStatus.error, errorMessage: message);
+      AppUpdateCheckResult(status: UpdateStatus.error);
 
   factory AppUpdateCheckResult.available(AppUpdate update) =>
       AppUpdateCheckResult(status: update.forceUpdate ? UpdateStatus.required : UpdateStatus.available, update: update);
 
   factory AppUpdateCheckResult.none() =>
-      const AppUpdateCheckResult(status: UpdateStatus.none);
+      AppUpdateCheckResult(status: UpdateStatus.none);
 
   bool get isRequired => status == UpdateStatus.required;
   bool get isAvailable => status == UpdateStatus.available;

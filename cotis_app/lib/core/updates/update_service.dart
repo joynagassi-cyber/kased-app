@@ -4,12 +4,13 @@
 /// 1. Récupère le manifeste JSON depuis InsForge Storage
 /// 2. Compare la version distante avec la version locale
 /// 3. Télécharge l'APK si une MAJ est disponible
-/// 4. Installe l'APK automatiquement (après téléchargement réussi)
+/// 4. Installe l'APK automatiquement via un MethodChannel natif
 library;
 
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:crypto/crypto.dart';
@@ -20,6 +21,8 @@ import 'app_update_model.dart';
 import 'update_config.dart';
 
 class UpdateService {
+  static const MethodChannel _channel = MethodChannel('kased_app/update');
+
   final Dio _dio;
 
   UpdateService({Dio? dio}) : _dio = dio ?? Dio();
@@ -45,25 +48,25 @@ class UpdateService {
 
       if (response.statusCode != 200) {
         debugPrint('[UpdateService] Manifest non trouvé (status=${response.statusCode})');
-        return const AppUpdateCheckResult.none();
+        return AppUpdateCheckResult.none();
       }
 
       // Le manifest peut être un objet direct ou contenu dans un champ "data"
       Map<String, dynamic> json;
       final data = response.data;
       if (data is Map) {
-        json = data;
+        json = data.cast<String, dynamic>();
       } else if (data is String) {
         json = jsonDecode(data) as Map<String, dynamic>;
       } else {
-        return const AppUpdateCheckResult.none();
+        return AppUpdateCheckResult.none();
       }
 
       final update = AppUpdate.fromJson(json);
 
       if (update.versionCode == 0 || update.downloadUrl.isEmpty) {
         debugPrint('[UpdateService] Manifest invalide (versionCode=0 ou url vide)');
-        return const AppUpdateCheckResult.none();
+        return AppUpdateCheckResult.none();
       }
 
       debugPrint(
@@ -71,7 +74,7 @@ class UpdateService {
 
       if (update.versionCode <= localVersionCode) {
         debugPrint('[UpdateService] Aucune mise à jour disponible');
-        return const AppUpdateCheckResult.none();
+        return AppUpdateCheckResult.none();
       }
 
       debugPrint('[UpdateService] Mise à jour disponible : ${update.versionName}');
@@ -79,10 +82,10 @@ class UpdateService {
     } on DioException catch (e) {
       debugPrint('[UpdateService] Erreur vérification : ${e.message}');
       // Timeout ou erreur réseau → on ne bloque pas l'app
-      return const AppUpdateCheckResult.none();
+      return AppUpdateCheckResult.none();
     } catch (e) {
       debugPrint('[UpdateService] Erreur inattendue : $e');
-      return const AppUpdateCheckResult.none();
+      return AppUpdateCheckResult.none();
     }
   }
 
@@ -106,8 +109,22 @@ class UpdateService {
         }
       }
 
-      final tempDir = await getExternalStorageDirectory();
-      final appDir = tempDir?.path ?? '/storage/emulated/0/Download';
+      // Utiliser le répertoire download pour Android 13+
+      final String appDir;
+      if (Platform.isAndroid) {
+        if (await Permission.manageExternalStorage.request().isGranted) {
+          // Android 13+ avec permission managée
+          final dir = await getExternalStorageDirectory();
+          appDir = dir?.path ?? '/storage/emulated/0/Download';
+        } else {
+          // Fallback : répertoire download
+          appDir = '/storage/emulated/0/Download';
+        }
+      } else {
+        final dir = await getApplicationSupportDirectory();
+        appDir = dir.path;
+      }
+
       final file = File('$appDir/Kased-v${update.versionName}.apk');
 
       await _dio.download(
@@ -146,9 +163,8 @@ class UpdateService {
 
   // ── Installation ───────────────────────────────────────────────────────────
 
-  /// Installe l'APK téléchargé.
+  /// Installe l'APK téléchargé via le MethodChannel natif.
   ///
-  /// Sur Android, utilise l'intent system d'installation automatique.
   /// Retourne true si l'installation a été lancée avec succès.
   Future<bool> installApk(String apkPath) async {
     try {
@@ -158,49 +174,15 @@ class UpdateService {
         return false;
       }
 
-      // Vérifier les permissions d'installation
-      if (await Permission.requestInstallPackages.isGranted ||
-          await Permission.manageExternalStorage.isGranted) {
-        // Lancer l'installation via Android Intent
-        // Note : l'installation auto nécessite soit le mode enterprise,
-        // soit un fichier APK dans le stockage externe avec permission.
-        debugPrint('[UpdateService] Installation lancée : $apkPath');
-        // On utilise open_file qui gère l'ouverture de fichier APK
-        // via le système Android.
-        return await _launchInstallApk(file);
-      } else {
-        debugPrint('[UpdateService] Permission d\'installation insuffisante');
-        return false;
-      }
+      debugPrint('[UpdateService] Installation lancée : $apkPath');
+      final result = await _channel.invokeMethod('installApk', {
+        'apkPath': apkPath,
+      });
+      return result == true;
     } catch (e) {
       debugPrint('[UpdateService] Erreur installation : $e');
       return false;
     }
-  }
-
-  /// Lance l'installation APK via le système Android.
-  Future<bool> _launchInstallApk(File file) async {
-    try {
-      // Utiliser open_file package pour lancer l'installation
-      // Cela déclenche l'Intent SYSTEM d'installation
-      final result = await _callNativeInstall(file.path);
-      return result;
-    } catch (e) {
-      debugPrint('[UpdateService] _launchInstallApk error: $e');
-      return false;
-    }
-  }
-
-  /// Appel natif pour installer un APK.
-  /// Utilise MethodChannel pour invoquer l'installation directement.
-  Future<bool> _callNativeInstall(String apkPath) async {
-    // Note: Sur Android 8+ (API 26+), l'installation directe d'APK
-    // depuis le stockage externe nécessite des permissions spéciales.
-    // Le plus fiable est d'utiliser le package `flutter_downloader`
-    // couplé à `install_app` ou `apk_installer`.
-    // Pour l'instant, on retourne true et on utilise une approche mixte.
-    debugPrint('[UpdateService] Tentative d\'installation via MethodChannel: $apkPath');
-    return true; // Sera géré par le platform channel
   }
 }
 
