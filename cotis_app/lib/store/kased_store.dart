@@ -172,6 +172,25 @@ class KasedStore {
 
     _state = withSortedMembres(_state, [..._state.membres, newMembre]);
 
+    // Sauvegarder avec sync op
+    final syncOp = SyncOperation()
+      ..operationId = UuidUtils.generate()
+      ..type = 'CREATE'
+      ..entityType = 'membre'
+      ..entityId = newMembre.id
+      ..payloadJson = jsonEncode(newMembre.toJson())
+      ..createdAt = now
+      ..deviceId = deviceId;
+    await cache.saveMembreWithSyncOp(newMembre, syncOp);
+
+    // Tentative réseau
+    try {
+      await api.createMembre(newMembre.toJson());
+      await cache.deleteSyncOp(syncOp.isarId);
+    } catch (e) {
+      debugPrint('[KasedStore] createMembre réseau échoué: $e');
+    }
+
     NotificationCoordinator.planifierAnniversaireMembre(newMembre);
     notifCoordinator.notifierCreationMembreFull(newMembre);
     unawaited(_notifierPush('membre_ajoute', newMembre.nomComplet));
@@ -209,7 +228,25 @@ class KasedStore {
       isOffline: _state.isOffline,
       error: null,
     );
-    await cache.saveMembre(updated);
+
+    // Sauvegarder avec sync op
+    final syncOp = SyncOperation()
+      ..operationId = UuidUtils.generate()
+      ..type = 'UPDATE'
+      ..entityType = 'membre'
+      ..entityId = action.id
+      ..payloadJson = jsonEncode(updated.toJson())
+      ..createdAt = now
+      ..deviceId = deviceId;
+    await cache.saveMembreWithSyncOp(updated, syncOp);
+
+    // Tentative réseau
+    try {
+      await api.updateMembre(action.id, updated.toJson());
+      await cache.deleteSyncOp(syncOp.isarId);
+    } catch (e) {
+      debugPrint('[KasedStore] updateMembre réseau échoué: $e');
+    }
 
     if (updated.dateNaissance != null) {
       NotificationCoordinator.planifierAnniversaireMembre(updated);
@@ -251,7 +288,25 @@ class KasedStore {
       isOffline: _state.isOffline,
       error: null,
     );
-    await cache.saveMembre(updated);
+
+    // Sauvegarder avec sync op
+    final syncOp = SyncOperation()
+      ..operationId = UuidUtils.generate()
+      ..type = 'UPDATE'
+      ..entityType = 'membre'
+      ..entityId = action.membreId
+      ..payloadJson = jsonEncode(updated.toJson())
+      ..createdAt = now
+      ..deviceId = deviceId;
+    await cache.saveMembreWithSyncOp(updated, syncOp);
+
+    // Tentative réseau
+    try {
+      await api.updateMembre(action.membreId, updated.toJson());
+      await cache.deleteSyncOp(syncOp.isarId);
+    } catch (e) {
+      debugPrint('[KasedStore] addPaymentAdvance réseau échoué: $e');
+    }
     notifCoordinator.notifierPaiementAvanceFull(action.montant, updated.nomComplet);
     unawaited(_notifierPush('paiement_avance', updated.nomComplet));
   }

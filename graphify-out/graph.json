@@ -3892,6 +3892,15 @@
       "norm_label": ".main()"
     },
     {
+      "label": "app_data_provider.dart",
+      "file_type": "code",
+      "source_file": "cotis_app\\lib\\providers\\app_data_provider.dart",
+      "source_location": null,
+      "id": "cotis_app_lib_providers_app_data_provider_dart",
+      "community": 48,
+      "norm_label": "app_data_provider.dart"
+    },
+    {
       "label": "auth_provider.dart",
       "file_type": "code",
       "source_file": "cotis_app\\lib\\providers\\auth_provider.dart",
@@ -4059,7 +4068,7 @@
       "source_file": "cotis_app\\lib\\providers\\auth_provider.g.dart",
       "source_location": null,
       "id": "cotis_app_lib_providers_auth_provider_g_dart",
-      "community": 48,
+      "community": 49,
       "norm_label": "auth_provider.g.dart"
     },
     {
@@ -4086,7 +4095,7 @@
       "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\providers\\isar_provider.g.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_providers_isar_provider_g_dart",
-      "community": 49,
+      "community": 50,
       "norm_label": "isar_provider.g.dart"
     },
     {
@@ -4203,7 +4212,7 @@
       "source_file": "cotis_app\\lib\\providers\\kased_app_provider.g.dart",
       "source_location": null,
       "id": "cotis_app_lib_providers_kased_app_provider_g_dart",
-      "community": 50,
+      "community": 51,
       "norm_label": "kased_app_provider.g.dart"
     },
     {
@@ -6813,7 +6822,7 @@
       "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\services\\auth_service.g.dart",
       "source_location": null,
       "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_services_auth_service_g_dart",
-      "community": 51,
+      "community": 52,
       "norm_label": "auth_service.g.dart"
     },
     {
@@ -10773,7 +10782,7 @@
       "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\windows\\flutter\\generated_plugin_registrant.h",
       "source_location": "L1",
       "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_windows_flutter_generated_plugin_registrant_h",
-      "community": 52,
+      "community": 53,
       "norm_label": "generated_plugin_registrant.h"
     },
     {
@@ -10854,7 +10863,7 @@
       "source_file": "cotis_app\\windows\\runner\\resource.h",
       "source_location": "L1",
       "id": "cotis_app_windows_runner_resource_h",
-      "community": 53,
+      "community": 54,
       "norm_label": "resource.h"
     },
     {
@@ -10899,7 +10908,7 @@
       "source_file": "cotis_app\\windows\\runner\\utils.h",
       "source_location": "L1",
       "id": "cotis_app_windows_runner_utils_h",
-      "community": 54,
+      "community": 55,
       "norm_label": "utils.h"
     },
     {
@@ -11097,7 +11106,7 @@
       "source_file": "cotis_app\\windows\\runner\\win32_window.h",
       "source_location": "L1",
       "id": "cotis_app_windows_runner_win32_window_h",
-      "community": 55,
+      "community": 56,
       "norm_label": "win32_window.h"
     },
     {
