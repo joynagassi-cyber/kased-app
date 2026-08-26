@@ -30,7 +30,7 @@ class CulteHandler {
     required this.onPush,
   });
 
-  Future<void> handle(CreateCulte action) async {
+  Future<void> createCulte action) async {
     final newCulte = Culte()
       ..id = UuidUtils.generate()
       ..dateCulte = action.date
@@ -63,7 +63,7 @@ class CulteHandler {
     unawaited(onPush('culte_cree', _formatDate(newCulte.dateCulte)));
   }
 
-  Future<void> handle(UpdateCulte action) async {
+  Future<void> updateCulte action) async {
     final existing = (await cache.getAllCultes()).firstWhere(
       (c) => c.id == action.id,
       orElse: () => throw Exception('Culte introuvable: ${action.id}'),
@@ -105,11 +105,11 @@ class CulteHandler {
     await onLoadDashboard();
   }
 
-  Future<void> handle(DeleteCulte action) async {
+  Future<void> deleteCulte action) async {
     await cache.deleteCulteById(action.id);
   }
 
-  Future<void> handle(RestoreCulte action) async {
+  Future<void> restoreCulte action) async {
     try {
       await api.createCulte({'id': action.id});
     } catch (e) {

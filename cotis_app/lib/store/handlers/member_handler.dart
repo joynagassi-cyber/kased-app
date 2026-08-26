@@ -32,7 +32,7 @@ class MemberHandler {
     required this.onPush,
   });
 
-  Future<void> handle(CreateMember action) async {
+  Future<void> createMember action) async {
     final deviceId = await deviceService.getDeviceId();
     final now = DateTime.now();
     final newMembre = Membre()
@@ -72,7 +72,7 @@ class MemberHandler {
     await onLoadDashboard();
   }
 
-  Future<void> handle(UpdateMember action) async {
+  Future<void> updateMember action) async {
     final membre = (await cache.getAllMembres()).firstWhere(
       (m) => m.id == action.id,
       orElse: () => throw Exception('Membre introuvable: ${action.id}'),
@@ -120,7 +120,7 @@ class MemberHandler {
     unawaited(onPush('membre_modifie', updated.nomComplet));
   }
 
-  Future<void> handle(AddPaymentAdvance action) async {
+  Future<void> addPaymentAdvance action) async {
     final membre = (await cache.getAllMembres()).firstWhere(
       (m) => m.id == action.membreId,
       orElse: () => throw Exception('Membre introuvable'),
@@ -165,14 +165,14 @@ class MemberHandler {
     await onPush('paiement_avance', updated.nomComplet);
   }
 
-  Future<void> handle(DeleteMember action) async {
+  Future<void> deleteMember action) async {
     final membres = (await cache.getAllMembres()).where((m) => m.id != action.id).toList();
     await cache.deleteMembreById(action.id);
     NotificationCoordinator.annulerAnniversaireMembre(action.id);
     unawaited(onPush('membre_supprime', action.id));
   }
 
-  Future<void> handle(RestoreMember action) async {
+  Future<void> restoreMember action) async {
     try {
       await api.updateMembre(action.id, {'is_active': true});
     } catch (e) {

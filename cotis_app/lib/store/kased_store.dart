@@ -90,56 +90,56 @@ class KasedStore {
       switch (action) {
         // Members
         case CreateMember():
-          await _memberHandler.handle(action);
+          await _memberHandler.createMember(action);
           _state = _state.copyWith(membres: sortMembres([..._state.membres, /* member added by handler */]));
         case UpdateMember():
-          await _memberHandler.handle(action);
+          await _memberHandler.createMember(action);
           final membres = await cache.getAllMembres();
           _state = _state.copyWith(membres: sortMembres(membres));
         case AddPaymentAdvance():
-          await _memberHandler.handle(action);
+          await _memberHandler.createMember(action);
           final membres2 = await cache.getAllMembres();
           _state = _state.copyWith(membres: sortMembres(membres2));
         case DeleteMember():
-          await _memberHandler.handle(action);
+          await _memberHandler.createMember(action);
           final membres3 = await cache.getAllMembres();
           _state = _state.copyWith(membres: membres3);
         case RestoreMember():
-          await _memberHandler.handle(action);
+          await _memberHandler.createMember(action);
           final allMembres = await cache.getAllMembres();
           final allCultes = await cache.getAllCultes();
           final allCotisations = await cache.getAllCotisations();
           _state = withFullData(_state, membres: allMembres, cultes: allCultes, cotisations: allCotisations);
         // Cultes
         case CreateCulte():
-          await _culteHandler.handle(action);
+          await _culteHandler.createCulte(action);
           final cultes = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes);
         case UpdateCulte():
-          await _culteHandler.handle(action);
+          await _culteHandler.createCulte(action);
           final cultes2 = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes2);
         case DeleteCulte():
-          await _culteHandler.handle(action);
+          await _culteHandler.createCulte(action);
           final cultes3 = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes3);
         case RestoreCulte():
-          await _culteHandler.handle(action);
+          await _culteHandler.createCulte(action);
           final allM = await cache.getAllMembres();
           final allC = await cache.getAllCultes();
           final allCo = await cache.getAllCotisations();
           _state = withFullData(_state, membres: allM, cultes: allC, cotisations: allCo);
         // Cotisations
         case RegisterPayment():
-          await _cotisationHandler.handle(action);
+          await _cotisationHandler.registerPayment(action);
           final cots = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots);
         case MarkAbsent():
-          await _cotisationHandler.handle(action);
+          await _cotisationHandler.registerPayment(action);
           final cots2 = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots2);
         case BulkSetPaiements():
-          await _cotisationHandler.handle(action);
+          await _cotisationHandler.registerPayment(action);
           final cots3 = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots3);
         case TogglePaiement():
@@ -150,7 +150,7 @@ class KasedStore {
             montant: 0, // Will be overridden by handler
           ));
         case PaySeveralCultesInAdvance():
-          await _cotisationHandler.handle(action);
+          await _cotisationHandler.registerPayment(action);
           final cots4 = await cache.getAllCotisations();
           final membres4 = await cache.getAllMembres();
           _state = _state.copyWith(cotisations: cots4, membres: membres4);

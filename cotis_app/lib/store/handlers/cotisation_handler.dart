@@ -32,7 +32,7 @@ class CotisationHandler {
     required this.onGetCotisations,
   });
 
-  Future<void> handle(RegisterPayment action) async {
+  Future<void> registerPayment action) async {
     final culte = (await cache.getAllCultes()).firstWhere(
       (c) => c.id == action.culteId,
       orElse: () => throw Exception('Culte introuvable'),
@@ -121,7 +121,7 @@ class CotisationHandler {
     ));
   }
 
-  Future<void> handle(MarkAbsent action) async {
+  Future<void> markAbsent action) async {
     final cultes = await cache.getAllCultes();
     final cotisations = await onGetCotisations();
     final membres = await onGetMembres();
@@ -193,7 +193,7 @@ class CotisationHandler {
     return (success: success, total: action.membreIds.length);
   }
 
-  Future<void> handle(PaySeveralCultesInAdvance action) async {
+  Future<void> paySeveralCultesInAdvance action) async {
     final cultes = await cache.getAllCultes();
     final cotisations = await onGetCotisations();
     final membres = await onGetMembres();
