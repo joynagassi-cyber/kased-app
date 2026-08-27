@@ -1,7 +1,7 @@
-# Graph Report - kased-app-new  (2026-08-26)
+# Graph Report - kased-app-new  (2026-08-27)
 
 ## Corpus Check
-- 186 files · ~515,524 words
+- 186 files · ~515,550 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
