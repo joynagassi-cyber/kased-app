@@ -82,17 +82,21 @@ class _SpringNavIconState extends State<SpringNavIcon>
         ? widget.selectedColor
         : widget.unselectedColor;
 
-    return ScaleTransition(
-      scale: _scale,
-      child: RotationTransition(
-        turns: _rotation,
-        child: AnimatedSwitcher(
-          duration: AppAnimDurations.fast,
-          child: Icon(
-            widget.isSelected ? widget.selectedIcon : widget.icon,
-            key: ValueKey(widget.isSelected),
-            color: color,
-            size: 26,
+    return Semantics(
+      label: widget.label,
+      selected: widget.isSelected,
+      child: ScaleTransition(
+        scale: _scale,
+        child: RotationTransition(
+          turns: _rotation,
+          child: AnimatedSwitcher(
+            duration: AppAnimDurations.fast,
+            child: Icon(
+              widget.isSelected ? widget.selectedIcon : widget.icon,
+              key: ValueKey(widget.isSelected),
+              color: color,
+              size: 26,
+            ),
           ),
         ),
       ),

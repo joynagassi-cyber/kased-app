@@ -54,7 +54,7 @@ class CadenceCard extends StatelessWidget {
                 Text(
                   'Cadence',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                     color: colorScheme.onPrimaryContainer,

@@ -131,7 +131,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   subtitle: Text(n.message, style: const TextStyle(fontSize: 12)),
                                   trailing: Text(
                                     DateFormat('dd/MM').format(n.date),
-                                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                                   ),
                                   onTap: () {
                                     if (!n.isLue) {
@@ -211,7 +211,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               '${notifState.nbNonLues}',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 9,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w800,
                               ),
                               textAlign: TextAlign.center,
@@ -354,7 +354,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                     Text(
                                                       'EN AVANCE',
                                                       style: const TextStyle(
-                                                        fontSize: 9,
+                                                        fontSize: 11,
                                                         fontWeight: FontWeight.w700,
                                                         letterSpacing: 1.0,
                                                         color: Colors.white,
@@ -413,7 +413,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                 Text(
                                                   'Prochain culte',
                                                   style: TextStyle(
-                                                    fontSize: 10,
+                                                    fontSize: 12,
                                                     fontWeight: FontWeight.w600,
                                                     letterSpacing: 1.0,
                                                     color: Colors.white.withValues(alpha: 0.6),
