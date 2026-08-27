@@ -4,22 +4,46 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/screens/membres/membres_screen.dart';
 import 'package:kased_app/providers/kased_app_provider.dart';
 import 'package:kased_app/models/membre.dart';
-import 'package:mocktail/mocktail.dart';
+import 'package:kased_app/core/services/stats_service.dart';
 
-// Use AutoDisposeAsyncNotifier as base to avoid _setElement errors
-class MockAppDataNotifier extends AutoDisposeAsyncNotifier<AppState> with Mock implements AppData {}
+// Fake KasedApp that returns controlled state for testing
+class FakeKasedApp extends KasedApp {
+  final AppState _state;
+
+  FakeKasedApp(this._state);
+
+  @override
+  Future<AppState> build() async {
+    return _state;
+  }
+
+  @override
+  DashboardStats getDashboardStats() => DashboardStats(
+        totalMembres: _state.membres.length,
+        totalCultes: _state.cultes.length,
+        totalCollecte: 0,
+        membresEnRetard: 0,
+        totalDu: 0,
+      );
+
+  @override
+  Future<void> loadDashboard() async {}
+
+  @override
+  Future<void> syncData() async {}
+
+  @override
+  Future<List<Map<String, dynamic>>> loadRetardsMembres() async => [];
+
+  @override
+  List<Map<String, dynamic>> getRetardsMembresLocally() => [];
+}
 
 void main() {
-  late MockAppDataNotifier mockNotifier;
-
-  setUp(() {
-    mockNotifier = MockAppDataNotifier();
-  });
-
-  Widget createMembresScreen() {
+  Widget createMembresScreen(AppState state) {
     return ProviderScope(
       overrides: [
-        kasedAppProvider.overrideWith(() => mockNotifier),
+        kasedAppProvider.overrideWith(() => FakeKasedApp(state)),
       ],
       child: const MaterialApp(
         home: MembresScreen(),
@@ -29,15 +53,17 @@ void main() {
 
   testWidgets('Renders list of members', (WidgetTester tester) async {
     final membres = [
-      Membre()..id = '1'..nom = 'Doe'..prenom = 'John'..telephone = '123'..dateAdhesion = DateTime(2023),
+      Membre()
+        ..id = '1'
+        ..nom = 'Doe'
+        ..prenom = 'John'
+        ..telephone = '123'
+        ..dateAdhesion = DateTime(2023),
     ];
     final state = AppState(membres: membres, cultes: [], cotisations: []);
-    
-    when(() => mockNotifier.build()).thenAnswer((_) async => state);
-    when(() => mockNotifier.loadRetardsMembres()).thenAnswer((_) async => []);
 
-    await tester.pumpWidget(createMembresScreen());
-    await tester.pump(); 
+    await tester.pumpWidget(createMembresScreen(state));
+    await tester.pump();
     await tester.pumpAndSettle();
 
     expect(find.text('John Doe'), findsOneWidget);
@@ -46,11 +72,8 @@ void main() {
 
   testWidgets('Shows empty state when no members', (WidgetTester tester) async {
     final state = AppState(membres: [], cultes: [], cotisations: []);
-    
-    when(() => mockNotifier.build()).thenAnswer((_) async => state);
-    when(() => mockNotifier.loadRetardsMembres()).thenAnswer((_) async => []);
 
-    await tester.pumpWidget(createMembresScreen());
+    await tester.pumpWidget(createMembresScreen(state));
     await tester.pumpAndSettle();
 
     expect(find.text('Aucun membre enregistré'), findsOneWidget);

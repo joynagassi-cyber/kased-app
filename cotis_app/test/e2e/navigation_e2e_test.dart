@@ -4,7 +4,6 @@ import 'package:kased_app/main.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/services/auth_service.dart';
 import 'package:kased_app/providers/kased_app_provider.dart' as store;
-import 'package:kased_app/core/services/stats_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -12,10 +11,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class MockAuthService extends Mock implements AuthService {}
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
-class FakeAppData extends store.KasedApp {
+class TestKasedApp extends store.KasedApp {
   @override
   Future<store.AppState> build() async {
-    this.statsService = StatsService();
     return store.AppState();
   }
   @override
@@ -32,6 +30,8 @@ class FakeAppData extends store.KasedApp {
       );
   @override
   Future<List<Map<String, dynamic>>> loadRetardsMembres() async => [];
+  @override
+  List<Map<String, dynamic>> getRetardsMembresLocally() => [];
 }
 
 const _validAccessToken =
@@ -53,7 +53,7 @@ ProviderScope buildApp(MockAuthService mockAuth, MockSecureStorage mockStorage) 
       overrides: [
         authServiceProvider.overrideWithValue(mockAuth),
         secureStorageProvider.overrideWithValue(mockStorage),
-        kasedAppProvider.overrideWith(() => FakeAppData()),
+        store.kasedAppProvider.overrideWith(() => TestKasedApp()),
       ],
       child: const KasedApp(),
     );
@@ -144,7 +144,6 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      // Dashboard shows trash access
       expect(find.textContaining('Dashboard Kased'), findsOneWidget);
     });
   });

@@ -30,8 +30,8 @@ void main() {
     });
 
     test('equality works correctly', () {
-      final e1 = NotificationEvent(type: 'test', label: 'label');
-      final e2 = NotificationEvent(type: 'test', label: 'label');
+      final e1 = const NotificationEvent(type: 'test', label: 'label');
+      final e2 = const NotificationEvent(type: 'test', label: 'label');
       final e3 = NotificationEvent(type: 'other', label: 'label');
 
       expect(e1, equals(e2));
@@ -47,7 +47,7 @@ void main() {
     });
 
     test('records events', () {
-      adapter.send(NotificationEvent(type: 'test', label: 'label'));
+      adapter.send(const NotificationEvent(type: 'test', label: 'label'));
       expect(adapter.events.length, 1);
       expect(adapter.events.first.type, 'test');
     });
@@ -78,7 +78,7 @@ void main() {
     });
 
     test('events is unmodifiable', () {
-      adapter.send(NotificationEvent(type: 'test', label: 'label'));
+      adapter.send(const NotificationEvent(type: 'test', label: 'label'));
       expect(() => adapter.events.add(NotificationEvent(type: 'x', label: 'y')), throwsUnsupportedError);
     });
   });
@@ -91,7 +91,7 @@ void main() {
     });
 
     test('records events', () {
-      adapter.send(NotificationEvent(type: 'test', label: 'label'));
+      adapter.send(const NotificationEvent(type: 'test', label: 'label'));
       expect(adapter.events.length, 1);
     });
   });
@@ -104,7 +104,7 @@ void main() {
     });
 
     test('does not record events', () {
-      adapter.send(NotificationEvent(type: 'test', label: 'label'));
+      adapter.send(const NotificationEvent(type: 'test', label: 'label'));
       expect(adapter.events, isEmpty);
     });
   });

@@ -12,11 +12,14 @@ part 'realtime_handler.g.dart';
 /// Callback type pour notifier le caller qu'un reload est nécessaire.
 typedef ReloadCallback = Future<void> Function();
 
+/// Délai minimum entre deux reloads consécutifs (30s).
+const _reloadDebounceDelay = Duration(seconds: 30);
+
 /// Gestionnaire d'événements temps réel.
 ///
 /// Reçoit les événements du [RealtimeService] et :
 /// 1. Applique un patch local via [RealtimePatchEngine]
-/// 2. Déclenche un reload si nécessaire
+/// 2. Déclenche un reload si nécessaire (debounce 30s)
 ///
 /// Le provider est keepAlive car il doit persister pendant toute la durée
 /// de l'application.
@@ -25,6 +28,8 @@ class RealtimeHandler extends _$RealtimeHandler {
   late RealtimeService _realtime;
   late RealtimePatchEngine _patchEngine;
   ReloadCallback? _reloadCallback;
+  DateTime? _lastReloadAt;
+  Timer? _reloadDebounceTimer;
 
   @override
   bool build() => false;
@@ -34,7 +39,7 @@ class RealtimeHandler extends _$RealtimeHandler {
     _realtime.addListener(_handleEvent);
   }
 
-  /// Initialise le patch engine avec le cache (à appeler après build).
+  /// Initialise le patch engine avec le cache.
   void initPatchEngine(LocalCache cache) {
     _patchEngine = RealtimePatchEngine(
       cache: cache,
@@ -56,6 +61,7 @@ class RealtimeHandler extends _$RealtimeHandler {
   /// Déconnecte le service realtime.
   void disconnect() {
     _reloadCallback = null;
+    _reloadDebounceTimer?.cancel();
     _realtime.disconnect();
   }
 
@@ -63,16 +69,34 @@ class RealtimeHandler extends _$RealtimeHandler {
   void _handleEvent(RealtimeEvent event) async {
     debugPrint('[RealtimeHandler] Event: ${event.action} ${event.table} ${event.id}');
     _patchEngine.apply(event);
-    _notifyReload();
+    _scheduleReload();
+  }
+
+  /// Programme un reload avec debounce de 30s.
+  void _scheduleReload() {
+    final now = DateTime.now();
+    final timeSinceLastReload = _lastReloadAt == null
+        ? _reloadDebounceDelay
+        : now.difference(_lastReloadAt!);
+
+    if (timeSinceLastReload >= _reloadDebounceDelay) {
+      // Pas de debounce nécessaire, reload immédiat
+      _performReload();
+    } else {
+      // Programmer le reload au bout du délai restant
+      final delay = _reloadDebounceDelay - timeSinceLastReload;
+      _reloadDebounceTimer?.cancel();
+      _reloadDebounceTimer = Timer(delay, _performReload);
+    }
+  }
+
+  void _performReload() async {
+    _lastReloadAt = DateTime.now();
+    _reloadCallback?.call();
   }
 
   /// Notifie qu'un patch a été appliqué (pour mise à jour UI).
   void _onPatchApplied() {
-    debugPrint('[RealtimeHandler] Patch appliqué, reload demandé');
-  }
-
-  /// Notifie le caller qu'un rechargement est nécessaire.
-  void _notifyReload() {
-    _reloadCallback?.call();
+    debugPrint('[RealtimeHandler] Patch appliqué, reload programmé');
   }
 }

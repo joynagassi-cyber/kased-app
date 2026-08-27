@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/core/insforge/insforge_service.dart';
 import 'package:kased_app/core/local_cache.dart';
@@ -190,13 +189,11 @@ void main() {
     late LocalCache mockCache;
     late FakeDeviceService mockDeviceService;
     late KasedStore store;
-    late bool isOffline;
 
     void setUpMocks() {
       mockApi = MockInsForgeService();
       mockCache = StubLocalCache();
       mockDeviceService = FakeDeviceService();
-      isOffline = false;
 
       when(() => mockApi.getDashboard()).thenAnswer((_) async => {});
       store = KasedStore(

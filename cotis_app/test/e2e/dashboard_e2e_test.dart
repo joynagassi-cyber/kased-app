@@ -4,8 +4,6 @@ import 'package:kased_app/main.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/services/auth_service.dart';
 import 'package:kased_app/providers/kased_app_provider.dart' as store;
-import 'package:kased_app/core/services/stats_service.dart';
-import 'package:kased_app/widgets/kased_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -13,13 +11,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class MockAuthService extends Mock implements AuthService {}
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
-class FakeAppData extends store.KasedApp {
+class TestKasedApp extends store.KasedApp {
   @override
   Future<store.AppState> build() async {
-    this.statsService = StatsService();
     return store.AppState();
   }
-
   @override
   Future<void> loadDashboard() async {}
   @override
@@ -34,6 +30,8 @@ class FakeAppData extends store.KasedApp {
       );
   @override
   Future<List<Map<String, dynamic>>> loadRetardsMembres() async => [];
+  @override
+  List<Map<String, dynamic>> getRetardsMembresLocally() => [];
 }
 
 const _validAccessToken =
@@ -55,7 +53,7 @@ ProviderScope buildApp(MockAuthService mockAuth, MockSecureStorage mockStorage) 
       overrides: [
         authServiceProvider.overrideWithValue(mockAuth),
         secureStorageProvider.overrideWithValue(mockStorage),
-        kasedAppProvider.overrideWith(() => FakeAppData()),
+        store.kasedAppProvider.overrideWith(() => TestKasedApp()),
       ],
       child: const KasedApp(),
     );
@@ -90,8 +88,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      // Dashboard uses KasedCard/InkWell for action buttons, not ElevatedButton
-      expect(find.byType(KasedCard), findsWidgets);
+      expect(find.byType(store.KasedCard), findsWidgets);
     });
 
     testWidgets('Flow 3: Pull to refresh', (tester) async {
@@ -107,7 +104,6 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      // Dashboard uses BackdropFilter for glassmorphism and ShaderMask for gradient text
       expect(find.byType(BackdropFilter), findsWidgets);
       expect(find.byType(ShaderMask), findsWidgets);
     });

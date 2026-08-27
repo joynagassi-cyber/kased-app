@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kased_app/core/router/app_router.dart';
 import 'package:kased_app/providers/auth_provider.dart';
-import 'package:kased_app/providers/kased_app_provider.dart';
 
 class FakeAuthNotifier extends Auth {
   final AuthState fixedState;
