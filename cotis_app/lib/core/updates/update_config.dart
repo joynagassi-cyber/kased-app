@@ -1,33 +1,26 @@
 /// Configuration dédiée au système de mise à jour auto.
 ///
-/// Les URLs pointent vers l'API InsForge Storage avec authentification.
-/// Le manifeste JSON est servi par l'API publique du bucket.
-/// Les APK sont servis par l'API publique du bucket.
+/// Les mises à jour sont vérifiées directement sur GitHub Releases.
 library;
-
-import '../insforge/insforge_config.dart';
 
 class UpdateConfig {
   UpdateConfig._();
 
-  /// Bucket InsForge où sont stockés les fichiers de mise à jour.
-  static const String bucket = 'app-updates';
+  /// Repository GitHub pour les releases.
+  static const String repoOwner = 'joynagassi-cyber';
+  static const String repoName = 'kased-app';
 
-  /// Nom du fichier manifeste dans le bucket.
-  static const String manifestFileName = 'manifest.json';
+  /// URL de l'API GitHub pour récupérer les dernières releases.
+  static const String githubReleasesUrl =
+      'https://api.github.com/repos/$repoOwner/$repoName/releases/latest';
 
-  /// Extension des fichiers APK.
-  static const String apkExtension = '.apk';
-
-  /// Retourne l'URL API du manifeste JSON.
-  /// Utilise le header apikey pour l'accès public au bucket.
-  static String get manifestUrl =>
-      '${InsForgeConfig.baseUrl}/api/storage/object/public/$bucket/$manifestFileName';
-
-  /// Retourne l'URL API d'un APK pour une version donnée.
-  static String apkUrl(String versionName) =>
-      '${InsForgeConfig.baseUrl}/api/storage/object/public/$bucket/${versionName}$apkExtension';
+  /// Pattern pour extraire le version code du build number (format: x.x.x+code).
+  static const String versionPattern = r'\+(\d+)$';
 
   /// Clé SharedPreferences pour stocker le code de version vu.
   static const String lastSeenVersionCodeKey = 'update_last_seen_version_code';
+
+  /// Nom du fichier APK dans la release GitHub.
+  static String apkAssetName(String versionName) =>
+      'kased-$versionName.apk';
 }

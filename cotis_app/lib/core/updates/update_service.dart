@@ -1,9 +1,9 @@
 /// Service de vérification et téléchargement des mises à jour.
 ///
-/// Ce service :
-/// 1. Récupère le manifeste JSON depuis InsForge Storage
+/// Ce service vérifie directement sur GitHub Releases.
+/// 1. Récupère la dernière release via l'API GitHub
 /// 2. Compare la version distante avec la version locale
-/// 3. Télécharge l'APK si une MAJ est disponible
+/// 3. Télécharge l'APK depuis GitHub
 /// 4. Installe l'APK automatiquement via un MethodChannel natif
 library;
 
@@ -13,13 +13,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'app_update_model.dart';
 import 'update_config.dart';
-import '../insforge/insforge_config.dart';
 
 class UpdateService {
   static const MethodChannel _channel = MethodChannel('kased_app/update');
@@ -28,19 +25,13 @@ class UpdateService {
 
   UpdateService({Dio? dio}) : _dio = dio ?? Dio(
         BaseOptions(
-          headers: {
-            'apikey': InsForgeConfig.anonKey,
-            'Authorization': 'Bearer ${InsForgeConfig.anonKey}',
-          },
+          headers: {'Accept': 'application/json'},
         ),
       );
 
   // ── Vérification de version ────────────────────────────────────────────────
 
-  /// Vérifie s'il existe une nouvelle version et la compare à la version locale.
-  ///
-  /// Retourne un [AppUpdateCheckResult] contenant le statut et l'update si applicable.
-  /// La comparaison de version utilise le [versionCode] (entier), pas le nom de version.
+  /// Vérifie s'il existe une nouvelle version sur GitHub Releases.
   Future<AppUpdateCheckResult> checkForUpdate() async {
     try {
       final localInfo = await PackageInfo.fromPlatform();
@@ -50,46 +41,82 @@ class UpdateService {
       debugPrint(
           '[UpdateService] Version locale : $localVersionName (code=$localVersionCode)');
 
+      // Récupérer la dernière release GitHub
       final response = await _dio
-          .get(UpdateConfig.manifestUrl)
+          .get(UpdateConfig.githubReleasesUrl)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200) {
-        debugPrint('[UpdateService] Manifest non trouvé (status=${response.statusCode})');
+        debugPrint('[UpdateService] Release GitHub non trouvée (status=${response.statusCode})');
         return AppUpdateCheckResult.none();
       }
 
-      // Le manifest peut être un objet direct ou contenu dans un champ "data"
-      Map<String, dynamic> json;
-      final data = response.data;
-      if (data is Map) {
-        json = data.cast<String, dynamic>();
-      } else if (data is String) {
-        json = jsonDecode(data) as Map<String, dynamic>;
+      final Map<String, dynamic> json = response.data;
+      
+      // Extraire la version depuis tag_name (format: v1.1.9+3)
+      final String tagName = json['tag_name'] as String? ?? '';
+      if (tagName.isEmpty) {
+        debugPrint('[UpdateService] Tag name vide dans la release');
+        return AppUpdateCheckResult.none();
+      }
+
+      // Parser la version: "v1.1.9+3" → versionName="1.1.9", versionCode=3
+      final String versionStr = tagName.startsWith('v') 
+          ? tagName.substring(1) 
+          : tagName;
+      
+      final int plusIndex = versionStr.lastIndexOf('+');
+      String versionName;
+      int versionCode;
+      
+      if (plusIndex > 0) {
+        versionName = versionStr.substring(0, plusIndex);
+        versionCode = int.tryParse(versionStr.substring(plusIndex + 1)) ?? 0;
       } else {
-        return AppUpdateCheckResult.none();
+        versionName = versionStr;
+        versionCode = 0;
       }
 
-      final update = AppUpdate.fromJson(json);
+      debugPrint('[UpdateService] Version distante : $versionName (code=$versionCode)');
 
-      if (update.versionCode == 0 || update.downloadUrl.isEmpty) {
-        debugPrint('[UpdateService] Manifest invalide (versionCode=0 ou url vide)');
-        return AppUpdateCheckResult.none();
-      }
-
-      debugPrint(
-          '[UpdateService] Version distante : ${update.versionName} (code=${update.versionCode})');
-
-      if (update.versionCode <= localVersionCode) {
+      if (versionCode == 0 || versionCode <= localVersionCode) {
         debugPrint('[UpdateService] Aucune mise à jour disponible');
         return AppUpdateCheckResult.none();
       }
 
-      debugPrint('[UpdateService] Mise à jour disponible : ${update.versionName}');
+      // Trouver l'asset APK dans la release
+      final List<dynamic> assets = json['assets'] ?? [];
+      String? downloadUrl;
+
+      for (final asset in assets) {
+        final String name = asset['name'] as String? ?? '';
+        if (name.endsWith('.apk')) {
+          downloadUrl = asset['browser_download_url'] as String?;
+          break;
+        }
+      }
+
+      if (downloadUrl == null || downloadUrl.isEmpty) {
+        debugPrint('[UpdateService] Aucun APK trouvé dans la release');
+        return AppUpdateCheckResult.none();
+      }
+
+      // Construire l'objet AppUpdate
+      final update = AppUpdate(
+        versionName: versionName,
+        versionCode: versionCode,
+        downloadUrl: downloadUrl,
+        changelog: json['body'] as String? ?? '',
+        forceUpdate: false, // GitHub releases ne supportent pas force_update
+        publishedAt: json['published_at'] != null
+            ? DateTime.tryParse(json['published_at'] as String)
+            : null,
+      );
+
+      debugPrint('[UpdateService] Mise à jour disponible : $versionName');
       return AppUpdateCheckResult.available(update);
     } on DioException catch (e) {
       debugPrint('[UpdateService] Erreur vérification : ${e.message}');
-      // Timeout ou erreur réseau → on ne bloque pas l'app
       return AppUpdateCheckResult.none();
     } catch (e) {
       debugPrint('[UpdateService] Erreur inattendue : $e');
@@ -99,10 +126,7 @@ class UpdateService {
 
   // ── Téléchargement ─────────────────────────────────────────────────────────
 
-  /// Télécharge l'APK de l'update et retourne le chemin local.
-  ///
-  /// Le pourcentage de progression est émis via le callback [onProgress].
-  /// Retourne null si le téléchargement échoue.
+  /// Télécharge l'APK de la release GitHub et retourne le chemin local.
   Future<String?> downloadApk({
     required AppUpdate update,
     void Function(int downloaded, int total)? onProgress,
@@ -121,11 +145,9 @@ class UpdateService {
       final String appDir;
       if (Platform.isAndroid) {
         if (await Permission.manageExternalStorage.request().isGranted) {
-          // Android 13+ avec permission managée
           final dir = await getExternalStorageDirectory();
           appDir = dir?.path ?? '/storage/emulated/0/Download';
         } else {
-          // Fallback : répertoire download
           appDir = '/storage/emulated/0/Download';
         }
       } else {
@@ -150,17 +172,6 @@ class UpdateService {
         ),
       );
 
-      // Vérification SHA-256 si fournie
-      if (update.sha256 != null && update.sha256!.isNotEmpty) {
-        final bytes = await file.readAsBytes();
-        final hash = sha256.convert(bytes).toString();
-        if (hash != update.sha256!) {
-          debugPrint('[UpdateService] Vérification SHA-256 échouée, suppression de l\'APK');
-          await file.delete();
-          return null;
-        }
-      }
-
       debugPrint('[UpdateService] APK téléchargé : ${file.path}');
       return file.path;
     } catch (e) {
@@ -172,8 +183,6 @@ class UpdateService {
   // ── Installation ───────────────────────────────────────────────────────────
 
   /// Installe l'APK téléchargé via le MethodChannel natif.
-  ///
-  /// Retourne true si l'installation a été lancée avec succès.
   Future<bool> installApk(String apkPath) async {
     try {
       final file = File(apkPath);
