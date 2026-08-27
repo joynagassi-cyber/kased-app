@@ -41,6 +41,7 @@ class RealtimeService {
   String? _deviceId;
   String? _currentUserEmail;
   String? _currentToken;
+  String? _currentChannel;
 
   bool get isConnected => _isConnected;
   String? get deviceId => _deviceId;
@@ -121,35 +122,46 @@ class RealtimeService {
       debugPrint('[Realtime] Error: $data');
     });
 
+    _socket!.on('realtime:subscribe', (data) {
+      // Notifier que le client s'est abonné avec succès
+    });
+
     // Événement générique de changement de données
     _socket!.on('data_changed', (data) {
       debugPrint('[Realtime] data_changed: $data');
+      _currentChannel = 'kased:all';
       _handleDataEvent(data);
     });
 
-    // Événements spécifiques par table
+    // Événements spécifiques par table (format serveur InsForge)
     _socket!.on('kased:membres:changed', (data) {
       debugPrint('[Realtime] membres:changed: $data');
+      _currentChannel = 'kased:membres';
       _handleDataEvent(data);
     });
     _socket!.on('kased:membres:deleted', (data) {
       debugPrint('[Realtime] membres:deleted: $data');
+      _currentChannel = 'kased:membres';
       _handleDataEvent(data);
     });
     _socket!.on('kased:cultes:changed', (data) {
       debugPrint('[Realtime] cultes:changed: $data');
+      _currentChannel = 'kased:cultes';
       _handleDataEvent(data);
     });
     _socket!.on('kased:cultes:deleted', (data) {
       debugPrint('[Realtime] cultes:deleted: $data');
+      _currentChannel = 'kased:cultes';
       _handleDataEvent(data);
     });
     _socket!.on('kased:cotisations:changed', (data) {
       debugPrint('[Realtime] cotisations:changed: $data');
+      _currentChannel = 'kased:cotisations';
       _handleDataEvent(data);
     });
     _socket!.on('kased:cotisations:deleted', (data) {
       debugPrint('[Realtime] cotisations:deleted: $data');
+      _currentChannel = 'kased:cotisations';
       _handleDataEvent(data);
     });
 
@@ -209,6 +221,11 @@ class RealtimeService {
   }
 
   /// Parse un événement de données et notifie les écouteurs.
+  ///
+  /// Le serveur InsForge publie avec le format :
+  ///   {action: 'create'|'update'|'delete', table: 'membres'|'cultes'|'cotisations', id: uuid, data: {...}}
+  /// Mais les triggers Pubsub envoient aussi des events sans 'data' (seulement id + updated_at).
+  /// On normalise ici pour que [RealtimePatchEngine] reçoive toujours un format cohérent.
   void _handleDataEvent(dynamic rawData) {
     Map<String, dynamic> data;
     if (rawData is Map) {
@@ -224,14 +241,43 @@ class RealtimeService {
       return;
     }
 
-    final event = RealtimeEvent.fromJson(data);
+    // Normaliser le format : extraire action, table, id, data
+    final String action = data['action'] as String? ?? data['event'] as String? ?? 'update';
+    final String table = data['table'] as String? ?? _tableFromChannel(_currentChannel);
+    final String id = data['id'] as String? ?? '';
+    final Map<String, dynamic>? entityData = data['data'] as Map<String, dynamic>?;
+
+    // Si l'événement vient d'un trigger de suppression, data peut être à la racine
+    final Map<String, dynamic> resolvedData = entityData ?? data;
+
+    // Si pas de table (événement générique), essayer de la déduire du channel
+    final String resolvedTable = table.isEmpty ? _tableFromChannel(_currentChannel) : table;
+
+    final event = RealtimeEvent(
+      action: action,
+      table: resolvedTable,
+      id: id,
+      data: resolvedData,
+    );
+
     debugPrint(
-        '[Realtime] Event: ${event.action} sur ${event.table} (id: ${event.id})');
+        '[Realtime] Event normalized: ${event.action} sur ${event.table} (id: ${event.id})');
 
     // Notifier tous les écouteurs
     for (final handler in _eventHandlers) {
       handler(event);
     }
+  }
+
+  /// Déduit le nom de la table depuis le channel courant.
+  String _tableFromChannel(String? channel) {
+    if (channel == null) return 'unknown';
+    final parts = channel.split(':');
+    if (parts.length >= 2) {
+      final table = parts[1];
+      if (table == 'membres' || table == 'cultes' || table == 'cotisations') return table;
+    }
+    return 'unknown';
   }
 
   /// Parse un événement de présence.
