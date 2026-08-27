@@ -248,6 +248,8 @@ jobs:
           compression-level: 9
 
       # ── 15. Create GitHub Release ───────────────────────────────────────────
+      # Note: GitHub releases are immutable once published — we use --clobber to
+      # replace the APK asset instead of deleting the old one (which is forbidden).
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -273,5 +275,6 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          replace_existing_artifacts: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
