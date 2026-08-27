@@ -9,16 +9,22 @@
 ### Déployer une nouvelle version
 
 ```bash
-# 1. Builder
+# 1. Modifier la version
+sed -i 's/^version: .*/version: 1.2.0+1/' pubspec.yaml
+
+# 2. Builder l'APK
 cd cotis_app
 flutter build apk --release --target-platform android-arm64 --split-per-abi
 
-# 2. Upload APK + manifest
-npx @insforge/cli storage upload docs/1.2.0.apk --bucket app-updates
-npx @insforge/cli storage upload docs/manifest.json --bucket app-updates
+# 3. Créer la release GitHub
+gh release create v1.2.0+1 \
+  --title "Kased v1.2.0+1" \
+  --notes "## Quoi de neuf\n\n- Feature 1\n- Bug fix" \
+  build/app/outputs/apk/release/app-arm64-v8a-release.apk \
+  --name "kased-v1.2.0+1.apk"
 
-# 3. Vérifier
-npx @insforge/cli storage list-objects app-updates
+# 4. Vérifier
+gh release view v1.2.0+1
 ```
 
 ---
@@ -27,20 +33,24 @@ npx @insforge/cli storage list-objects app-updates
 
 | Besoin | Lire |
 |--------|------|
-| **Guide complet** | `docs/SYSTEM_REFERENCE.md` |
-| **Workflow étape par étape** | `docs/UPDATE_GUIDE.md` |
-| **Checklist avant déploiement** | `docs/DEPLOYMENT_CHECKLIST.md` |
-| **Architecture technique** | `docs/adr/ADR-001-update-system.md` |
+| **Guide complet** | `docs/UPDATE_GUIDE.md` |
+| **Architecture technique** | `docs/UPDATE_SYSTEM.md` |
 | **Liste des changements** | `docs/CHANGES.md` |
 
 ---
 
 ## 🔑 Infos Clés
 
-### InsForge
-- **Bucket** : `app-updates`
-- **URL** : `https://pu74z8pe.us-east.insforge.app`
-- **Manifeste** : `docs/manifest.json`
+### GitHub Repository
+- **Owner** : `joynagassi-cyber`
+- **Repo** : `kased-app`
+- **API** : `https://api.github.com/repos/joynagassi-cyber/kased-app/releases/latest`
+
+### Format des Versions
+```
+Tag GitHub : vMAJOR.MINOR.PATCH+BUILDCODE
+Exemple    : v1.1.9+3
+```
 
 ### Commandes Utiles
 ```bash
@@ -52,24 +62,44 @@ flutter test
 
 # Générer code
 dart run build_runner build --delete-conflicting-outputs
-```
 
-### Version Code
-```
-version_code = MAJOR * 1000000 + MINOR * 1000 + PATCH * 1 + BUILD
+# Lister les releases
+gh release list --limit 5
 ```
 
 ---
 
 ## ✅ Checklist Rapide
 
-- [ ] Version modifiée dans `pubspec.yaml`
-- [ ] `version_code` augmenté dans `docs/manifest.json`
+- [ ] Version modifiée dans `pubspec.yaml` (format: `X.Y.Z+W`)
 - [ ] `flutter analyze` passe
-- [ ] APK uploadé sur InsForge
-- [ ] Manifest uploadé sur InsForge
+- [ ] `flutter build apk` réussi
+- [ ] Release GitHub créée avec tag `vX.Y.Z+W`
+- [ ] Asset APK présent dans la release
 - [ ] Test sur appareil effectué
 
 ---
 
-**Mis à jour** : 2026-08-26
+## 📝 Exemple de Release
+
+```bash
+gh release create v1.2.0+1 \
+  --title "Kased v1.2.0+1" \
+  --notes "## Quoi de neuf dans v1.2.0+1
+
+### Nouvelles fonctionnalités
+- Barre de filtrage avancée pour les membres
+- Tri par nom et date d'adhésion
+- Filtrage par statut actif/inactif
+
+### Corrections
+- Navigation corrigée après création d'un membre
+" \
+  build/app/outputs/apk/release/app-arm64-v8a-release.apk \
+  --name "kased-v1.2.0+1.apk"
+```
+
+---
+
+**Mis à jour** : 2026-08-27
+**Système** : GitHub Releases (direct)

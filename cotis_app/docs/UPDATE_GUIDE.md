@@ -11,11 +11,15 @@
 cd cotis_app
 flutter build apk --release --target-platform android-arm64 --split-per-abi
 
-# Uploader sur InsForge
-npx @insforge/cli storage upload <fichier> --bucket app-updates
+# Créer la release GitHub
+gh release create v1.2.0+1 \
+  --title "Kased v1.2.0+1" \
+  --notes "Changelog..." \
+  build/app/outputs/apk/release/app-arm64-v8a-release.apk \
+  --name "kased-v1.2.0+1.apk"
 
-# Vérifier le bucket
-npx @insforge/cli storage list-objects app-updates
+# Vérifier la release
+gh release view v1.2.0+1
 
 # Analyser le code
 flutter analyze lib/core/updates/ lib/providers/update_provider.dart
@@ -25,16 +29,14 @@ flutter analyze lib/core/updates/ lib/providers/update_provider.dart
 
 | Élément | URL |
 |---------|-----|
-| Manifest | `https://pu74z8pe.us-east.insforge.app/api/storage/object/public/app-updates/manifest.json` |
-| Bucket | `app-updates` |
-| Projjet InsForge | `pu74z8pe.us-east.insforge.app` |
+| API GitHub Releases | `https://api.github.com/repos/joynagassi-cyber/kased-app/releases/latest` |
+| Download APK | `https://github.com/joynagassi-cyber/kased-app/releases/download/vX.Y.Z+W/kased-vX.Y.Z+W.apk` |
+| Page Release | `https://github.com/joynagassi-cyber/kased-app/releases/tag/vX.Y.Z+W` |
 
 ### Fichiers Modifiés à Chaque MAJ
 
 ```
 pubspec.yaml                              # version: X.Y.Z+W
-docs/manifest.json                        # version_code, download_url, changelog
-build/app/outputs/apk/release/*.apk       # APK généré
 ```
 
 ## Workflow Complet
@@ -57,54 +59,47 @@ flutter build apk --release --target-platform android-arm64 --split-per-abi
 # Output: build/app/outputs/apk/release/app-arm64-v8a-release.apk
 ```
 
-### 3. Calcul SHA-256 (optionnel mais recommandé)
+### 3. Création de la Release GitHub
 ```bash
-sha256sum build/app/outputs/apk/release/app-arm64-v8a-release.apk
-# Copier le hash pour le manifeste
+# Créer un tag git
+git tag v1.2.0+1
+git push origin v1.2.0+1
+
+# Créer la release avec l'APK en asset
+gh release create v1.2.0+1 \
+  --title "Kased v1.2.0+1" \
+  --notes "## Quoi de neuf dans v1.2.0+1
+
+### Nouvelles fonctionnalités
+- Feature 1
+- Feature 2
+
+### Corrections
+- Bug fix 1
+" \
+  build/app/outputs/apk/release/app-arm64-v8a-release.apk \
+  --name "kased-v1.2.0+1.apk"
 ```
 
-### 4. Mise à jour du manifeste
-**Fichier** : `cotis_app/docs/manifest.json`
+### 4. Vérification
+```bash
+# Liste des releases
+gh release list --limit 5
 
-```json
-{
-  "version_name": "1.2.0",
-  "version_code": 1020001,
-  "download_url": "https://pu74z8pe.us-east.insforge.app/api/storage/object/public/app-updates/1.2.0.apk",
-  "changelog": "• Feature 1\n• Bug fix 2",
-  "force_update": false,
-  "published_at": "2026-08-26T10:00:00Z",
-  "sha256": "calculé_étape_3"
-}
+# Détails de la dernière release
+gh release view --json tagName,url,assets
+
+# Test API
+gh api repos/joynagassi-cyber/kased-app/releases/latest
 ```
 
-**Formule version_code** : `MAJOR * 1000000 + MINOR * 1000 + PATCH * 1 + BUILD`
-
-### 5. Upload sur InsForge
+### 5. Test sur appareil
 ```bash
-# Upload APK
-npx @insforge/cli storage upload cotis_app/docs/1.2.0.apk \
-  --bucket app-updates \
-  --file build/app/outputs/apk/release/app-arm64-v8a-release.apk
+# Télécharger l'APK
+gh release download v1.2.0+1 -d . --pattern "*.apk"
 
-# Upload manifest
-npx @insforge/cli storage upload cotis_app/docs/manifest.json \
-  --bucket app-updates
-```
-
-### 6. Vérification
-```bash
-# Liste des fichiers
-npx @insforge/cli storage list-objects app-updates
-
-# Test du manifeste
-curl -s "https://pu74z8pe.us-east.insforge.app/api/storage/object/public/app-updates/manifest.json"
-```
-
-### 7. Test sur appareil
-```bash
-# Installer l'APK
-adb install build/app/outputs/apk/release/app-arm64-v8a-release.apk
+# Installer
+adb install kased-v1.2.0+1.apk
 
 # Ouvrir l'app et vérifier le badge "NEW" dans Profil
 ```
@@ -117,7 +112,7 @@ cotis_app/
 │   ├── core/
 │   │   └── updates/
 │   │       ├── app_update_model.dart    # Modèles de données
-│   │       ├── update_config.dart       # Configuration URLs
+│   │       ├── update_config.dart       # Configuration GitHub API
 │   │       └── update_service.dart      # Logique métier
 │   ├── providers/
 │   │   ├── update_provider.dart         # Provider Riverpod
@@ -136,10 +131,9 @@ cotis_app/
 │                   └── xml/
 │                       └── file_paths.xml        # FileProvider config
 └── docs/
-    ├── manifest.json                  # Manifeste exemple
     ├── UPDATE_SYSTEM.md               # Doc technique
-    └── adr/
-        └── ADR-001-update-system.md   # Architecture decision record
+    ├── UPDATE_GUIDE.md                # Ce fichier
+    └── README-UPDATE.md               # Quick start
 ```
 
 ## Vérifications Avant Commit
@@ -153,39 +147,17 @@ flutter analyze
 # 2. Tester (si tests existent)
 flutter test
 
-# 3. Vérifier les imports
+# 3. Vérifier le provider
 grep -r "update_provider" lib/ --include="*.dart"
-
-# 4. Vérifier le manifeste JSON
-cat docs/manifest.json | python -m json.tool
-```
-
-## Commandes Utiles InsForge
-
-```bash
-# Voir la config du projet
-npx @insforge/cli current
-
-# Voir les buckets
-npx @insforge/cli storage buckets
-
-# Lister les objets d'un bucket
-npx @insforge/cli storage list-objects <bucket>
-
-# Télécharger un objet
-npx @insforge/cli storage download <key> --bucket <bucket>
-
-# Supprimer un objet
-npx @insforge/cli storage delete <key> --bucket <bucket>
 ```
 
 ## Problèmes Courants
 
 | Symptôme | Cause | Solution |
 |----------|-------|----------|
-| Badge "NEW" n'apparaît pas | version_code pas augmenté | Vérifier manifest.json |
-| "Manifest non trouvé" | Bucket inexistant | `npx @insforge/cli storage buckets` |
-| Téléchargement échoue | URL APK invalide | Vérifier download_url dans manifest |
+| Badge "NEW" n'apparaît pas | Tag GitHub mal formaté | Vérifier `vX.Y.Z+W` |
+| "Release non trouvée" | API GitHub 404 | Vérifier la release existe |
+| Téléchargement échoue | Asset APK manquant | Vérifier l'asset dans la release |
 | Installation bloquée | Sources inconnues | Paramètres → Sécurité |
 | Analyse flutter échoue | Import manquant | Vérifier pubspec.yaml |
 
@@ -193,25 +165,25 @@ npx @insforge/cli storage delete <key> --bucket <bucket>
 
 1. **Le provider se vérifie toutes les 6 heures** automatiquement
 2. **Au redémarrage**, vérification manuelle via `didChangeAppLifecycleState`
-3. **Le SHA-256** est optionnel mais recommandé pour la sécurité
-4. **force_update: true** bloque l'app jusqu'à installation
+3. **Le changelog** est extrait du body de la release GitHub
+4. **force_update: false** par défaut (GitHub ne supporte pas force_update)
 5. **SharedPreferences** stocke le dernier versionCode vu (clé: `update_last_seen_version_code`)
 
 ## Variables d'Environnement
 
-Aucune variable d'environnement spécifique. Les URLs sont hardcodées dans `InsForgeConfig`.
+Aucune variable d'environnement spécifique. L'API GitHub est publique.
 
 ## Dépendances
 
 ```yaml
 # pubspec.yaml
 dependencies:
-  apk_installer: ^0.0.4  # Ajouté pour le système de MAJ
+  apk_installer: ^0.0.4  # Plugin natif pour installation APK
 ```
 
 ## Liens
 
 - **Documentation technique** : `docs/UPDATE_SYSTEM.md`
-- **Architecture** : `docs/adr/ADR-001-update-system.md`
-- **Bucket InsForge** : `app-updates`
-- **Projet** : `pu74z8pe.us-east.insforge.app`
+- **Quick start** : `docs/README-UPDATE.md`
+- **Repository GitHub** : `https://github.com/joynagassi-cyber/kased-app`
+- **API GitHub** : `https://docs.github.com/en/rest/releases`
