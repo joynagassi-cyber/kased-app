@@ -38,10 +38,10 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
     return appDataAsync.when(
       data: (state) {
         // Toujours relire depuis le provider pour être à jour (bugfix: widget.membre
-        // est un snapshot de navigation, pas la version la plus récente après ajout d'avance)
+        // est un snapshot de navigation, pas la version la plus recente après ajout d'avance)
         final currentMembre = state.membres.firstWhere(
               (m) => m.id == widget.membreId,
-              orElse: () => throw Exception('Membre non trouvé'),
+              orElse: () => throw Exception('Membre non trouve'),
             );
 
         final cotisationsMembre = state.cotisations
@@ -92,7 +92,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
         return Scaffold(
           backgroundColor: colorScheme.surface,
           appBar: AppBar(
-            title: const Text('Détails du membre', style: TextStyle(fontSize: 16)),
+            title: const Text('Details du membre', style: TextStyle(fontSize: 16)),
             elevation: 0,
             actions: [
               // Bouton rapport
@@ -182,7 +182,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                       children: [
                         Expanded(
                           child: _StatCard(
-                            label: 'Cultes payés',
+                            label: 'Cultes payes',
                             value: '$cultesPayes',
                             sub: '$totalCultes cultes',
                             icon: Icons.check_circle,
@@ -210,7 +210,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                           child: _StatCard(
                             label: 'Absences',
                             value: '$absences',
-                            sub: 'marqués',
+                            sub: 'marques',
                             icon: Icons.person_off,
                             iconColor: AppColors.warning,
                             cardColor: colorScheme.tertiaryContainer,
@@ -409,7 +409,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                         ),
                         ButtonSegment(
                           value: StatutCotisation.paye,
-                          label: Text('Payé'),
+                          label: Text('Paye'),
                         ),
                         ButtonSegment(
                           value: StatutCotisation.enAvance,
@@ -518,7 +518,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 estPaye
-                                    ? 'Paiement effectué'
+                                    ? 'Paiement effectue'
                                     : (estAbsent
                                         ? 'Membre absent'
                                         : 'En attente'),
@@ -570,7 +570,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Impossible d'ajouter le paiement en avance. Veuillez réessayer.'))),
+      error: (e, _) => Scaffold(body: Center(child: Text("Impossible d'ajouter le paiement en avance. Veuillez reessayer."))),
     );
   }
   Future<void> _showAvanceDialog(BuildContext context, Membre membre) async {
@@ -617,7 +617,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Gloire à Dieu ! ${montant.toStringAsFixed(0)} F ajoutés en avance'),
+                'Gloire à Dieu ! ${montant.toStringAsFixed(0)} F ajoutes en avance'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -625,7 +625,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Impossible d'ajouter le paiement en avance. Veuillez réessayer.')),
+          SnackBar(content: Text("Impossible d'ajouter le paiement en avance. Veuillez reessayer.")),
         );
       }
     } finally {

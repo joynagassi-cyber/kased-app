@@ -63,8 +63,10 @@ void main() {
     final state = AppState(membres: membres, cultes: [], cotisations: []);
 
     await tester.pumpWidget(createMembresScreen(state));
+    // Pump past loading skeleton and async initState
     await tester.pump();
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('John Doe'), findsOneWidget);
     expect(find.text('Membres'), findsOneWidget);
@@ -74,7 +76,10 @@ void main() {
     final state = AppState(membres: [], cultes: [], cotisations: []);
 
     await tester.pumpWidget(createMembresScreen(state));
-    await tester.pumpAndSettle();
+    // Pump past loading skeleton and async initState
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Aucun membre enregistré'), findsOneWidget);
   });

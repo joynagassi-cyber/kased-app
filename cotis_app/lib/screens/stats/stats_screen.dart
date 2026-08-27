@@ -23,13 +23,13 @@ class StatsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Calculs réels pour les stats rapides
+    // Calculs reels pour les stats rapides
     final totalCollecte = donnees.collecteParMois.fold<double>(0, (sum, item) => sum + item.montant);
     final moyenneCollecte = donnees.collecteParMois.where((m) => m.montant > 0).isEmpty 
         ? 0.0 
         : totalCollecte / donnees.collecteParMois.where((m) => m.montant > 0).length;
     
-    // Simplification : le taux de croissance se base sur le mois en cours vs mois précédent.
+    // Simplification : le taux de croissance se base sur le mois en cours vs mois precedent.
     double tauxCroissance = 0;
     if (donnees.collecteParMois.length >= 2) {
       final montantActuel = donnees.collecteParMois.last.montant;
@@ -64,7 +64,7 @@ class StatsScreen extends ConsumerWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Données exportées avec succès dans :\n$path'),
+                            content: Text('Donnees exportees avec succès dans :\n$path'),
                             duration: const Duration(seconds: 5),
                             action: SnackBarAction(
                               label: 'OK',
@@ -304,7 +304,7 @@ class StatsScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       title: Text(assidu.membre.nom, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                      subtitle: Text('${assidu.cultesPayes}/${assidu.cultesConcernes} cultes payés'),
+                                      subtitle: Text('${assidu.cultesPayes}/${assidu.cultesConcernes} cultes payes'),
                                       trailing: Text(
                                         '${assidu.pourcentage.toStringAsFixed(0)}%',
                                         style: TextStyle(
@@ -346,7 +346,7 @@ class StatsScreen extends ConsumerWidget {
                               ]
                             ),
                             child: FilledButton(
-                              onPressed: () {}, // Géré par SpringButton
+                              onPressed: () {}, // Gere par SpringButton
                               style: FilledButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 shadowColor: Colors.transparent,
@@ -424,7 +424,7 @@ class StatsScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Rapport PDF enregistré dans :\n$path'),
+            content: Text('Rapport PDF enregistre dans :\n$path'),
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
               label: 'OK',
@@ -436,7 +436,7 @@ class StatsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l'opération. Veuillez réessayer.')),
+          SnackBar(content: Text("Operation impossible. Veuillez reessayer.")),
         );
       }
     }
@@ -473,7 +473,7 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
             decoration: const InputDecoration(labelText: 'Mois'),
             items: const [
               DropdownMenuItem(value: 1, child: Text('Janvier')),
-              DropdownMenuItem(value: 2, child: Text('Février')),
+              DropdownMenuItem(value: 2, child: Text('Fevrier')),
               DropdownMenuItem(value: 3, child: Text('Mars')),
               DropdownMenuItem(value: 4, child: Text('Avril')),
               DropdownMenuItem(value: 5, child: Text('Mai')),
@@ -483,14 +483,14 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
               DropdownMenuItem(value: 9, child: Text('Septembre')),
               DropdownMenuItem(value: 10, child: Text('Octobre')),
               DropdownMenuItem(value: 11, child: Text('Novembre')),
-              DropdownMenuItem(value: 12, child: Text('Décembre')),
+              DropdownMenuItem(value: 12, child: Text('Decembre')),
             ],
             onChanged: (value) => setState(() => _mois = value ?? _mois),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
             initialValue: _annee,
-            decoration: const InputDecoration(labelText: 'Année'),
+            decoration: const InputDecoration(labelText: 'Annee'),
             items: List.generate(
               5,
               (index) => DropdownMenuItem(value: DateTime.now().year - 2 + index, child: Text('${DateTime.now().year - 2 + index}')),

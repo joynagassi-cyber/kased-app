@@ -4,6 +4,7 @@ import 'package:kased_app/main.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/services/auth_service.dart';
 import 'package:kased_app/providers/kased_app_provider.dart' as store;
+import 'package:kased_app/core/services/stats_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

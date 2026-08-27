@@ -346,15 +346,19 @@ void main() {
         cotisations: [_cotisation(membreId: membreId, culteId: culteId, statut: StatutCotisation.paye, paye: 50.0)],
       ));
 
+      // Le store capture l'exception internement - le paiement n'est pas modifié
       await store.dispatch(RegisterPayment(
         membreId: membreId,
         culteId: culteId,
         montant: 100.0,
       ));
 
-      // L'exception est capturee par le store
-      final cots = await store.state.cotisations;
-      expect(cots.first.statut, equals(StatutCotisation.paye));
+      // La cotisation originale devrait rester inchangée dans le cache
+      final cachedCots = await store.cache.getAllCotisations();
+      expect(cachedCots.any((c) => c.membreId == membreId && c.culteId == culteId), isTrue);
+      final originalCot = cachedCots.firstWhere((c) => c.membreId == membreId && c.culteId == culteId);
+      expect(originalCot.statut, equals(StatutCotisation.paye));
+      expect(originalCot.montantPaye, equals(50.0));
     });
   });
 }

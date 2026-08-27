@@ -58,7 +58,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
                     const Icon(Icons.verified_rounded, size: 96, color: AppColors.success),
                     const SizedBox(height: 16),
                     Text(
-                      'Tout le monde a été traité',
+                      'Tout le monde a ete traite',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
@@ -66,7 +66,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${state.cotisations.where((c) => c.culteId == widget.culteId && c.estPaye).length} paiements enregistrés pour ce culte.',
+                      '${state.cotisations.where((c) => c.culteId == widget.culteId && c.estPaye).length} paiements enregistres pour ce culte.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
                       textAlign: TextAlign.center,
                     ),
@@ -101,7 +101,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '$payesCount / $_total payés - ${culte.montantCotisation.toInt()} FCFA',
+                    '$payesCount / $_total payes - ${culte.montantCotisation.toInt()} FCFA',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
@@ -163,7 +163,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Tapez payé ou passez au suivant',
+                                    'Tapez paye ou passez au suivant',
                                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                           color: AppColors.textSecondary,
                                         ),
@@ -183,7 +183,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
                       minimumSize: const Size.fromHeight(80),
                     ),
                     onPressed: () => _markPaid(context, culte.montantCotisation),
-                    child: const Text('V Payé'),
+                    child: const Text('V Paye'),
                   ),
                   const SizedBox(height: 10),
                   FilledButton.icon(
@@ -210,7 +210,7 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
         );
       },
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Impossible d'enregistrer le paiement. Veuillez réessayer.'))),
+      error: (e, _) => Scaffold(body: Center(child: Text("Impossible d enregistrer le paiement. Veuillez reessayer."))),
     );
   }
 
@@ -243,13 +243,13 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Impossible d'enregistrer le paiement. Veuillez réessayer.')),
+          SnackBar(content: Text("Impossible d enregistrer le paiement. Veuillez reessayer.")),
         );
       }
     }
   }
 
-  /// Ouvre [PaiementPersonnelDialog] pour un montant personnalisé,
+  /// Ouvre [PaiementPersonnelDialog] pour un montant personnalise,
   /// puis enregistre le paiement via [AppData.enregistrerPaiementPersonnel]
   /// et passe au membre suivant.
   Future<void> _customPayment(
@@ -279,15 +279,15 @@ class _SaisieRapideScreenState extends ConsumerState<SaisieRapideScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(don > 0
-                ? 'Don de ${don.toStringAsFixed(0)} F enregistré'
-                : 'Paiement de ${result.toStringAsFixed(0)} F enregistré'),
+                ? 'Don de ${don.toStringAsFixed(0)} F enregistre'
+                : 'Paiement de ${result.toStringAsFixed(0)} F enregistre'),
           ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Impossible d'enregistrer le paiement. Veuillez réessayer.')),
+          SnackBar(content: Text("Impossible d enregistrer le paiement. Veuillez reessayer.")),
         );
       }
     }

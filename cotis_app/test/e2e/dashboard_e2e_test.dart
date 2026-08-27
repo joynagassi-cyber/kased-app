@@ -4,6 +4,8 @@ import 'package:kased_app/main.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/services/auth_service.dart';
 import 'package:kased_app/providers/kased_app_provider.dart' as store;
+import 'package:kased_app/core/services/stats_service.dart';
+import 'package:kased_app/widgets/kased_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -88,7 +90,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.byType(store.KasedCard), findsWidgets);
+      expect(find.byType(KasedCard), findsWidgets);
     });
 
     testWidgets('Flow 3: Pull to refresh', (tester) async {

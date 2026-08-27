@@ -7,6 +7,7 @@ import 'package:kased_app/providers/kased_app_provider.dart' as store;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:kased_app/core/services/stats_service.dart';
 
 class MockAuthService extends Mock implements AuthService {}
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
