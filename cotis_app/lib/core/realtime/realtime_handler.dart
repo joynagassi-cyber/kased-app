@@ -26,13 +26,13 @@ class RealtimeHandler extends _$RealtimeHandler {
   late RealtimePatchEngine _patchEngine;
   ReloadCallback? _reloadCallback;
 
+  @override
+  bool build() => false;
+
   RealtimeHandler() {
     _realtime = RealtimeService();
     _realtime.addListener(_handleEvent);
   }
-
-  @override
-  bool build() => false;
 
   /// Initialise le patch engine avec le cache (à appeler après build).
   void initPatchEngine(LocalCache cache) {
