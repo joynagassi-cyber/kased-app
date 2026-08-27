@@ -209,8 +209,8 @@ void main() {
           'id': 'test-001',
           'nom': 'Dupont',
           'prenom': 'Jean',
-          'dateAdhesion': DateTime.now().toIso8601String(),
-          'isActive': true,
+          'date_adhesion': DateTime.now().toIso8601String(),
+          'is_active': true,
         },
       );
 
@@ -245,8 +245,8 @@ void main() {
           'id': 'test-001',
           'nom': 'Dupont',
           'prenom': 'Jacques',
-          'dateAdhesion': DateTime.now().toIso8601String(),
-          'isActive': true,
+          'date_adhesion': DateTime.now().toIso8601String(),
+          'is_active': true,
         },
       );
 
@@ -293,9 +293,9 @@ void main() {
         id: 'culte-001',
         data: {
           'id': 'culte-001',
-          'dateCulte': DateTime.now().toIso8601String(),
+          'date_culte': DateTime.now().toIso8601String(),
           'titre': 'Culte du dimanche',
-          'montantCotisation': 50.0,
+          'montant_cotisation': 50.0,
         },
       );
 
@@ -323,9 +323,9 @@ void main() {
         id: 'culte-001',
         data: {
           'id': 'culte-001',
-          'dateCulte': DateTime.now().toIso8601String(),
+          'date_culte': DateTime.now().toIso8601String(),
           'titre': 'Nouveau titre',
-          'montantCotisation': 100.0,
+          'montant_cotisation': 100.0,
         },
       );
 
@@ -370,10 +370,10 @@ void main() {
         id: 'cot-001',
         data: {
           'id': 'cot-001',
-          'membreId': 'membre-001',
-          'culteId': 'culte-001',
-          'montantObligatoire': 50.0,
-          'montantPaye': 50.0,
+          'membre_id': 'membre-001',
+          'culte_id': 'culte-001',
+          'montant_obligatoire': 50.0,
+          'montant_paye': 50.0,
           'statut': 'paye',
         },
       );
@@ -402,10 +402,10 @@ void main() {
         id: 'cot-001',
         data: {
           'id': 'cot-001',
-          'membreId': 'membre-001',
-          'culteId': 'culte-001',
-          'montantObligatoire': 50.0,
-          'montantPaye': 50.0,
+          'membre_id': 'membre-001',
+          'culte_id': 'culte-001',
+          'montant_obligatoire': 50.0,
+          'montant_paye': 50.0,
           'statut': 'paye',
         },
       );

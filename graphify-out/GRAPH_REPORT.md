@@ -1,11 +1,11 @@
 # Graph Report - kased-app-new  (2026-08-27)
 
 ## Corpus Check
-- 189 files · ~518,191 words
+- 189 files · ~520,024 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1348 nodes · 1834 edges · 42 communities detected
+- 1341 nodes · 1828 edges · 42 communities detected
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 10 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -81,27 +81,27 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.02
-Nodes (142): _notificationIdFor, NotificationService, IsarLocalCache, _pickCotisation, _pickCulte, _pickMembre, LocalCache, _applyCotisation (+134 more)
+Nodes (159): _notificationIdFor, NotificationService, KasedExportService, IsarLocalCache, _pickCotisation, _pickCulte, _pickMembre, LocalCache (+151 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.02
-Nodes (115): build, CulteDetailScreen, _CulteDetailScreenState, EmptyState, MemberPayTile, Padding, Scaffold, SizedBox (+107 more)
+Cohesion: 0.03
+Nodes (102): addNotificationClickListener, addPushSubscriptionObserver, OneSignalService, setLogLevel, CollecteParMois, DonneesGraphiques, MembreAssidu, ParticipationParCulte (+94 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (86): AnimatedAppear, build, AvatarService, Color, colorFromEmail, generateFromEmail, initialsFromEmail, AppColors (+78 more)
+Nodes (101): AnimatedAppear, build, AvatarService, Color, colorFromEmail, generateFromEmail, initialsFromEmail, AppColors (+93 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.03
-Nodes (84): ThemeModeNotifier, main, buildApp, FakeAppData, getDashboardStats, main, MockAuthService, MockSecureStorage (+76 more)
+Nodes (76): AlertDialog, build, _confirmDeleteCulte, Container, CultesScreen, _CultesScreenState, CustomScrollView, _DatePickerTile (+68 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.03
-Nodes (74): CotisationExportService, _saveAndShareCsv, KasedExportService, _getStatutText, MemberReportExportService, _getStatutColor, _getStatutText, MemberReportPdfService (+66 more)
+Cohesion: 0.04
+Nodes (51): build, CulteDetailScreen, _CulteDetailScreenState, EmptyState, MemberPayTile, Padding, Scaffold, SizedBox (+43 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.04
-Nodes (48): _BouncingScrollBehavior, BouncingScrollPhysics, build, didChangeAppLifecycleState, dispose, Duration, getScrollPhysics, initializeDateFormatting (+40 more)
+Nodes (49): _BouncingScrollBehavior, BouncingScrollPhysics, build, didChangeAppLifecycleState, dispose, Duration, getScrollPhysics, initializeDateFormatting (+41 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.04
@@ -109,27 +109,27 @@ Nodes (47): AuthService, Duration, Exception, _requireAnonKey, build, didUpdateW
 
 ### Community 7 - "Community 7"
 Cohesion: 0.04
-Nodes (47): build, dispose, initState, LoginScreen, _LoginScreenState, MotionAware, Scaffold, SizedBox (+39 more)
+Nodes (46): _asList, _asSingle, InsForgeService, StateError, calculerMontantDu, calculerNombreRetards, CotisationLogic, determinerStatut (+38 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.04
-Nodes (45): _asList, _asSingle, InsForgeService, StateError, calculerMontantDu, calculerNombreRetards, CotisationLogic, determinerStatut (+37 more)
+Nodes (47): build, Center, Consumer, DashboardScreen, _DashboardScreenState, Divider, DraggableScrollableSheet, initState (+39 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.04
-Nodes (47): build, Center, Consumer, DashboardScreen, _DashboardScreenState, Divider, DraggableScrollableSheet, initState (+39 more)
+Cohesion: 0.05
+Nodes (41): build, dispose, initState, LoginScreen, _LoginScreenState, MotionAware, Scaffold, SizedBox (+33 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.06
-Nodes (34): build, _Card, Container, dispose, GestureDetector, initState, Padding, ProfileScreen (+26 more)
+Nodes (33): build, _Card, Container, dispose, GestureDetector, initState, Padding, ProfileScreen (+25 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.06
-Nodes (30): app_update_model.dart, addListener, addPresenceListener, disconnect, _handleDataEvent, _handlePresenceUpdate, RealtimeService, removeListener (+22 more)
-
-### Community 12 - "Community 12"
 Cohesion: 0.09
 Nodes (25): FlutterWindow(), OnCreate(), RegisterPlugins(), wWinMain(), CreateAndAttachConsole(), GetCommandLineArguments(), Utf8FromUtf16(), Create() (+17 more)
+
+### Community 12 - "Community 12"
+Cohesion: 0.06
+Nodes (28): AppPrefs, AppPrefsKey, _check, DeviceService, DeviceServicePort, FakeDeviceService, NoOpDeviceService, RealDeviceService (+20 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.06
@@ -137,27 +137,27 @@ Nodes (28): CorbeilleItem, copyWith, Cotisation, fromJson, _statutToString, _str
 
 ### Community 14 - "Community 14"
 Cohesion: 0.06
-Nodes (30): addNotificationClickListener, addPushSubscriptionObserver, OneSignalService, setLogLevel, Auth, AuthState, build, _checkPersistedAuth (+22 more)
+Nodes (31): build, _CadenceCard, Container, _HistoriqueItem, MembreDetailScreen, _MembreDetailScreenState, Padding, paint (+23 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.06
 Nodes (30): annulerAnniversaireMembre, Function, NotificationCoordinator, notifierAbsentMarque, notifierAbsentMarqueFull, notifierCreationCulte, notifierCreationCulteFull, notifierCreationMembre (+22 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.08
-Nodes (24): addListener, cleanup, init, markOffline, _onPresenceUpdate, PresenceService, removeListener, build (+16 more)
+Cohesion: 0.07
+Nodes (26): app_update_model.dart, addListener, addPresenceListener, disconnect, _handleDataEvent, _handlePresenceUpdate, RealtimeService, removeListener (+18 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.08
-Nodes (20): AppPrefs, AppPrefsKey, _check, DeviceService, DeviceServicePort, FakeDeviceService, NoOpDeviceService, RealDeviceService (+12 more)
+Nodes (24): addListener, cleanup, init, markOffline, _onPresenceUpdate, PresenceService, removeListener, build (+16 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.08
 Nodes (24): _cotisationAttach, _cotisationDeserialize, _cotisationEstimateSize, _cotisationGetId, _cotisationSerialize, deleteAllByIdSync, deleteAllByIndex, deleteAllByIndexSync (+16 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.08
-Nodes (23): AddPaymentAdvance, BulkSetPaiements, CreateCulte, CreateMember, DeleteCulte, DeleteMember, EmptyTrash, GetCotisationsDuCulte (+15 more)
+Cohesion: 0.13
+Nodes (19): CotisationExportService, _saveAndShareCsv, _getStatutText, MemberReportExportService, _getStatutColor, _getStatutText, MemberReportPdfService, _saveAndShare (+11 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.09
@@ -173,19 +173,19 @@ Nodes (13): build, _buildPermissionItem, Container, CustomGoogleSignInButton, Go
 
 ### Community 23 - "Community 23"
 Cohesion: 0.12
-Nodes (15): build, _CadenceCard, Container, _HistoriqueItem, MembreDetailScreen, _MembreDetailScreenState, Padding, paint (+7 more)
+Nodes (15): Auth, AuthState, build, _checkPersistedAuth, copyWith, Exception, FlutterSecureStorage, _isTokenExpired (+7 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.13
-Nodes (14): AnimatedContainer, BatchPaymentDialog, _BatchPaymentDialogState, build, Dialog, dispose, Function, Icon (+6 more)
+Cohesion: 0.12
+Nodes (15): build, _buildCotisationsHistory, _buildCotisationTile, _buildIdentityCard, _buildInfoRow, _buildStatsSummary, _buildStatTile, Center (+7 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.17
-Nodes (9): FakeNotifyAdapter, hasEventType, NoOpNotifyAdapter, NotificationEvent, NotifyPort, RealNotifyAdapter, send, toString (+1 more)
+Cohesion: 0.12
+Nodes (15): AnimatedBuilder, build, Container, CulteDetailSkeleton, DashboardSkeleton, dispose, initState, ListView (+7 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.29
-Nodes (8): build, connectWithAuth, copyWith, disconnect, Function, _Private, rebuild, _
+Cohesion: 0.17
+Nodes (9): FakeNotifyAdapter, hasEventType, NoOpNotifyAdapter, NotificationEvent, NotifyPort, RealNotifyAdapter, send, toString (+1 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.25
@@ -248,7 +248,7 @@ Cohesion: 1.0
 Nodes (1): AppNotification
 
 ## Knowledge Gaps
-- **1016 isolated node(s):** `Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages.`, `-registerWithRegistry`, `KasedApp`, `_KasedAppState`, `_BouncingScrollBehavior` (+1011 more)
+- **1009 isolated node(s):** `Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages.`, `-registerWithRegistry`, `KasedApp`, `_KasedAppState`, `_BouncingScrollBehavior` (+1004 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **Thin community `Community 30`** (6 nodes): `AppUpdatePlugin`, `.installApk()`, `.onAttachedToEngine()`, `.onDetachedFromEngine()`, `.onMethodCall()`, `AppUpdatePlugin.kt`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -272,17 +272,17 @@ Nodes (1): AppNotification
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `package:flutter/material.dart` connect `Community 2` to `Community 1`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 13`, `Community 14`, `Community 17`, `Community 22`, `Community 23`, `Community 24`?**
-  _High betweenness centrality (0.285) - this node is a cross-community bridge._
-- **Why does `package:flutter_riverpod/flutter_riverpod.dart` connect `Community 3` to `Community 0`, `Community 1`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 13`, `Community 14`, `Community 23`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
-- **Why does `package:kased_app/models/membre.dart` connect `Community 4` to `Community 0`, `Community 1`, `Community 3`, `Community 15`, `Community 16`, `Community 23`?**
-  _High betweenness centrality (0.066) - this node is a cross-community bridge._
+- **Why does `package:flutter/material.dart` connect `Community 2` to `Community 0`, `Community 1`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 12`, `Community 13`, `Community 14`, `Community 22`, `Community 24`, `Community 25`?**
+  _High betweenness centrality (0.282) - this node is a cross-community bridge._
+- **Why does `package:flutter_riverpod/flutter_riverpod.dart` connect `Community 1` to `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 12`, `Community 13`, `Community 14`, `Community 24`?**
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+- **Why does `package:kased_app/models/membre.dart` connect `Community 0` to `Community 1`, `Community 3`, `Community 4`, `Community 14`, `Community 15`, `Community 17`, `Community 19`, `Community 24`?**
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
 - **What connects `Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages.`, `-registerWithRegistry`, `KasedApp` to the rest of the system?**
-  _1016 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1009 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.02 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.02 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.03 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.02 - nodes in this community are weakly interconnected._
