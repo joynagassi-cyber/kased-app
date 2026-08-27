@@ -16,8 +16,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:kased_app/store/app_state.dart';
 import 'package:kased_app/store/kased_action.dart';
 import 'package:kased_app/store/kased_store.dart';
-
-export 'package:kased_app/store/app_state.dart';
+import 'package:kased_app/providers/auth_provider.dart';
 
 export 'package:kased_app/store/app_state.dart';
 
@@ -95,8 +94,30 @@ class KasedApp extends _$KasedApp {
       }
     });
 
+    // Connecter le temps réel si l'utilisateur est authentifié
+    final authState = ref.read(authProvider);
+    if (authState.isAuthenticated && authState.token != null && authState.userEmail != null) {
+      _store.connectRealtime(
+        token: authState.token!,
+        email: authState.userEmail!,
+      );
+    }
+
+    // Écouter les changements d'authentification pour reconnecter/déconnecter
+    ref.listen<AuthState>(authProvider, (_, next) {
+      if (next.isAuthenticated && next.token != null && next.userEmail != null) {
+        _store.connectRealtime(
+          token: next.token!,
+          email: next.userEmail!,
+        );
+      } else if (!next.isAuthenticated) {
+        _store.disconnectRealtime();
+      }
+    });
+
     ref.onDispose(() {
       _connectivitySubscription?.cancel();
+      _store.disconnectRealtime();
     });
 
     // Planifier un sync différé de 3 secondes après le chargement

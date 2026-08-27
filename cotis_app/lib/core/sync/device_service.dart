@@ -17,4 +17,14 @@ class DeviceService {
       return 'test-device-${const Uuid().v4()}';
     }
   }
+
+  /// Efface le deviceId (utile pour reset ou changement d'utilisateur).
+  static Future<void> resetDeviceId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_key);
+    } catch (_) {
+      // Ignorer en cas d'erreur
+    }
+  }
 }

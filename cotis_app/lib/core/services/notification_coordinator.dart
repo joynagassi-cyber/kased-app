@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:kased_app/core/notifications/notification_service.dart';
 import 'package:kased_app/models/culte.dart';
@@ -102,6 +101,72 @@ class NotificationCoordinator {
     }
   }
 
+  /// Affiche une notification de modification de membre (systeme uniquement).
+  static void notifierModificationMembre(Membre membre) {
+    final nomComplet = '${membre.prenom} ${membre.nom}';
+    _showSystem(
+      title: 'Membre modifie',
+      body: '$nomComplet a ete modifie',
+      channelId: 'membres',
+      channelName: 'Membres',
+    );
+  }
+
+  /// Affiche une notification de suppression de membre (systeme uniquement).
+  static void notifierSuppressionMembre(Membre membre) {
+    final nomComplet = '${membre.prenom} ${membre.nom}';
+    _showSystem(
+      title: 'Membre supprime',
+      body: '$nomComplet a ete supprime',
+      channelId: 'membres',
+      channelName: 'Membres',
+    );
+  }
+
+  /// Affiche une notification de modification de culte (systeme uniquement).
+  static void notifierModificationCulte(Culte culte) {
+    final titreCulte = culte.titre != null ? ' : ${culte.titre}' : '';
+    final body = 'Culte${titreCulte.isNotEmpty ? titreCulte : ''} modifie - ${DateFormat('dd/MM/yyyy').format(culte.dateCulte)}';
+    _showSystem(
+      title: 'Culte modifie',
+      body: body,
+      channelId: 'cultes',
+      channelName: 'Cultes',
+    );
+  }
+
+  /// Affiche une notification de paiement enregistre (systeme uniquement).
+  static void notifierPaiementEnregistre(double montant, String membreNom, String culteTitre) {
+    final body = '$membreNom a paye ${montant.toStringAsFixed(0)} F pour le culte $culteTitre';
+    _showSystem(
+      title: 'Paiement enregistre',
+      body: body,
+      channelId: 'paiements',
+      channelName: 'Paiements',
+    );
+  }
+
+  /// Affiche une notification d'absence marquee (systeme uniquement).
+  static void notifierAbsentMarque(String membreNom, String culteTitre) {
+    final body = '$membreNom a ete marque absent pour le culte $culteTitre';
+    _showSystem(
+      title: 'Absence marquee',
+      body: body,
+      channelId: 'paiements',
+      channelName: 'Paiements',
+    );
+  }
+
+  /// Affiche une notification de modification de cotisation (systeme uniquement).
+  static void notifierModificationCotisation(String membreNom, String action) {
+    _showSystem(
+      title: 'Cotisation modifiee',
+      body: '$membreNom : $action',
+      channelId: 'paiements',
+      channelName: 'Paiements',
+    );
+  }
+
   // ─── Instance methods (system + in-app) ────────────────────────────────────
 
   /// Version instance: systeme + notification in-app via callback.
@@ -159,6 +224,75 @@ class NotificationCoordinator {
         typeEvenement: 'paiements_bulk',
       );
     }
+  }
+
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierModificationMembreFull(Membre membre) {
+    notifierModificationMembre(membre);
+    final nomComplet = '${membre.prenom} ${membre.nom}';
+    _showInApp(
+      titre: 'Membre modifie',
+      message: '$nomComplet a ete modifie',
+      typeEvenement: 'membre_modifie',
+      entiteId: membre.id,
+    );
+  }
+
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierSuppressionMembreFull(Membre membre) {
+    notifierSuppressionMembre(membre);
+    final nomComplet = '${membre.prenom} ${membre.nom}';
+    _showInApp(
+      titre: 'Membre supprime',
+      message: '$nomComplet a ete supprime',
+      typeEvenement: 'membre_supprime',
+      entiteId: membre.id,
+    );
+  }
+
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierModificationCulteFull(Culte culte) {
+    notifierModificationCulte(culte);
+    final titreCulte = culte.titre != null ? ' : ${culte.titre}' : '';
+    final body = 'Culte${titreCulte.isNotEmpty ? titreCulte : ''} modifie - ${DateFormat('dd/MM/yyyy').format(culte.dateCulte)}';
+    _showInApp(
+      titre: 'Culte modifie',
+      message: body,
+      typeEvenement: 'culte_modifie',
+      entiteId: culte.id,
+    );
+  }
+
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierPaiementEnregistreFull(double montant, String membreNom, String culteTitre) {
+    notifierPaiementEnregistre(montant, membreNom, culteTitre);
+    final body = '$membreNom a paye ${montant.toStringAsFixed(0)} F pour le culte $culteTitre';
+    _showInApp(
+      titre: 'Paiement enregistre',
+      message: body,
+      typeEvenement: 'cotisation_payee',
+    );
+  }
+
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierAbsentMarqueFull(String membreNom, String culteTitre) {
+    notifierAbsentMarque(membreNom, culteTitre);
+    final body = '$membreNom a ete marque absent pour le culte $culteTitre';
+    _showInApp(
+      titre: 'Absence marquee',
+      message: body,
+      typeEvenement: 'cotisation_absente',
+    );
+  }
+
+  /// Version instance: systeme + notification in-app via callback.
+  void notifierModificationCotisationFull(String membreNom, String action) {
+    notifierModificationCotisation(membreNom, action);
+    _showInApp(
+      titre: 'Cotisation modifiee',
+      message: '$membreNom : $action',
+      typeEvenement: 'cotisation_modifiee',
+    );
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────────────

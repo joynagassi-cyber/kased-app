@@ -65,7 +65,7 @@ class MemberHandler {
 
     NotificationCoordinator.planifierAnniversaireMembre(newMembre);
     notifCoordinator.notifierCreationMembreFull(newMembre);
-    await onPush('membre_ajoute', newMembre.nomComplet);
+    unawaited(onPush('membre_ajoute', newMembre.nomComplet));
     await onLoadDashboard();
   }
 
@@ -114,6 +114,7 @@ class MemberHandler {
     } else {
       NotificationCoordinator.annulerAnniversaireMembre(action.id);
     }
+    notifCoordinator.notifierModificationMembreFull(updated);
     unawaited(onPush('membre_modifie', updated.nomComplet));
   }
 
@@ -163,9 +164,16 @@ class MemberHandler {
   }
 
   Future<void> deleteMember(DeleteMember action) async {
+    final membre = (await cache.getAllMembres()).firstWhere(
+      (m) => m.id == action.id,
+      orElse: () => Membre()..id = action.id,
+    );
     await cache.deleteMembreById(action.id);
     NotificationCoordinator.annulerAnniversaireMembre(action.id);
-    unawaited(onPush('membre_supprime', action.id));
+    if (membre.id.isNotEmpty) {
+      notifCoordinator.notifierSuppressionMembreFull(membre);
+      unawaited(onPush('membre_supprime', membre.nomComplet));
+    }
   }
 
   Future<void> restoreMember(RestoreMember action) async {

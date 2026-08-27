@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../insforge/insforge_config.dart';
@@ -21,6 +22,7 @@ typedef PresenceChangeHandler = void Function(DevicePresence presence);
 /// - Patchs locaux au lieu de reload complet
 /// - Suivi de présence des appareils connectés
 /// - Reconnexion automatique avec exponential backoff
+/// - deviceId persisté dans SharedPreferences
 class RealtimeService {
   static final RealtimeService _instance = RealtimeService._internal();
   factory RealtimeService() => _instance;
@@ -31,49 +33,66 @@ class RealtimeService {
   final List<PresenceChangeHandler> _presenceHandlers = [];
   bool _isConnected = false;
   int _reconnectAttempts = 0;
-  static const _maxReconnectAttempts = 10;
   static const _reconnectDelayMs = 1000;
   static const _heartbeatIntervalMs = 30000;
+  static const _deviceIdKey = 'kased_realtime_device_id';
 
-  /// ID de l'appareil actuel (généré aléatoirement si non stocké)
+  /// ID de l'appareil actuel (persisté)
   String? _deviceId;
   String? _currentUserEmail;
-  DateTime? _lastHeartbeat;
+  String? _currentToken;
 
   bool get isConnected => _isConnected;
   String? get deviceId => _deviceId;
   String? get currentUserEmail => _currentUserEmail;
+  String? get currentToken => _currentToken;
+
+  /// Charge ou génère un deviceId persisté.
+  Future<String> _getOrLoadDeviceId() async {
+    if (_deviceId != null) return _deviceId!;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _deviceId = prefs.getString(_deviceIdKey);
+      if (_deviceId == null) {
+        _deviceId = 'device_${DateTime.now().millisecondsSinceEpoch}';
+        await prefs.setString(_deviceIdKey, _deviceId!);
+      }
+    } catch (e) {
+      debugPrint('[Realtime] Failed to load device ID: $e');
+      _deviceId = 'device-fallback-${DateTime.now().microsecond}';
+    }
+    return _deviceId!;
+  }
 
   /// Connecte le socket avec l'authentification utilisateur.
   ///
   /// [token] : token JWT de l'utilisateur connecté (null = mode anon).
-  /// [deviceId] : ID unique de l'appareil (généré automatiquement si null).
   /// [email] : email de l'utilisateur (pour la présence).
+  /// Note : le deviceId est chargé/persisté automatiquement.
   Future<void> connect({
     String? token,
-    String? deviceId,
     String? email,
   }) async {
     if (_socket != null) {
       await disconnect();
     }
 
-    _deviceId = deviceId ?? _loadDeviceId();
+    _currentToken = token;
     _currentUserEmail = email;
-    _lastHeartbeat = DateTime.now();
 
+    final deviceId = await _getOrLoadDeviceId();
     final useToken = token ?? InsForgeConfig.effectiveAnonKey;
 
     final opts = IO.OptionBuilder()
         .setTransports(['websocket'])
         .setQuery({
           'token': useToken,
-          'deviceId': _deviceId ?? '',
+          'deviceId': deviceId,
           'platform': kIsWeb ? 'web' : 'mobile',
         })
         .setAuth({'token': useToken})
         .setExtraHeaders({
-          'deviceId': _deviceId ?? '',
+          'deviceId': deviceId,
           'email': email ?? '',
         })
         .build();
@@ -84,15 +103,18 @@ class RealtimeService {
       debugPrint('[Realtime] Connecté à ${InsForgeConfig.baseUrl}');
       _isConnected = true;
       _reconnectAttempts = 0;
+      // Souscrire aux canaux publics et privés
       _socket!.emit('realtime:subscribe', {'channel': 'kased:all'});
       _socket!.emit('realtime:subscribe', {'channel': 'kased:private'});
+      _socket!.emit('realtime:subscribe', {'channel': 'kased:membres'});
+      _socket!.emit('realtime:subscribe', {'channel': 'kased:cultes'});
+      _socket!.emit('realtime:subscribe', {'channel': 'kased:cotisations'});
       _startHeartbeat();
     });
 
     _socket!.onDisconnect((_) {
       debugPrint('[Realtime] Déconnecté');
       _isConnected = false;
-      _lastHeartbeat = null;
     });
 
     _socket!.onError((data) {
@@ -151,7 +173,9 @@ class RealtimeService {
       _reconnectAttempts = 0;
       _socket!.emit('realtime:subscribe', {'channel': 'kased:all'});
       _socket!.emit('realtime:subscribe', {'channel': 'kased:private'});
-      _lastHeartbeat = DateTime.now();
+      _socket!.emit('realtime:subscribe', {'channel': 'kased:membres'});
+      _socket!.emit('realtime:subscribe', {'channel': 'kased:cultes'});
+      _socket!.emit('realtime:subscribe', {'channel': 'kased:cotisations'});
     });
 
     _socket!.onReconnectError((data) {
@@ -168,7 +192,6 @@ class RealtimeService {
     _socket = null;
     _isConnected = false;
     _reconnectAttempts = 0;
-    _lastHeartbeat = null;
     debugPrint('[Realtime] Déconnecté (manuel)');
   }
 
@@ -181,7 +204,6 @@ class RealtimeService {
           'email': _currentUserEmail,
           'timestamp': DateTime.now().toIso8601String(),
         });
-        _lastHeartbeat = DateTime.now();
       }
     });
   }
@@ -256,13 +278,4 @@ class RealtimeService {
   void removePresenceListener(PresenceChangeHandler listener) {
     _presenceHandlers.remove(listener);
   }
-}
-
-/// Charge l'ID de l'appareil depuis les préférences partagées.
-String _loadDeviceId() {
-  // Pour l'instant, génère un ID aléatoire
-  // Dans une version future, on peut l'-store dans SharedPreferences
-  final timestamp = DateTime.now().millisecondsSinceEpoch;
-  final random = DateTime.now().microsecond;
-  return 'device_${timestamp}_${random}';
 }

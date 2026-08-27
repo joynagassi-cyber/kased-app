@@ -102,10 +102,19 @@ class CulteHandler {
     }
 
     await onLoadDashboard();
+    notifCoordinator.notifierModificationCulteFull(updated);
+    unawaited(onPush('culte_modifie', _formatDate(updated.dateCulte)));
   }
 
   Future<void> deleteCulte(DeleteCulte action) async {
+    final culte = (await cache.getAllCultes()).firstWhere(
+      (c) => c.id == action.id,
+      orElse: () => Culte()..id = action.id,
+    );
     await cache.deleteCulteById(action.id);
+    if (culte.id.isNotEmpty) {
+      unawaited(onPush('culte_supprime', culte.titre ?? culte.id));
+    }
   }
 
   Future<void> restoreCulte(RestoreCulte action) async {

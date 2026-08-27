@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:kased_app/core/insforge/insforge_service_port.dart';
 import 'package:kased_app/core/local_cache.dart';
+import 'package:kased_app/core/realtime/realtime_handler.dart';
 import 'package:kased_app/core/services/notification_coordinator.dart';
 import 'package:kased_app/core/services/push_notify_service.dart';
 import 'package:kased_app/core/services/stats_service.dart';
@@ -45,8 +46,11 @@ class KasedStore {
   late MemberHandler _memberHandler;
   late CulteHandler _culteHandler;
   late CotisationHandler _cotisationHandler;
+  RealtimeHandler? _realtimeHandler;
 
   bool _isSyncing = false;
+  String? _currentUserEmail;
+  String? _currentUserToken;
 
   KasedStore({
     required this.api,
@@ -81,6 +85,32 @@ class KasedStore {
       onGetMembres: () => cache.getAllMembres(),
       onGetCotisations: () => cache.getAllCotisations(),
     );
+  }
+
+  /// Connecte le handler temps réel avec les identifiants de l'utilisateur.
+  void connectRealtime({required String token, required String email}) {
+    if (_currentUserEmail == email && _currentUserToken == token) return;
+    _currentUserEmail = email;
+    _currentUserToken = token;
+    _realtimeHandler?.disconnect();
+    _realtimeHandler = RealtimeHandler();
+    _realtimeHandler!.initPatchEngine(cache);
+    _realtimeHandler!.connectWithAuth(
+      token: token,
+      email: email,
+      onReload: () async {
+        // Recharger les données après un événement temps réel
+        await reloadFromCache();
+      },
+    );
+  }
+
+  /// Déconnecte le handler temps réel (appelé au logout).
+  void disconnectRealtime() {
+    _realtimeHandler?.disconnect();
+    _realtimeHandler = null;
+    _currentUserEmail = null;
+    _currentUserToken = null;
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────

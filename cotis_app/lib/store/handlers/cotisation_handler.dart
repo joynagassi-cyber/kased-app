@@ -112,9 +112,11 @@ class CotisationHandler {
     }
 
     if (membre != null) {
+      final culteTitre = culte.titre ?? 'Culte du ${culte.dateCulte.day}/${culte.dateCulte.month}';
+      notifCoordinator.notifierPaiementEnregistreFull(action.montant, membre.nomComplet, culteTitre);
       unawaited(onPush(
         statut == StatutCotisation.enAvance ? 'cotisation_en_avance' : 'cotisation_payee',
-        '${membre.nomComplet} — culte du ${culte.dateCulte.day}/${culte.dateCulte.month}',
+        '${membre.nomComplet} — $culteTitre',
         extra: action.montant.toStringAsFixed(0),
       ));
     }
@@ -161,6 +163,8 @@ class CotisationHandler {
       (m) => m.id == action.membreId,
     );
     if (membre != null) {
+      final culteTitre = culte.titre ?? 'Culte du ${culte.dateCulte.day}/${culte.dateCulte.month}';
+      notifCoordinator.notifierAbsentMarqueFull(membre.nomComplet, culteTitre);
       unawaited(onPush('cotisation_absente', membre.nomComplet));
     }
   }
