@@ -477,7 +477,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
   void _confirmDeleteCulte(BuildContext context, WidgetRef ref, Culte culte) async {
     bool isDeleting = false;
 
-    final confirmed = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setLocalState) {

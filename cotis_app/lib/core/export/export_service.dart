@@ -1,9 +1,7 @@
-/// Interface commune pour tous les services d'export (CSV, PDF, etc.).
 ///
 /// Permet de changer de format ou d'implémentation sans modifier les écrans.
 library;
 
-import 'dart:typed_data';
 
 import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/culte.dart';
