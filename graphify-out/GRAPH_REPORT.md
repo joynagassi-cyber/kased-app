@@ -1,7 +1,7 @@
 # Graph Report - kased-app-new  (2026-08-27)
 
 ## Corpus Check
-- 191 files · ~520,408 words
+- 191 files · ~521,589 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -108,7 +108,7 @@ Nodes (49): _BouncingScrollBehavior, BouncingScrollPhysics, build, didChangeAppL
 
 ### Community 7 - "Community 7"
 Cohesion: 0.04
-Nodes (47): AuthService, Duration, Exception, _requireAnonKey, build, didUpdateWidget, dispose, initState (+39 more)
+Nodes (47): AuthService, Duration, Exception, _requireAnonKey, AppAnimDurations, AppSprings, AnimatedContainer, build (+39 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.04

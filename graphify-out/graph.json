@@ -672,7 +672,7 @@
     {
       "label": "package:flutter/physics.dart",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "id": "package_flutter_physics_dart",
       "community": 7,
@@ -3021,7 +3021,7 @@
     {
       "label": "package:flutter/services.dart",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "id": "package_flutter_services_dart",
       "community": 7,
@@ -8871,7 +8871,7 @@
     {
       "label": "package:kased_app/core/animation_constants.dart",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "id": "package_kased_app_core_animation_constants_dart",
       "community": 7,
@@ -8880,83 +8880,83 @@
     {
       "label": "spring_nav_icon.dart",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
+      "id": "cotis_app_lib_widgets_spring_nav_icon_dart",
       "community": 7,
       "norm_label": "spring_nav_icon.dart"
     },
     {
       "label": "SpringNavIcon",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_springnavicon",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_springnavicon",
       "community": 7,
       "norm_label": "springnavicon"
     },
     {
       "label": "_SpringNavIconState",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_springnaviconstate",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_springnaviconstate",
       "community": 7,
       "norm_label": "_springnaviconstate"
     },
     {
       "label": "initState",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_initstate",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_initstate",
       "community": 7,
       "norm_label": "initstate"
     },
     {
       "label": "didUpdateWidget",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_didupdatewidget",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_didupdatewidget",
       "community": 7,
       "norm_label": "didupdatewidget"
     },
     {
       "label": "_triggerSpring",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_triggerspring",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_triggerspring",
       "community": 7,
       "norm_label": "_triggerspring"
     },
     {
       "label": "dispose",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_dispose",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_dispose",
       "community": 7,
       "norm_label": "dispose"
     },
     {
       "label": "build",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_build",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_build",
       "community": 7,
       "norm_label": "build"
     },
     {
-      "label": "ScaleTransition",
+      "label": "Semantics",
       "file_type": "code",
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_scaletransition",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_semantics",
       "community": 7,
-      "norm_label": "scaletransition"
+      "norm_label": "semantics"
     },
     {
       "label": "stat_card.dart",
@@ -9607,13 +9607,13 @@
       "norm_label": "build"
     },
     {
-      "label": "Container",
+      "label": "Semantics",
       "file_type": "code",
       "source_file": "cotis_app\\lib\\widgets\\membre_detail\\stat_card.dart",
       "source_location": null,
-      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_stat_card_dart_container",
+      "id": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_stat_card_dart_semantics",
       "community": 3,
-      "norm_label": "container"
+      "norm_label": "semantics"
     },
     {
       "label": "SizedBox",
@@ -13488,13 +13488,13 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
       "_tgt": "package_flutter_material_dart",
       "source": "package_flutter_material_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart"
+      "target": "cotis_app_lib_widgets_spring_nav_icon_dart"
     },
     {
       "relation": "imports",
@@ -14448,13 +14448,13 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
       "_tgt": "package_flutter_physics_dart",
       "source": "package_flutter_physics_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart"
+      "target": "cotis_app_lib_widgets_spring_nav_icon_dart"
     },
     {
       "relation": "defines",
@@ -20484,13 +20484,13 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
       "_tgt": "package_flutter_services_dart",
       "source": "package_flutter_services_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart"
+      "target": "cotis_app_lib_widgets_spring_nav_icon_dart"
     },
     {
       "relation": "imports",
@@ -29532,109 +29532,109 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
       "_tgt": "package_kased_app_core_animation_constants_dart",
       "source": "package_kased_app_core_animation_constants_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart"
+      "target": "cotis_app_lib_widgets_spring_nav_icon_dart"
     },
     {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_springnavicon",
-      "source": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_springnavicon"
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_springnavicon",
+      "source": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_springnavicon"
     },
     {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_springnaviconstate",
-      "source": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_springnaviconstate"
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_springnaviconstate",
+      "source": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_springnaviconstate"
     },
     {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_initstate",
-      "source": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_initstate"
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_initstate",
+      "source": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_initstate"
     },
     {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_didupdatewidget",
-      "source": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_didupdatewidget"
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_didupdatewidget",
+      "source": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_didupdatewidget"
     },
     {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_triggerspring",
-      "source": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_triggerspring"
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_triggerspring",
+      "source": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_triggerspring"
     },
     {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_dispose",
-      "source": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_dispose"
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_dispose",
+      "source": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_dispose"
     },
     {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_build",
-      "source": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_build"
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_build",
+      "source": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_build"
     },
     {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "C:\\Users\\joyda\\ZCodeProject\\kased-app\\cotis_app\\lib\\widgets\\spring_nav_icon.dart",
+      "source_file": "cotis_app\\lib\\widgets\\spring_nav_icon.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_scaletransition",
-      "source": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_cotis_app_lib_widgets_spring_nav_icon_dart_scaletransition"
+      "_src": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_semantics",
+      "source": "cotis_app_lib_widgets_spring_nav_icon_dart",
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_spring_nav_icon_dart_semantics"
     },
     {
       "relation": "defines",
@@ -30364,9 +30364,9 @@
       "source_location": null,
       "weight": 1.0,
       "_src": "cotis_app_lib_widgets_membre_detail_stat_card_dart",
-      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_stat_card_dart_container",
+      "_tgt": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_stat_card_dart_semantics",
       "source": "cotis_app_lib_widgets_membre_detail_stat_card_dart",
-      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_stat_card_dart_container"
+      "target": "c_users_joyda_zcodeproject_kased_app_new_cotis_app_lib_widgets_membre_detail_stat_card_dart_semantics"
     },
     {
       "relation": "defines",
