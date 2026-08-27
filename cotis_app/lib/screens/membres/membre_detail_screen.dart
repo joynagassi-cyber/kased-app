@@ -8,6 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:kased_app/widgets/kased_avatar.dart';
 import 'membre_report_screen.dart';
+import 'package:kased_app/widgets/membre_detail/stat_card.dart';
+import 'package:kased_app/widgets/membre_detail/cadence_card.dart';
+import 'package:kased_app/widgets/membre_detail/historique_item.dart';
 
 class MembreDetailScreen extends ConsumerStatefulWidget {
   final String membreId;
@@ -64,7 +67,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
         final historiqueItems = cotisationsMembre
             .map((cot) {
               final culte = cultesById[cot.culteId];
-              return _HistoriqueItem(
+              return HistoriqueItem(
                 date: culte?.dateCulte,
                 titre: culte?.titre ?? 'Culte',
                 statut: cot.statut,
@@ -181,7 +184,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: _StatCard(
+                          child: StatCard(
                             label: 'Cultes payes',
                             value: '$cultesPayes',
                             sub: '$totalCultes cultes',
@@ -194,7 +197,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: _StatCard(
+                          child: StatCard(
                             label: 'Retards',
                             value: '$retards',
                             sub: 'en attente',
@@ -207,7 +210,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: _StatCard(
+                          child: StatCard(
                             label: 'Absences',
                             value: '$absences',
                             sub: 'marques',
@@ -225,7 +228,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: _CadenceCard(
+                          child: CadenceCard(
                             percentage: cadence,
                             paid: cultesPayes,
                             total: totalCultes,
@@ -234,7 +237,7 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: _StatCard(
+                          child: StatCard(
                             label: 'Total Dons',
                             value: '${totalDons.toStringAsFixed(0)}',
                             sub: 'FCFA',
@@ -634,224 +637,6 @@ class _MembreDetailScreenState extends ConsumerState<MembreDetailScreen> {
   }
 }
 
-class _HistoriqueItem {
-  final DateTime? date;
-  final String titre;
-  final StatutCotisation statut;
-  final double montant;
-  final DateTime? datePaiement;
-
-  const _HistoriqueItem({
-    this.date,
-    required this.titre,
-    required this.statut,
-    required this.montant,
-    this.datePaiement,
-  });
-}
-
 // ── Stat Card (theme-aware, uses ColorScheme) ────────────────────────────────
 
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final String sub;
-  final IconData icon;
-  final Color iconColor;
-  final Color cardColor;
-  final Color textColor;
-  final bool isDark;
-
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.sub,
-    required this.icon,
-    required this.iconColor,
-    required this.cardColor,
-    required this.textColor,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 20, color: iconColor),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: textColor,
-              height: 1.1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: textColor.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            sub,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              color: textColor.withValues(alpha: 0.45),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Cadence Card (progress ring + percentage) ─────────────────────────────────
-
-class _CadenceCard extends StatelessWidget {
-  final double percentage;
-  final int paid;
-  final int total;
-  final bool isDark;
-
-  const _CadenceCard({
-    required this.percentage,
-    required this.paid,
-    required this.total,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          // Circular progress indicator
-          SizedBox(
-            width: 64,
-            height: 64,
-            child: CustomPaint(
-              painter: _ProgressPainter(percentage, colorScheme),
-              child: Center(
-                child: Text(
-                  '${percentage.toStringAsFixed(0)}%',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Cadence',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$paid / $total cultes',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                LinearProgressIndicator(
-                  value: total > 0 ? percentage / 100 : 0,
-                  minHeight: 5,
-                  borderRadius: BorderRadius.circular(4),
-                  backgroundColor: colorScheme
-                      .onPrimaryContainer
-                      .withValues(alpha: 0.15),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    colorScheme.primary.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProgressPainter extends CustomPainter {
-  final double percentage;
-  final ColorScheme colorScheme;
-
-  _ProgressPainter(this.percentage, this.colorScheme);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width / 2) - 4;
-
-    // Background arc
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = colorScheme.onPrimaryContainer.withValues(alpha: 0.15)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6,
-    );
-
-    // Progress arc
-    if (percentage > 0) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        -90 * (3.14159265 / 180),
-        (percentage / 100) * 2 * 3.14159265,
-        false,
-        Paint()
-          ..color = colorScheme.primary
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ProgressPainter oldDelegate) =>
-      oldDelegate.percentage != percentage;
-}

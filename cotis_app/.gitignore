@@ -49,3 +49,18 @@ app/google-services.json
 app/client_secret_*.json
 upload-keystore.jks
 key.properties
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf
