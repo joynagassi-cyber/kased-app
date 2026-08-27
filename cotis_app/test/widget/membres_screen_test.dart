@@ -75,8 +75,14 @@ void main() {
   testWidgets('Shows empty state when no members', (WidgetTester tester) async {
     final state = AppState(membres: [], cultes: [], cotisations: []);
 
-    await tester.pumpWidget(createMembresScreen(state));
-    // Pump past loading skeleton and async initState
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(size: Size(375, 812)),
+          child: createMembresScreen(state),
+        ),
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
     await tester.pump(const Duration(milliseconds: 500));

@@ -18,8 +18,16 @@ class CultesScreen extends ConsumerStatefulWidget {
   ConsumerState<CultesScreen> createState() => _CultesScreenState();
 }
 
+// Enums pour le tri des cultes
+enum CultesSortOption { dateAsc, dateDesc }
+
 class _CultesScreenState extends ConsumerState<CultesScreen> {
   bool _isCreatingCulte = false;
+
+  // Filter/sort state
+  String _searchQuery = '';
+  CultesSortOption _sortOption = CultesSortOption.dateDesc;
+  bool _showFilters = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,19 +44,89 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
             tooltip: 'Synchroniser',
             onPressed: () => ref.read(kasedAppProvider.notifier).syncData(),
           ),
+          // Bouton filtre
+          IconButton(
+            icon: Icon(_showFilters ? Icons.filter_alt : Icons.filter_alt_outlined),
+            tooltip: 'Filtres et tri',
+            onPressed: () => setState(() => _showFilters = !_showFilters),
+          ),
         ],
       ),
       body: appDataAsync.when(
         data: (state) {
-          final cultes = state.cultes;
           final membres = state.membres;
+          // Appliquer le tri et filtrage
+          var cultes = List<Culte>.from(state.cultes);
+
+          // Filtre par recherche (sur la date)
+          if (_searchQuery.isNotEmpty) {
+            final q = _searchQuery.toLowerCase();
+            cultes = cultes.where((c) {
+              final dateStr = c.dateFormatee.toLowerCase();
+              return dateStr.contains(q);
+            }).toList();
+          }
+
+          // Tri
+          switch (_sortOption) {
+            case CultesSortOption.dateAsc:
+              cultes.sort((a, b) => a.dateCulte.compareTo(b.dateCulte));
+              break;
+            case CultesSortOption.dateDesc:
+              cultes.sort((a, b) => b.dateCulte.compareTo(a.dateCulte));
+              break;
+          }
+
+          // Barre de filtres
+          final filterBar = AnimatedSlide(
+            offset: Offset(0, _showFilters ? 0 : -1),
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _showFilters ? 1.0 : 0,
+              child: _buildFilterBar(theme),
+            ),
+          );
 
           if (cultes.isEmpty) {
-            return const EmptyState(
-              icon: Icons.event_note,
-              titre: 'Aucun culte enregistré',
-              sousTitre: 'Démarrer un culte pour commencer le suivi.',
-            );
+            return Column(children: [
+              filterBar,
+              Expanded(
+                child: cultes.isEmpty && state.cultes.isNotEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.search_off,
+                                size: 64, color: colorScheme.outline),
+                            const SizedBox(height: 16),
+                            Text('Aucun culte trouvé',
+                                style: theme.textTheme.titleSmall),
+                            const SizedBox(height: 8),
+                            Text('Essayez de modifier vos filtres',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary)),
+                            const SizedBox(height: 24),
+                            FilledButton.tonal(
+                              onPressed: () {
+                                setState(() {
+                                  _searchQuery = '';
+                                  _sortOption = CultesSortOption.dateDesc;
+                                });
+                              },
+                              child: const Text('Reinitialiser'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const EmptyState(
+                        icon: Icons.event_note,
+                        titre: 'Aucun culte enregistré',
+                        sousTitre: 'Démarrer un culte pour commencer le suivi.',
+                      ),
+              ),
+            ]);
           }
 
           final totalCultes = cultes.length;
@@ -56,242 +134,341 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
               .where((c) => c.estPaye)
               .fold(0.0, (sum, c) => sum + c.montantPaye);
 
-          return CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                sliver: SliverToBoxAdapter(
-                  child: KasedGradientCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'TOTAL HISTORIQUE',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${totalGlobalCollecte.toInt()} FCFA',
-                          style: const TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -1.0,
-                            color: Colors.white,
-                            height: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Icon(Icons.church, color: Colors.white, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              '$totalCultes cultes organisés',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+          return Column(
+            children: [
+              filterBar,
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      sliver: SliverToBoxAdapter(
+                        child: KasedGradientCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'TOTAL HISTORIQUE',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.5,
+                                  color: Colors.white,
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                '${totalGlobalCollecte.toInt()} FCFA',
+                                style: const TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -1.0,
+                                  color: Colors.white,
+                                  height: 1.1,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
+                                children: [
+                                  Icon(Icons.church, color: Colors.white, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '$totalCultes culte${totalCultes > 1 ? 's' : ''} organise${totalCultes > 1 ? 's' : ''}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final culte = cultes[index];
-                      final cotisations = state.cotisations
-                          .where((c) => c.culteId == culte.id)
-                          .toList();
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final culte = cultes[index];
+                            final cotisations = state.cotisations
+                                .where((c) => c.culteId == culte.id)
+                                .toList();
 
-                      final payeursCount = cotisations.where((c) => c.estPaye).length;
-                      // Filtrer le total par les membres présents à la création du culte
-                      final culteMemberIds = culte.memberIds;
-                      final totalMembres = culteMemberIds.isNotEmpty
-                          ? membres.where((m) => culteMemberIds.contains(m.id)).length
-                          : membres.length;
-                      final percentage =
-                          totalMembres > 0 ? payeursCount / totalMembres : 0.0;
-                      final totalCollecte = cotisations
-                          .where((c) => c.estPaye)
-                          .fold(0.0, (sum, c) => sum + c.montantPaye);
+                            final payeursCount =
+                                cotisations.where((c) => c.estPaye).length;
+                            final culteMemberIds = culte.memberIds;
+                            final totalMembres = culteMemberIds.isNotEmpty
+                                ? membres
+                                    .where((m) =>
+                                        culteMemberIds.contains(m.id))
+                                    .length
+                                : membres.length;
+                            final percentage =
+                                totalMembres > 0
+                                    ? payeursCount / totalMembres
+                                    : 0.0;
+                            final totalCollecte = cotisations
+                                .where((c) => c.estPaye)
+                                .fold(0.0, (sum, c) => sum + c.montantPaye);
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Hero(
-                          tag: 'culte_${culte.id}',
-                          child: KasedCard(
-                            padding: EdgeInsets.zero,
-                            onTap: () => context.push('/cultes/${culte.id}'),
-                            child: Material(
-                              type: MaterialType.transparency,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 48,
-                                          height: 48,
-                                          decoration: BoxDecoration(
-                                            color: colorScheme.primaryContainer,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Center(
-                                            child: Icon(
-                                              Icons.event,
-                                              color: colorScheme.primary,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Hero(
+                                tag: 'culte_${culte.id}',
+                                child: KasedCard(
+                                  padding: EdgeInsets.zero,
+                                  onTap: () =>
+                                      context.push('/cultes/${culte.id}'),
+                                  child: Material(
+                                    type: MaterialType.transparency,
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
                                             children: [
-                                              Text(
-                                                culte.dateFormatee,
-                                                style: theme.textTheme.titleMedium?.copyWith(
-                                                  fontWeight: FontWeight.w800,
-                                                  color: colorScheme.onSurface,
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: colorScheme
+                                                      .primaryContainer,
+                                                  shape:
+                                                      BoxShape.circle,
+                                                ),
+                                                child: Center(
+                                                  child: Icon(
+                                                    Icons.event,
+                                                    color: colorScheme
+                                                        .primary,
+                                                  ),
                                                 ),
                                               ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '${totalCollecte.toInt()} FCFA',
-                                                style: theme.textTheme.bodyMedium?.copyWith(
-                                                  fontWeight: FontWeight.w700,
-                                                  color: colorScheme.primary,
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment
+                                                          .start,
+                                                  children: [
+                                                    Text(
+                                                      culte.dateFormatee,
+                                                      style: theme
+                                                          .textTheme
+                                                          .titleMedium
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w800,
+                                                            color:
+                                                                colorScheme
+                                                                    .onSurface,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(
+                                                        height: 4),
+                                                    Text(
+                                                      '${totalCollecte.toInt()} FCFA',
+                                                      style: theme
+                                                          .textTheme
+                                                          .bodyMedium
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w700,
+                                                            color:
+                                                                colorScheme
+                                                                    .primary,
+                                                          ),
+                                                    ),
+                                                  ],
                                                 ),
+                                              ),
+                                              PopupMenuButton<String>(
+                                                icon: Icon(
+                                                  Icons.more_vert,
+                                                  color:
+                                                      colorScheme
+                                                          .onSurfaceVariant,
+                                                ),
+                                                onSelected: (value) {
+                                                  if (value == 'edit') {
+                                                    _showEditCulteDialog(
+                                                        context, ref, culte);
+                                                  } else if (value ==
+                                                      'delete') {
+                                                    _confirmDeleteCulte(
+                                                        context, ref, culte);
+                                                  }
+                                                },
+                                                itemBuilder: (_) {
+                                                  final isOlderThan30 =
+                                                      DateTime.now()
+                                                          .difference(
+                                                              culte.dateCulte)
+                                                          .inDays >
+                                                      30;
+                                                  return [
+                                                    if (!isOlderThan30)
+                                                      const PopupMenuItem(
+                                                        value: 'edit',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons
+                                                                .edit_outlined,
+                                                                size: 18),
+                                                            SizedBox(
+                                                                width: 8),
+                                                            Text('Modifier'),
+                                                          ],
+                                                        ),
+                                                      )
+                                                    else
+                                                      const PopupMenuItem(
+                                                        enabled: false,
+                                                        value:
+                                                            'edit_locked',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons
+                                                                .lock_outline,
+                                                                size: 18,
+                                                                color:
+                                                                    Colors
+                                                                        .grey),
+                                                            SizedBox(
+                                                                width: 8),
+                                                            Text(
+                                                                'Verrouillé (>30j)',
+                                                                style: TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .grey)),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    if (!isOlderThan30)
+                                                      const PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons
+                                                                .delete_outline,
+                                                                size: 18,
+                                                                color: AppColors
+                                                                    .danger),
+                                                            SizedBox(
+                                                                width: 8),
+                                                            Text(
+                                                                'Supprimer',
+                                                                style: TextStyle(
+                                                                    color: AppColors
+                                                                        .danger)),
+                                                          ],
+                                                        ),
+                                                      )
+                                                    else
+                                                      const PopupMenuItem(
+                                                        enabled: false,
+                                                        value:
+                                                            'delete_locked',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons
+                                                                .lock_outline,
+                                                                size: 18,
+                                                                color:
+                                                                    Colors
+                                                                        .grey),
+                                                            SizedBox(
+                                                                width: 8),
+                                                            Text(
+                                                                'Verrouillé (>30j)',
+                                                                style: TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .grey)),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                  ];
+                                                },
                                               ),
                                             ],
                                           ),
-                                        ),
-                                        PopupMenuButton<String>(
-                                          icon: Icon(
-                                            Icons.more_vert,
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                          onSelected: (value) {
-                                            if (value == 'edit') {
-                                              _showEditCulteDialog(context, ref, culte);
-                                            } else if (value == 'delete') {
-                                              _confirmDeleteCulte(context, ref, culte);
-                                            }
-                                          },
-                                          itemBuilder: (_) {
-                                            final isOlderThan30 = DateTime.now().difference(culte.dateCulte).inDays > 30;
-                                            return [
-                                              if (!isOlderThan30)
-                                                const PopupMenuItem(
-                                                  value: 'edit',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.edit_outlined, size: 18),
-                                                      SizedBox(width: 8),
-                                                      Text('Modifier'),
-                                                    ],
-                                                  ),
-                                                )
+                                          const SizedBox(height: 16),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment
+                                                    .spaceBetween,
+                                            children: [
+                                              Text(
+                                                '$payeursCount / $totalMembres payes',
+                                                style: theme.textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color:
+                                                          colorScheme
+                                                              .onSurfaceVariant,
+                                                    ),
+                                              ),
+                                              if (percentage == 1.0)
+                                                KasedStatusBadge.success(
+                                                    'Complet')
                                               else
-                                                const PopupMenuItem(
-                                                  enabled: false,
-                                                  value: 'edit_locked',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.lock_outline, size: 18, color: Colors.grey),
-                                                      SizedBox(width: 8),
-                                                      Text('Verrouillé (>30j)', style: TextStyle(color: Colors.grey)),
-                                                    ],
-                                                  ),
-                                                ),
-                                              if (!isOlderThan30)
-                                                const PopupMenuItem(
-                                                  value: 'delete',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
-                                                      SizedBox(width: 8),
-                                                      Text('Supprimer', style: TextStyle(color: AppColors.danger)),
-                                                    ],
-                                                  ),
-                                                )
-                                              else
-                                                const PopupMenuItem(
-                                                  enabled: false,
-                                                  value: 'delete_locked',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.lock_outline, size: 18, color: Colors.grey),
-                                                      SizedBox(width: 8),
-                                                      Text('Verrouillé (>30j)', style: TextStyle(color: Colors.grey)),
-                                                    ],
-                                                  ),
-                                                ),
-                                            ];
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '$payeursCount / $totalMembres payés',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
+                                                KasedStatusBadge.info(
+                                                    '${(percentage * 100).toInt()}%'),
+                                            ],
                                           ),
-                                        ),
-                                        if (percentage == 1.0)
-                                          KasedStatusBadge.success('Complet')
-                                        else
-                                          KasedStatusBadge.info('${(percentage * 100).toInt()}%'),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: LinearProgressIndicator(
-                                        value: percentage,
-                                        backgroundColor: colorScheme.surfaceContainerHighest,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          percentage == 1.0 ? AppColors.gradientEnd : colorScheme.primary,
-                                        ),
-                                        minHeight: 8,
+                                          const SizedBox(height: 8),
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            child: LinearProgressIndicator(
+                                              value: percentage,
+                                              backgroundColor:
+                                                  colorScheme
+                                                      .surfaceContainerHighest,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<
+                                                      Color>(
+                                                percentage == 1.0
+                                                    ? AppColors
+                                                        .gradientEnd
+                                                    : colorScheme.primary,
+                                              ),
+                                              minHeight: 8,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
+                          childCount: cultes.length,
                         ),
-                      );
-                    },
-                    childCount: cultes.length,
-                  ),
+                      ),
+                    ),
+                    const SliverPadding(
+                        padding: EdgeInsets.only(bottom: 24)),
+                  ],
                 ),
               ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Impossible de supprimer le culte. Vérifiez votre connexion.')),
+        error: (e, _) =>
+            Center(child: Text('Impossible de supprimer le culte. Verifiez votre connexion.')),
       ),
       floatingActionButton: SpringButton(
         onTap: () => _showAddCulteDialog(context, ref),
@@ -302,6 +479,106 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
         ),
       ),
     );
+  }
+
+  // -- Barre de filtres et tri --
+  Widget _buildFilterBar(ThemeData theme) {
+    return Container(
+      color: theme.colorScheme.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            decoration: InputDecoration(
+              hintText: 'Rechercher par date...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () =>
+                          setState(() => _searchQuery = ''),
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    BorderSide(color: theme.colorScheme.outline),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    BorderSide(color: theme.colorScheme.outline),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                    color: theme.colorScheme.primary, width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 12),
+            ),
+            onChanged: (v) => setState(() => _searchQuery = v),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.sort,
+                  size: 18, color: AppColors.textSecondary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SegmentedButton<CultesSortOption>(
+                  segments: CultesSortOption.values
+                      .map((opt) => ButtonSegment<CultesSortOption>(
+                            value: opt,
+                            label: Text(opt.label),
+                          ))
+                      .toList(),
+                  selected: {_sortOption},
+                  onSelectionChanged: (s) =>
+                      setState(() => _sortOption = s.first),
+                ),
+              ),
+            ],
+          ),
+          // Indicateur nombre de resultats
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              'Affiche ${_getFilteredCultes(
+                  ref.read(kasedAppProvider).value?.cultes ?? []).length}'
+                  ' sur ${ref.read(kasedAppProvider).value?.cultes.length ?? 0} cultes',
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textTertiary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -- Filtre / Tri --
+  List<Culte> _getFilteredCultes(List<Culte> cultes) {
+    var result = List<Culte>.from(cultes);
+
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      result = result.where((c) {
+        final dateStr = c.dateFormatee.toLowerCase();
+        return dateStr.contains(q);
+      }).toList();
+    }
+
+    switch (_sortOption) {
+      case CultesSortOption.dateAsc:
+        result.sort((a, b) => a.dateCulte.compareTo(b.dateCulte));
+        break;
+      case CultesSortOption.dateDesc:
+        result.sort((a, b) => b.dateCulte.compareTo(a.dateCulte));
+        break;
+    }
+
+    return result;
   }
 
   void _showAddCulteDialog(BuildContext context, WidgetRef ref) async {
@@ -568,3 +845,15 @@ class _DatePickerTile extends StatelessWidget {
     );
   }
 }
+// Extension pour le label du tri
+extension _CultesSortOptionLabel on CultesSortOption {
+  String get label {
+    switch (this) {
+      case CultesSortOption.dateAsc:
+        return 'Date ancien';
+      case CultesSortOption.dateDesc:
+        return 'Date recent';
+    }
+  }
+}
+
