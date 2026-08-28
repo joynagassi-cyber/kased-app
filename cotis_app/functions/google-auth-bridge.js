@@ -16,7 +16,7 @@
  */
 
 // Firebase Web Client ID — must match serverClientId in auth_service.dart
-const EXPECTED_CLIENT_ID = '535496831713-4ol3svlekn919034dp509bbi6i9j0ndo.apps.googleusercontent.com';
+const EXPECTED_CLIENT_ID = '535496831713-eqn2k8iasrmbfuk7r91nn43bnoenkma7.apps.googleusercontent.com';
 const INTERNAL_SALT = 'KASED_SECURE_SALT_2026_v1';
 
 module.exports = async function(request) {
