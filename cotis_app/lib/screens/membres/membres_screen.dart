@@ -449,7 +449,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setLocalState) {
-          bool isDeleting = false;
+          
           return AlertDialog(
             title: const Text('Supprimer ?'),
             content: Text('Voulez-vous vraiment supprimer ${membre.nomComplet} ?'),
@@ -518,7 +518,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setLocalState) {
-          bool isSaving = false;
+          
           return AlertDialog(
             title: const Text('Modifier le membre'),
             content: Column(

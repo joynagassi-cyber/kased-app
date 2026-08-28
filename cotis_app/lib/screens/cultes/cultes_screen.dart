@@ -684,7 +684,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (ctx, setLocalState) {
-            bool isSaving = false;
+            
             return AlertDialog(
               title: const Text('Modifier le culte'),
               content: Form(
