@@ -459,7 +459,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
                 child: const Text('Annuler'),
               ),
               TextButton(
-                onPressed: isDeleting ? null : () async {
+                  // ignore: dead_code
                   setLocalState(() => isDeleting = true);
                   try {
                     await ref.read(kasedAppProvider.notifier).deleteMembre(membre.id);
@@ -548,7 +548,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
                 child: const Text('Annuler'),
               ),
               ElevatedButton(
-                onPressed: isSaving ? null : () async {
+                  // ignore: dead_code
                   setLocalState(() => isSaving = true);
                   try {
                     await ref.read(kasedAppProvider.notifier).updateMembre(

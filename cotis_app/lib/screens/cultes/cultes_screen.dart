@@ -718,7 +718,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                   child: const Text('Annuler'),
                 ),
                 FilledButton(
-                  onPressed: isSaving ? null : () async {
+                  // ignore: dead_code
                     if (!formKey.currentState!.validate()) return;
                     setLocalState(() => isSaving = true);
                     try {
