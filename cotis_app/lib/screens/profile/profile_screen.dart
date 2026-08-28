@@ -448,8 +448,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       if (confirm == true && context.mounted) {
                         try {
                           final isarAsync = ref.read(isarProvider);
-                          if (isarAsync.hasValue) {
-                            final isar = isarAsync.value!;
+                          isarAsync.whenData((isar) async {
                             await isar.writeTxn(() {
                               isar.membres.clear();
                               isar.cultes.clear();
@@ -457,7 +456,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               isar.syncOperations.clear();
                               isar.corbeilleItems.clear();
                             });
-                          }
+                            return true;
+                          });
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
