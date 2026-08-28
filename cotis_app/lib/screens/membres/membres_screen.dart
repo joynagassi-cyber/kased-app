@@ -128,18 +128,6 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
           final membres = state.membres;
           final filtered = _getFilteredMembres(membres);
 
-          // Barre de filtres
-          final filterBar = AnimatedSlide(
-            offset: Offset(0, _showFilters ? 0 : -1),
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: _showFilters ? 1.0 : 0,
-              child: _buildFilterBar(theme),
-            ),
-          );
-
           if (membres.isEmpty) {
             return const EmptyState(
               icon: Icons.people_outline,
@@ -150,7 +138,17 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
 
           return Column(
             children: [
-              filterBar,
+              if (_showFilters)
+                AnimatedSlide(
+                  offset: Offset.zero,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: 1.0,
+                    child: _buildFilterBar(theme),
+                  ),
+                ),
               Expanded(
                 child: filtered.isEmpty
                     ? Center(

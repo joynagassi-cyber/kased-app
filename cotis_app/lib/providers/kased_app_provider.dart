@@ -131,8 +131,8 @@ class KasedApp extends _$KasedApp {
   }
 
   /// Dispatch une action vers le store.
-  void dispatch(KasedAction action) {
-    _store.dispatch(action);
+  Future<void> dispatch(KasedAction action) async {
+    await _store.dispatch(action);
   }
 
   /// Lire l'état actuel du store.
@@ -148,7 +148,7 @@ class KasedApp extends _$KasedApp {
     String? telephone,
     String? notes,
   }) async {
-    dispatch(CreateMember(
+    await dispatch(CreateMember(
       nom: nom,
       prenom: prenom,
       dateAdhesion: dateAdhesion,
@@ -173,7 +173,7 @@ class KasedApp extends _$KasedApp {
     String? notes,
     bool? isActive,
   }) async {
-    dispatch(UpdateMember(
+    await dispatch(UpdateMember(
       id: id,
       nom: nom,
       prenom: prenom,
@@ -190,7 +190,7 @@ class KasedApp extends _$KasedApp {
     required double montant,
     String? notes,
   }) async {
-    dispatch(AddPaymentAdvance(
+    await dispatch(AddPaymentAdvance(
       membreId: membreId,
       montant: montant,
       notes: notes,
@@ -198,7 +198,7 @@ class KasedApp extends _$KasedApp {
   }
 
   Future<void> deleteMembre(String id) async {
-    dispatch(DeleteMember(id));
+    await dispatch(DeleteMember(id));
   }
 
   Future<void> addCulte({
@@ -206,7 +206,7 @@ class KasedApp extends _$KasedApp {
     String? titre,
     required double montant,
   }) async {
-    dispatch(CreateCulte(
+    await dispatch(CreateCulte(
       date: date,
       titre: titre,
       montant: montant,
@@ -220,7 +220,7 @@ class KasedApp extends _$KasedApp {
     double? montantCotisation,
     String? notes,
   }) async {
-    dispatch(UpdateCulte(
+    await dispatch(UpdateCulte(
       id: id,
       dateCulte: dateCulte,
       titre: titre,
@@ -230,7 +230,7 @@ class KasedApp extends _$KasedApp {
   }
 
   Future<void> deleteCulte(String id) async {
-    dispatch(DeleteCulte(id));
+    await dispatch(DeleteCulte(id));
   }
 
   Future<void> enregistrerPaiementPersonnel({
@@ -238,7 +238,7 @@ class KasedApp extends _$KasedApp {
     required String culteId,
     required double montant,
   }) async {
-    dispatch(RegisterPayment(
+    await dispatch(RegisterPayment(
       membreId: membreId,
       culteId: culteId,
       montant: montant,
@@ -249,7 +249,7 @@ class KasedApp extends _$KasedApp {
     required String membreId,
     required String culteId,
   }) async {
-    dispatch(TogglePaiement(
+    await dispatch(TogglePaiement(
       membreId: membreId,
       culteId: culteId,
     ));
@@ -260,7 +260,7 @@ class KasedApp extends _$KasedApp {
     required StatutCotisation newStatut,
     required List<String> membreIds,
   }) async {
-    dispatch(BulkSetPaiements(
+    await dispatch(BulkSetPaiements(
       culteId: culteId,
       newStatut: newStatut,
       membreIds: membreIds,
@@ -272,7 +272,7 @@ class KasedApp extends _$KasedApp {
     required String membreId,
     required String culteId,
   }) async {
-    dispatch(MarkAbsent(
+    await dispatch(MarkAbsent(
       membreId: membreId,
       culteId: culteId,
     ));
@@ -283,7 +283,7 @@ class KasedApp extends _$KasedApp {
     required List<String> culteIds,
     required double montantTotal,
   }) async {
-    dispatch(PaySeveralCultesInAdvance(
+    await dispatch(PaySeveralCultesInAdvance(
       membreId: membreId,
       culteIds: culteIds,
       montantTotal: montantTotal,
@@ -291,11 +291,11 @@ class KasedApp extends _$KasedApp {
   }
 
   Future<void> syncData() async {
-    dispatch(SyncData());
+    await dispatch(SyncData());
   }
 
   Future<void> loadDashboard() async {
-    dispatch(LoadDashboard());
+    await dispatch(LoadDashboard());
   }
 
   DashboardStats getDashboardStats() {
