@@ -450,12 +450,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           final isarAsync = ref.read(isarProvider);
                           if (isarAsync.hasValue) {
                             final isar = isarAsync.value!;
-                            await isar.writeTxn(() {
+                            await isar.writeTxn(() async {
                               isar.membres.clear();
                               isar.cultes.clear();
                               isar.cotisations.clear();
                               isar.syncOperations.clear();
                               isar.corbeilleItems.clear();
+                              return null;
                             });
                           }
                           if (mounted) {
