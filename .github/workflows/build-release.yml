@@ -170,7 +170,7 @@ jobs:
           echo "Patch completed successfully."
 
       - name: Dart analyze
-        run: dart analyze --no-fatal-warnings --no-fatal-infos --no-fatal-infos
+        run: dart analyze --no-fatal-warnings
 
       # ── 9. Code generation (Riverpod, Isar, etc.) ────────────────────────────
       - name: Build runner
