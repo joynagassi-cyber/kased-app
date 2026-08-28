@@ -447,15 +447,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       );
                       if (confirm == true && context.mounted) {
                         try {
-                          final cache = ref.read(isarProvider);
-                          await cache.when(
+                          final isarAsync = ref.read(isarProvider);
+                          await isarAsync.when(
                             data: (isar) async {
                               await isar.writeTxn(() async {
-                                await isar.filter<Membre>().deleteAll();
-                                await isar.filter<Culte>().deleteAll();
-                                await isar.filter<Cotisation>().deleteAll();
-                                await isar.filter<SyncOperation>().deleteAll();
-                                await isar.filter<CorbeilleItem>().deleteAll();
+                                await isar.membres.filter().deleteAll();
+                                await isar.cultes.filter().deleteAll();
+                                await isar.cotisations.filter().deleteAll();
+                                await isar.syncOperations.filter().deleteAll();
+                                await isar.corbeilleItems.filter().deleteAll();
                               });
                             },
                             error: (e, stack) => debugPrint('Erreur: $e'),
