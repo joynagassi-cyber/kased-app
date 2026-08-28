@@ -4,6 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:isar/isar.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
+import 'package:kased_app/models/corbeille_item.dart';
+import 'package:kased_app/models/cotisation.dart';
+import 'package:kased_app/models/culte.dart';
+import 'package:kased_app/models/membre.dart';
+import 'package:kased_app/models/sync_operation.dart';
 import 'package:kased_app/providers/auth_provider.dart';
 import 'package:kased_app/providers/isar_provider.dart';
 import 'package:kased_app/providers/theme_provider.dart';
@@ -446,11 +451,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           await cache.when(
                             data: (isar) async {
                               await isar.writeTxn(() async {
-                                await isar.membres.clear();
-                                await isar.cultes.clear();
-                                await isar.cotisations.clear();
-                                await isar.syncOperations.clear();
-                                await isar.corbeilleItems.clear();
+                                await isar.filter<Membre>().deleteAll();
+                                await isar.filter<Culte>().deleteAll();
+                                await isar.filter<Cotisation>().deleteAll();
+                                await isar.filter<SyncOperation>().deleteAll();
+                                await isar.filter<CorbeilleItem>().deleteAll();
                               });
                             },
                             error: (e, stack) => debugPrint('Erreur: $e'),
