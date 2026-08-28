@@ -9,6 +9,7 @@
 analyzer:
   errors:
     invalid_use_of_visible_for_overriding_member: ignore
+    dead_code: ignore
   exclude:
     - "**/*.g.dart"
 
