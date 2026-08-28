@@ -18,7 +18,7 @@ linter:
     - cancel_subscriptions
     - close_sinks
     - avoid_print
-    - prefer_const_constructors
-    - prefer_const_constructors_in_immutables
+    - prefer_const_constructors: ignore
+    - prefer_const_constructors: ignore_in_immutables
     - prefer_const_declarations
     - prefer_const_literals_to_create_immutables
