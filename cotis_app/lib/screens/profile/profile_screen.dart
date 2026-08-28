@@ -456,7 +456,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               isar.syncOperations.clear();
                               isar.corbeilleItems.clear();
                             });
-                          });
+                          }).catchError((e) => debugPrint('Erreur: $e'));
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
