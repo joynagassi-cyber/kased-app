@@ -22,3 +22,8 @@ linter:
     - prefer_const_constructors: ignore_in_immutables
     - prefer_const_declarations
     - prefer_const_literals_to_create_immutables
+
+  linter:
+    rules:
+      - dead_code: ignore
+
