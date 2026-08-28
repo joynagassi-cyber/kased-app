@@ -456,7 +456,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               isar.cotisations.clear();
                               isar.syncOperations.clear();
                               isar.corbeilleItems.clear();
-                              return null;
+                              
                             });
                           }
                           if (mounted) {
