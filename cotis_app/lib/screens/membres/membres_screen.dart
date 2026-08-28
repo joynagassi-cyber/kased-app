@@ -449,7 +449,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setLocalState) {
-          
+          bool isDeleting = false;
           return AlertDialog(
             title: const Text('Supprimer ?'),
             content: Text('Voulez-vous vraiment supprimer ${membre.nomComplet} ?'),
@@ -459,7 +459,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
                 child: const Text('Annuler'),
               ),
               TextButton(
-                  // setLocalState(() => isSaving = true); // Dead code - commented to fix CI
+                onPressed: isDeleting ? null : () async {
                   setLocalState(() => isDeleting = true);
                   try {
                     await ref.read(kasedAppProvider.notifier).deleteMembre(membre.id);
@@ -518,7 +518,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setLocalState) {
-          
+          bool isSaving = false;
           return AlertDialog(
             title: const Text('Modifier le membre'),
             content: Column(
@@ -548,7 +548,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
                 child: const Text('Annuler'),
               ),
               ElevatedButton(
-                  // setLocalState(() => isDeleting = true); // Dead code - commented to fix CI
+                onPressed: isSaving ? null : () async {
                   setLocalState(() => isSaving = true);
                   try {
                     await ref.read(kasedAppProvider.notifier).updateMembre(

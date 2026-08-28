@@ -684,7 +684,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (ctx, setLocalState) {
-            
+            bool isSaving = false;
             return AlertDialog(
               title: const Text('Modifier le culte'),
               content: Form(
@@ -718,7 +718,7 @@ class _CultesScreenState extends ConsumerState<CultesScreen> {
                   child: const Text('Annuler'),
                 ),
                 FilledButton(
-                    // setLocalState(() => isSaving = true); // Dead code - commented to fix CI
+                  onPressed: isSaving ? null : () async {
                     if (!formKey.currentState!.validate()) return;
                     setLocalState(() => isSaving = true);
                     try {
