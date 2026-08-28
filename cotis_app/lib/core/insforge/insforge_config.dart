@@ -30,10 +30,12 @@ class InsForgeConfig {
   static String get anonKey =>
       _anonKeyOverride.isEmpty ? _defaultAnonKey : _anonKeyOverride;
 
-  /// Client OAuth Web Firebase (public, présent dans google-services.json).
-  /// Doit correspondre à EXPECTED_CLIENT_ID du bridge google-auth-bridge.
+  /// Android Client ID Google — utilisé pour le serverClientId dans GoogleSignIn.
+  /// Ce client ID est spécifique à l'application Android et garantit que
+  /// l'ID Token généré a un `aud` (audience) correct pour la validation
+  /// côté serveur. Doit correspondre à EXPECTED_CLIENT_ID dans le bridge.
   static const String _defaultGoogleServerClientId =
-      '535496831713-4ol3svlekn919034dp509bbi6i9j0ndo.apps.googleusercontent.com';
+      '535496831713-eqn2k8iasrmbfuk7r91nn43bnoenkma7.apps.googleusercontent.com';
 
   static const String _googleServerClientIdOverride = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
