@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:isar/isar.dart';
 import 'package:kased_app/core/theme/app_theme.dart';
 import 'package:kased_app/providers/auth_provider.dart';
+import 'package:kased_app/providers/isar_provider.dart';
 import 'package:kased_app/providers/theme_provider.dart';
 import 'package:kased_app/providers/update_provider.dart';
 import 'package:kased_app/widgets/user_avatar.dart';
@@ -391,6 +394,91 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     icon: const Icon(Icons.logout),
                     label: const Text(
                       'Se déconnecter',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Bouton Réinitialiser le cache
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.warning,
+                      side: BorderSide(
+                        color: AppColors.warning.withValues(alpha: 0.5),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Réinitialiser le cache'),
+                          content: const Text(
+                              'Cela supprimera toutes les données locales (membres, cultes, cotisations). Les données seront rechargées depuis le serveur au prochain sync.\n\nContinuer ?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Annuler'),
+                            ),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.warning,
+                              ),
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Réinitialiser'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true && context.mounted) {
+                        try {
+                          final cache = ref.read(isarProvider);
+                          await cache.when(
+                            data: (isar) async {
+                              await isar.writeTxn(() async {
+                                await isar.membres.clear();
+                                await isar.cultes.clear();
+                                await isar.cotisations.clear();
+                                await isar.syncOperations.clear();
+                                await isar.corbeilleItems.clear();
+                              });
+                            },
+                            error: (e, stack) => debugPrint('Erreur: $e'),
+                            loading: () async {},
+                          );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Cache réinitialisé ✓'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Erreur: $e'),
+                                backgroundColor: AppColors.danger,
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.delete_sweep),
+                    label: const Text(
+                      'Réinitialiser le cache local',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
