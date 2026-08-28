@@ -1,7 +1,7 @@
 /// Provider Riverpod pour la gestion des mises à jour.
 ///
 /// Ce provider vérifie périodiquement s'il existe une nouvelle version
-/// sur InsForge Storage et gère l'état du processus de mise à jour
+/// sur GitHub Releases et gère l'état du processus de mise à jour
 /// (vérification, téléchargement, installation).
 library;
 

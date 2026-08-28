@@ -1,7 +1,7 @@
 /// Modèle de donnée pour le manifeste de mise à jour.
 ///
-/// Ce fichier définit la structure JSON attendue par le serveur InsForge
-/// pour décrire une nouvelle version disponible.
+/// Ce fichier définit la structure des données pour les mises à jour
+/// via GitHub Releases.
 library;
 
 /// Statut de la mise à jour.
@@ -56,7 +56,7 @@ class AppUpdate {
     this.sha256,
   });
 
-  /// Crée une instance depuis un JSON brut (format InsForge).
+  /// Crée une instance depuis un JSON brut (format GitHub Release).
   factory AppUpdate.fromJson(Map<String, dynamic> json) {
     return AppUpdate(
       versionName: json['version_name'] as String? ?? '',
