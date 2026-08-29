@@ -94,7 +94,7 @@ class Auth extends _$Auth {
   ///
   /// On anticipa le refresh pour éviter de déconnecter l'utilisateur
   /// pendant qu'il utilise l'app.
-  bool _isTokenExpired(String token, {int graceMinutes = 5}) {
+  bool _isTokenExpired(String token, {int graceMinutes = 3}) {
     try {
       final parts = token.split('.');
       if (parts.length != 3) return true;
@@ -117,7 +117,7 @@ class Auth extends _$Auth {
       return now.isAfter(effectiveExpiry);
     } catch (e) {
       debugPrint('[AUTH] Erreur décodage JWT : $e');
-      return false;
+      return true; // En cas d'erreur, on considère le token comme expiré
     }
   }
 
@@ -293,16 +293,24 @@ class Auth extends _$Auth {
 
   Future<bool> refreshSession(String rToken) async {
     try {
+      debugPrint('[AUTH] Tentative de refresh avec refresh_token...');
       final result = await _authService.refreshToken(rToken);
       if (result != null) {
-        await setAuthenticated(
-          token: result['token'] ?? '',
-          refreshToken: result['refreshToken'],
-          email: state.userEmail ?? '',
-          name: state.userName ?? 'Utilisateur',
-        );
-        return true;
+        final newToken = result['token'] as String?;
+        final newRefreshToken = result['refreshToken'] as String?;
+
+        if (newToken != null && newToken.isNotEmpty) {
+          debugPrint('[AUTH] Refresh réussi, nouveau token obtenu');
+          await setAuthenticated(
+            token: newToken,
+            refreshToken: newRefreshToken ?? rToken, // Garder l'ancien si pas de nouveau
+            email: state.userEmail ?? '',
+            name: state.userName ?? 'Utilisateur',
+          );
+          return true;
+        }
       }
+      debugPrint('[AUTH] Refresh échoué: pas de token dans la réponse');
       await logout();
       return false;
     } catch (e) {
@@ -317,6 +325,8 @@ class Auth extends _$Auth {
         debugPrint('[AUTH] Erreur réseau lors du refresh, maintien de la session locale.');
         return false;
       }
+      // Erreur serveur ou autre → déconnecter
+      debugPrint('[AUTH] Erreur serveur lors du refresh, déconnexion');
       await logout();
       return false;
     }
@@ -448,7 +458,8 @@ class Auth extends _$Auth {
 
   void _startRefreshTimer() {
     _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
+    // Vérifier toutes les 2 minutes pour anticiper l'expiration (JWT expire à 15 min)
+    _refreshTimer = Timer.periodic(const Duration(minutes: 2), (_) async {
       await refreshTokenIfNeeded();
     });
     ref.onDispose(() {

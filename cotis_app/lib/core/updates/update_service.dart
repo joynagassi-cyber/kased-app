@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_update_model.dart';
 import 'update_config.dart';
@@ -52,23 +53,23 @@ class UpdateService {
       }
 
       final Map<String, dynamic> json = response.data;
-      
-      // Extraire la version depuis tag_name (format: v1.1.9+3)
+
+      // Extraire la version depuis tag_name (format: v1.1.9+5)
       final String tagName = json['tag_name'] as String? ?? '';
       if (tagName.isEmpty) {
         debugPrint('[UpdateService] Tag name vide dans la release');
         return AppUpdateCheckResult.none();
       }
 
-      // Parser la version: "v1.1.9+3" → versionName="1.1.9", versionCode=3
-      final String versionStr = tagName.startsWith('v') 
-          ? tagName.substring(1) 
+      // Parser la version: "v1.1.9+5" → versionName="1.1.9", versionCode=5
+      final String versionStr = tagName.startsWith('v')
+          ? tagName.substring(1)
           : tagName;
-      
+
       final int plusIndex = versionStr.lastIndexOf('+');
       String versionName;
       int versionCode;
-      
+
       if (plusIndex > 0) {
         versionName = versionStr.substring(0, plusIndex);
         versionCode = int.tryParse(versionStr.substring(plusIndex + 1)) ?? 0;
@@ -79,8 +80,14 @@ class UpdateService {
 
       debugPrint('[UpdateService] Version distante : $versionName (code=$versionCode)');
 
-      if (versionCode == 0 || versionCode <= localVersionCode) {
-        debugPrint('[UpdateService] Aucune mise à jour disponible');
+      // Vérifier si nous avons déjà vu cette version
+      final prefs = await SharedPreferences.getInstance();
+      final lastSeenCode = prefs.getInt(UpdateConfig.lastSeenVersionCodeKey) ?? 0;
+      debugPrint('[UpdateService] Dernier code vu : $lastSeenCode');
+
+      // Si la version distante est <= version locale ET <= dernier code vu → pas de mise à jour
+      if (versionCode == 0 || versionCode <= localVersionCode || versionCode <= lastSeenCode) {
+        debugPrint('[UpdateService] Aucune mise à jour disponible (locale=$localVersionCode, distant=$versionCode, vu=$lastSeenCode)');
         return AppUpdateCheckResult.none();
       }
 

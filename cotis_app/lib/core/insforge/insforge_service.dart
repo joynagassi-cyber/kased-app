@@ -52,16 +52,25 @@ class InsForgeService implements InsForgeServicePort {
         onError: (DioException error, ErrorInterceptorHandler handler) async {
           if (error.response?.statusCode == 401) {
             debugPrint('[InsForge] 401 — session expirée ou accès refusé');
-            
+
             if (onUnauthorized != null) {
-              final refreshed = await onUnauthorized!();
-              if (refreshed) {
-                // Le refresh a réussi, le provider va se reconstruire.
-                // Note: On pourrait relancer la requête ici, mais avec Riverpod
-                // la plupart des widgets vont se rafraîchir d'eux-mêmes.
-                debugPrint('[InsForge] Session rafraîchie avec succès.');
+              try {
+                final refreshed = await onUnauthorized!();
+                if (refreshed) {
+                  debugPrint('[InsForge] Session rafraîchie avec succès');
+                  // Le provider va se reconstruire automatiquement,
+                  // les widgets vont recharger avec le nouveau token
+                  return;
+                } else {
+                  debugPrint('[InsForge] Refresh échoué, déconnexion requise');
+                }
+              } catch (e) {
+                debugPrint('[InsForge] Erreur lors du refresh: $e');
               }
             }
+
+            // Si on arrive ici, la session est invalide → déconnexion
+            debugPrint('[InsForge] Session expirée, déclenchement déconnexion');
           }
           handler.next(error);
         },

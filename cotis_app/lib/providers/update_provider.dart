@@ -41,12 +41,16 @@ class UpdateNotifier extends _$UpdateNotifier {
     final result = await _service.checkForUpdate();
 
     // Stocker le dernier code de version vu pour éviter les rappels constants
-    if (result.hasUpdate) {
+    // On ne stocke que si une mise à jour existe ET qu'elle n'a pas déjà été vue
+    if (result.hasUpdate && result.update != null) {
       final prefs = await SharedPreferences.getInstance();
       final lastSeen = prefs.getInt(UpdateConfig.lastSeenVersionCodeKey) ?? 0;
-      if (lastSeen < result.update!.versionCode) {
-        await prefs.setInt(UpdateConfig.lastSeenVersionCodeKey, result.update!.versionCode);
-        debugPrint('[UpdateNotifier] Nouveau code de version enregistré: ${result.update!.versionCode}');
+      final newCode = result.update!.versionCode;
+
+      // Ne pas stocker si déjà vu
+      if (lastSeen < newCode) {
+        await prefs.setInt(UpdateConfig.lastSeenVersionCodeKey, newCode);
+        debugPrint('[UpdateNotifier] Nouveau code de version enregistré: $newCode');
       }
     }
 
