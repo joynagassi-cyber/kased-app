@@ -33,10 +33,29 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
   MembresFilterOption _filterOption = MembresFilterOption.all;
   bool _showFilters = false;
 
+  // Scroll controller pour le focus automatique
+  final ScrollController _scrollController = ScrollController();
+  String? _lastNewMemberId;
+
   @override
   void initState() {
     super.initState();
     _loadRetards();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Détection automatique du dernier membre ajouté
+  void _checkForNewMember(List<Membre> membres) {
+    if (membres.isEmpty) return;
+    final latest = membres.last;
+    if (latest.id != _lastNewMemberId) {
+      _lastNewMemberId = latest.id;
+    }
   }
 
   Future<void> _loadRetards() async {
@@ -72,6 +91,10 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
               m.prenom.toLowerCase().contains(q))
           .toList();
     }
+
+    // Deduplicate by member ID
+    final seenIds = <String>{};
+    result = result.where((m) => seenIds.add(m.id)).toList();
 
     // Tri
     switch (_sortOption) {
@@ -115,6 +138,22 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
               await _loadRetards();
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Actualiser',
+            onPressed: () async {
+              await ref.read(kasedAppProvider.notifier).syncData();
+              await _loadRetards();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Données actualisées'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+          ),
           // Bouton filtre
           IconButton(
             icon: Icon(_showFilters ? Icons.filter_alt : Icons.filter_alt_outlined),
@@ -128,17 +167,11 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
           final membres = state.membres;
           final filtered = _getFilteredMembres(membres);
 
-          // Barre de filtres
-          final filterBar = AnimatedSlide(
-            offset: Offset(0, _showFilters ? 0 : -1),
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: _showFilters ? 1.0 : 0,
-              child: _buildFilterBar(theme),
-            ),
-          );
+          // Vérifier si un nouveau membre a été ajouté
+          _checkForNewMember(membres);
+
+          // Barre de filtres — render conditionnellement, pas d'AnimatedSlide
+          final filterBar = _showFilters ? _buildFilterBar(theme) : null;
 
           if (membres.isEmpty) {
             return const EmptyState(
@@ -150,9 +183,14 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
 
           return Column(
             children: [
-              filterBar,
+              if (filterBar != null) filterBar,
               Expanded(
-                child: filtered.isEmpty
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    await ref.read(kasedAppProvider.notifier).syncData();
+                    await _loadRetards();
+                  },
+                  child: filtered.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -234,6 +272,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
                               padding:
                                   const EdgeInsets.only(bottom: 12),
                               child: KasedCard(
+                                key: Key('membre_card_${membre.id}'),
                                 padding: EdgeInsets.zero,
                                 onTap: () =>
                                     context.push('/membres/${membre.id}',
@@ -328,6 +367,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
                                       Curves.easeOutCubic);
                         },
                       ),
+                ),
               ),
             ],
           );

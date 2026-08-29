@@ -111,10 +111,42 @@ class CulteHandler {
       (c) => c.id == action.id,
       orElse: () => Culte()..id = action.id,
     );
-    await cache.deleteCulteById(action.id);
-    if (culte.id.isNotEmpty) {
-      unawaited(onPush('culte_supprime', culte.titre ?? culte.id));
-    }
+    if (culte.id.isEmpty) return;
+
+    final deviceId = await deviceService.getDeviceId();
+    final now = DateTime.now();
+
+    // Récupérer les cotisations associées
+    final cotisations = await cache.getAllCotisations();
+    final culteCotisations = cotisations.where((c) => c.culteId == culte.id).toList();
+
+    // Soft delete : marquer comme supprimé
+    final deletedCulte = Culte()
+      ..id = culte.id
+      ..dateCulte = culte.dateCulte
+      ..titre = culte.titre
+      ..montantCotisation = culte.montantCotisation
+      ..memberIds = culte.memberIds
+      ..createdAt = culte.createdAt
+      ..updatedAt = now
+      ..isDeleted = true
+      ..deletedAt = now
+      ..deletedBy = deviceId;
+
+    // Créer l'opération de synchronisation
+    final syncOp = SyncOperation()
+      ..operationId = UuidUtils.generate()
+      ..type = 'DELETE'
+      ..entityType = 'culte'
+      ..entityId = culte.id
+      ..payloadJson = jsonEncode(deletedCulte.toJson())
+      ..createdAt = now
+      ..deviceId = deviceId;
+
+    // Soft delete du culte + soft delete des cotisations
+    await cache.softDeleteCulteWithSyncOp(deletedCulte, culteCotisations, syncOp);
+
+    unawaited(onPush('culte_supprime', culte.titre ?? culte.id));
   }
 
   Future<void> restoreCulte(RestoreCulte action) async {

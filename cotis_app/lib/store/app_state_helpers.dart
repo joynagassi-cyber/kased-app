@@ -9,13 +9,20 @@ import 'package:kased_app/store/app_state.dart';
 
 // ── Membres ──────────────────────────────────────────────────────────────────
 
-/// Trie les membres par nom puis prénom.
+/// Trie les membres par nom puis prénom, en éliminant les doublons par id.
 List<Membre> sortMembres(List<Membre> membres) {
-  final sorted = List<Membre>.from(membres);
-  sorted.sort((a, b) => a.nom.compareTo(b.nom) != 0
+  // Deduplicate by id (keep first occurrence)
+  final seenIds = <String>{};
+  final deduped = <Membre>[];
+  for (final m in membres) {
+    if (seenIds.add(m.id)) {
+      deduped.add(m);
+    }
+  }
+  deduped.sort((a, b) => a.nom.compareTo(b.nom) != 0
       ? a.nom.compareTo(b.nom)
       : a.prenom.compareTo(b.prenom));
-  return sorted;
+  return deduped;
 }
 
 /// Supprime un membre de la liste.
@@ -23,9 +30,9 @@ List<Membre> removeMembre(List<Membre> membres, String membreId) {
   return membres.where((m) => m.id != membreId).toList();
 }
 
-/// Ajoute un membre et trie.
+/// Ajoute un membre et trie. Le membre est remplacé s'il existe déjà (par id).
 List<Membre> addMembreSorted(List<Membre> membres, Membre membre) {
-  return sortMembres([...membres, membre]);
+  return updateMembreInList(membres, membre.id, membre);
 }
 
 /// Met à jour un membre existant.

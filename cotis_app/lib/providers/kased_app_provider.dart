@@ -78,6 +78,12 @@ class KasedApp extends _$KasedApp {
     // Charger l'état initial depuis le cache
     await _store.reloadFromCache();
 
+    // Écouter les changements d'état du store (dispatch + patches temps réel)
+    // pour propager l'état mis à jour aux consommateurs Riverpod.
+    _store.onStateChanged = (newState) {
+      state = AsyncValue.data(newState);
+    };
+
     // Surveiller la connectivité
     _connectivitySubscription =
         Connectivity().onConnectivityChanged.listen((results) {

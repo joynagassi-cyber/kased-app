@@ -33,8 +33,12 @@ class IsarLocalCache implements LocalCache {
   // ── Individual writes ──────────────────────────────────────────────────────
 
   @override
-  Future<void> saveMembre(Membre m) =>
-      _isar.writeTxn(() => _isar.membres.put(m));
+  Future<void> saveMembre(Membre m) => _isar.writeTxn(() async {
+        // Delete first to prevent duplicates in concurrent race conditions
+        // (e.g., local dispatch + realtime patch both targeting the same id)
+        await _isar.membres.filter().idEqualTo(m.id).deleteAll();
+        await _isar.membres.put(m);
+      });
 
   @override
   Future<void> deleteMembreById(String id) =>

@@ -52,6 +52,9 @@ class KasedStore {
   String? _currentUserEmail;
   String? _currentUserToken;
 
+  /// Callback invoqué à chaque changement d'état (y compris les patches temps réel).
+  void Function(AppState newState)? onStateChanged;
+
   KasedStore({
     required this.api,
     required this.cache,
@@ -102,7 +105,17 @@ class KasedStore {
         // Recharger les données après un événement temps réel
         await reloadFromCache();
       },
+      onImmediateUpdate: _onRealtimePatchApplied,
     );
+  }
+
+  /// Rafraîchit l'état depuis le cache et notifie le provider pour mise à jour UI immédiate.
+  void _onRealtimePatchApplied() {
+    reloadFromCache().then((_) {
+      // reloadFromCache() a déjà mis à jour _state; on notifie le provider.
+      final updated = _state;
+      onStateChanged?.call(updated);
+    });
   }
 
   /// Déconnecte le handler temps réel (appelé au logout).
@@ -124,70 +137,86 @@ class KasedStore {
           await _memberHandler.createMember(action);
           final membres = await cache.getAllMembres();
           _state = _state.copyWith(membres: sortMembres(membres));
+          onStateChanged?.call(_state);
         case UpdateMember():
           await _memberHandler.updateMember(action);
           final membres2 = await cache.getAllMembres();
           _state = _state.copyWith(membres: sortMembres(membres2));
+          onStateChanged?.call(_state);
         case AddPaymentAdvance():
           await _memberHandler.addPaymentAdvance(action);
           final membres3 = await cache.getAllMembres();
           _state = _state.copyWith(membres: sortMembres(membres3));
+          onStateChanged?.call(_state);
         case DeleteMember():
           await _memberHandler.deleteMember(action);
           final membres4 = await cache.getAllMembres();
           _state = _state.copyWith(membres: membres4);
+          onStateChanged?.call(_state);
         case RestoreMember():
           await _memberHandler.restoreMember(action);
           final allMembres = await cache.getAllMembres();
           final allCultes = await cache.getAllCultes();
           final allCotisations = await cache.getAllCotisations();
           _state = withFullData(_state, membres: allMembres, cultes: allCultes, cotisations: allCotisations);
+          onStateChanged?.call(_state);
         // Cultes
         case CreateCulte():
           await _culteHandler.createCulte(action);
           final cultes = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes);
+          onStateChanged?.call(_state);
         case UpdateCulte():
           await _culteHandler.updateCulte(action);
           final cultes2 = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes2);
+          onStateChanged?.call(_state);
         case DeleteCulte():
           await _culteHandler.deleteCulte(action);
           final cultes3 = await cache.getAllCultes();
           _state = _state.copyWith(cultes: cultes3);
+          onStateChanged?.call(_state);
         case RestoreCulte():
           await _culteHandler.restoreCulte(action);
           final allM = await cache.getAllMembres();
           final allC = await cache.getAllCultes();
           final allCo = await cache.getAllCotisations();
           _state = withFullData(_state, membres: allM, cultes: allC, cotisations: allCo);
+          onStateChanged?.call(_state);
         // Cotisations
         case RegisterPayment():
           await _cotisationHandler.registerPayment(action);
           final cots = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots);
+          onStateChanged?.call(_state);
         case MarkAbsent():
           await _cotisationHandler.markAbsent(action);
           final cots2 = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots2);
+          onStateChanged?.call(_state);
         case BulkSetPaiements():
           await _cotisationHandler.bulkSetPaiements(action);
           final cots3 = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots3);
+          onStateChanged?.call(_state);
         case TogglePaiement():
           await _cotisationHandler.togglePaiement(action);
           final cots4 = await cache.getAllCotisations();
           _state = _state.copyWith(cotisations: cots4);
+          onStateChanged?.call(_state);
         case PaySeveralCultesInAdvance():
           await _cotisationHandler.paySeveralCultesInAdvance(action);
           final cots5 = await cache.getAllCotisations();
           final membres5 = await cache.getAllMembres();
           _state = _state.copyWith(cotisations: cots5, membres: membres5);
+          onStateChanged?.call(_state);
         // Sync
         case SyncData():
           await _handleSyncData();
+          onStateChanged?.call(_state);
         case LoadDashboard():
           await _handleLoadDashboard();
+          onStateChanged?.call(_state);
         // Corbeille
         case PermanentlyDelete():
           await cache.deleteCorbeilleItem(action.isarId);

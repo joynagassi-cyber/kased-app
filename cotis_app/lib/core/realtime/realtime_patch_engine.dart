@@ -7,6 +7,9 @@ import 'package:kased_app/models/culte.dart';
 import 'package:kased_app/models/membre.dart';
 import 'package:kased_app/models/cotisation.dart';
 
+/// Callback type for immediate UI state refresh after a patch.
+typedef ImmediateUpdateCallback = void Function();
+
 /// Moteur de patch pour les événements temps réel.
 ///
 /// Applique localement chaque événement reçu sans recharger toute la base.
@@ -14,12 +17,15 @@ import 'package:kased_app/models/cotisation.dart';
 class RealtimePatchEngine {
   final LocalCache _cache;
   final void Function() _onPatchApplied;
+  final ImmediateUpdateCallback? _onImmediateUpdate;
 
   RealtimePatchEngine({
     required LocalCache cache,
     required void Function() onPatchApplied,
+    ImmediateUpdateCallback? onImmediateUpdate,
   })  : _cache = cache,
-        _onPatchApplied = onPatchApplied;
+        _onPatchApplied = onPatchApplied,
+        _onImmediateUpdate = onImmediateUpdate;
 
   /// Applique un événement temps réel localement.
   ///
@@ -49,6 +55,7 @@ class RealtimePatchEngine {
         default:
           debugPrint('[PatchEngine] Unknown table: ${event.table}');
       }
+      _onImmediateUpdate?.call();
       _onPatchApplied();
     } catch (e, stack) {
       debugPrint('[PatchEngine] Error applying patch: $e\n$stack');

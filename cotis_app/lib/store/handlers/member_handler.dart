@@ -168,12 +168,46 @@ class MemberHandler {
       (m) => m.id == action.id,
       orElse: () => Membre()..id = action.id,
     );
-    await cache.deleteMembreById(action.id);
-    NotificationCoordinator.annulerAnniversaireMembre(action.id);
-    if (membre.id.isNotEmpty) {
-      notifCoordinator.notifierSuppressionMembreFull(membre);
-      unawaited(onPush('membre_supprime', membre.nomComplet));
-    }
+    if (membre.id.isEmpty) return;
+
+    final deviceId = await deviceService.getDeviceId();
+    final now = DateTime.now();
+
+    // Soft delete : marquer comme supprimé
+    final deletedMembre = Membre()
+      ..id = membre.id
+      ..nom = membre.nom
+      ..prenom = membre.prenom
+      ..dateAdhesion = membre.dateAdhesion
+      ..dateNaissance = membre.dateNaissance
+      ..montantEnAvance = membre.montantEnAvance
+      ..totalDons = membre.totalDons
+      ..telephone = membre.telephone
+      ..notes = membre.notes
+      ..isActive = false
+      ..deviceId = deviceId
+      ..createdAt = membre.createdAt
+      ..version = membre.version + 1
+      ..isDeleted = true
+      ..deletedAt = now
+      ..deletedBy = deviceId
+      ..updatedAt = now;
+
+    // Créer l'opération de synchronisation
+    final syncOp = SyncOperation()
+      ..operationId = UuidUtils.generate()
+      ..type = 'DELETE'
+      ..entityType = 'membre'
+      ..entityId = membre.id
+      ..payloadJson = jsonEncode(deletedMembre.toJson())
+      ..createdAt = now
+      ..deviceId = deviceId;
+
+    await cache.softDeleteMembreWithSyncOp(deletedMembre, syncOp);
+
+    NotificationCoordinator.annulerAnniversaireMembre(membre.id);
+    notifCoordinator.notifierSuppressionMembreFull(membre);
+    unawaited(onPush('membre_supprime', membre.nomComplet));
   }
 
   Future<void> restoreMember(RestoreMember action) async {

@@ -12,6 +12,9 @@ part 'realtime_handler.g.dart';
 /// Callback type pour notifier le caller qu'un reload est nécessaire.
 typedef ReloadCallback = Future<void> Function();
 
+/// Callback type pour mise à jour UI immédiate (sans recharger du serveur).
+typedef ImmediateUpdateCallback = void Function();
+
 /// Délai minimum entre deux reloads consécutifs (30s).
 const _reloadDebounceDelay = Duration(seconds: 30);
 
@@ -28,6 +31,7 @@ class RealtimeHandler extends _$RealtimeHandler {
   late RealtimeService _realtime;
   late RealtimePatchEngine _patchEngine;
   ReloadCallback? _reloadCallback;
+  ImmediateUpdateCallback? _immediateUpdateCallback;
   DateTime? _lastReloadAt;
   Timer? _reloadDebounceTimer;
 
@@ -44,6 +48,7 @@ class RealtimeHandler extends _$RealtimeHandler {
     _patchEngine = RealtimePatchEngine(
       cache: cache,
       onPatchApplied: _onPatchApplied,
+      onImmediateUpdate: _immediateUpdateCallback,
     );
   }
 
@@ -52,15 +57,18 @@ class RealtimeHandler extends _$RealtimeHandler {
     required String token,
     required String email,
     ReloadCallback? onReload,
+    ImmediateUpdateCallback? onImmediateUpdate,
   }) {
     debugPrint('[RealtimeHandler] Connexion avec auth: $email');
     _reloadCallback = onReload;
+    _immediateUpdateCallback = onImmediateUpdate;
     _realtime.connect(token: token, email: email);
   }
 
   /// Déconnecte le service realtime.
   void disconnect() {
     _reloadCallback = null;
+    _immediateUpdateCallback = null;
     _reloadDebounceTimer?.cancel();
     _realtime.disconnect();
   }
