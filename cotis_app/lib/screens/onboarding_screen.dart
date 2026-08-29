@@ -90,33 +90,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF2962FF), Color(0xFF7C4DFF)],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                'K',
-                style: GoogleFonts.syne(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
+          // Vrai logo Kased
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              'assets/images/kased_logo.png',
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
             ),
           ),
           const Spacer(),

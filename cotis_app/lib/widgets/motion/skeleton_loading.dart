@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/motion_tokens.dart';
 
 class SkeletonLoading extends StatefulWidget {
   final double width;
@@ -27,7 +26,8 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: MotionDuration.long * 2, // Shimmer lent
+      // Shimmer lent et visible — 3 secondes pour un cycle complet
+      duration: const Duration(seconds: 3),
     )..repeat();
 
     _animation = Tween<double>(begin: -2.0, end: 2.0).animate(
@@ -44,8 +44,9 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE0E0E0);
-    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF5F5F5);
+    // Couleurs plus contrastées pour meilleure visibilité
+    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF475569) : const Color(0xFFFFFFFF);
 
     return AnimatedBuilder(
       animation: _animation,

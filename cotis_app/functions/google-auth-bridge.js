@@ -1,21 +1,21 @@
 /**
- * Google Auth Bridge for KASED-APP (v6)
+ * Google Auth Bridge for KASED-APP (v7)
  *
  * Features:
- * - Audience validation (Firebase Web Client ID)
+ * - Audience validation (Android Client ID)
+ * - Provider tracking (google vs email)
  * - Generic error reporting
  * - Salted internal password
- * - Automatic Profile creation (No roles)
- * - InsForge anon key header on ALL auth requests (fixes 500 cascade)
+ * - Automatic Profile creation
+ * - InsForge anon key header on ALL auth requests
  *
- * CHANGELOG v6:
- * - Add InsForge anon key headers to /api/auth/sessions and /api/auth/users
- *   calls. Without these headers InsForge returns HTTP 401 "No token provided"
- *   which cascades into a HTTP 500 on the bridge side.
- * - Use __INSFORGE_ANON_KEY__ placeholder replaced by deploy script at deploy time.
+ * CHANGELOG v7:
+ * - Add provider: 'google' to user creation to distinguish from email auth
+ * - Use Android Client ID for EXPECTED_CLIENT_ID
+ * - Store Google sub as metadata for cross-device linking
  */
 
-// Firebase Web Client ID — must match serverClientId in auth_service.dart
+// Android Client ID Google — must match serverClientId in auth_service.dart
 const EXPECTED_CLIENT_ID = '535496831713-eqn2k8iasrmbfuk7r91nn43bnoenkma7.apps.googleusercontent.com';
 const INTERNAL_SALT = 'KASED_SECURE_SALT_2026_v1';
 
@@ -54,44 +54,60 @@ module.exports = async function(request) {
     const email = googleData.email;
     const name = googleData.name || 'Utilisateur Google';
     const googleId = googleData.sub;
+    // Password dérivé du Google ID + sel — unique par utilisateur
     const password = `GAuth_${googleId}_${INTERNAL_SALT.substring(0, 8)}`;
 
     const baseUrl = 'https://pu74z8pe.us-east.insforge.app';
 
     // InsForge exige la clé anon sur CHAQUE requête.
-    // Sans le header `apikey`, /api/auth/sessions répond HTTP 401 "No token provided"
-    // ce qui cascade en erreur 500 côté bridge.
-    // Le placeholder __INSFORGE_ANON_KEY__ est remplacé par le script de déploiement.
     const bridgeHeaders = {
       'Content-Type': 'application/json',
       'apikey': '__INSFORGE_ANON_KEY__',
       'Authorization': 'Bearer __INSFORGE_ANON_KEY__'
     };
 
-    // 3. Login or Signup
+    // 3. Login or Signup — with provider: 'google'
     let authData;
     const loginRes = await fetch(`${baseUrl}/api/auth/sessions?client_type=mobile`, {
       method: 'POST',
       headers: bridgeHeaders,
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({
+        email,
+        password,
+        provider: 'google', // CRITIQUE: identifie le provider comme Google
+        app_metadata: {
+          google_id: googleId,
+          name: name
+        }
+      })
     });
 
     if (loginRes.ok) {
       authData = await loginRes.json();
     } else if (loginRes.status === 401) {
+      // User not found — create account with provider: google
       const signUpRes = await fetch(`${baseUrl}/api/auth/users?client_type=mobile`, {
         method: 'POST',
         headers: bridgeHeaders,
-        body: JSON.stringify({ email, password, name })
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          provider: 'google', // CRITIQUE: provider explicitement défini
+          app_metadata: {
+            google_id: googleId,
+            picture: googleData.picture
+          }
+        })
       });
 
       if (signUpRes.ok) {
         authData = await signUpRes.json();
       } else {
         const errorData = await signUpRes.json();
+        const errorMsg = errorData.message || errorData.msg || '';
 
         // Check for email collision (if the user already signed up with password)
-        const errorMsg = errorData.message || errorData.msg || '';
         if (signUpRes.status === 409 || signUpRes.status === 422 ||
             errorMsg.toLowerCase().includes('already registered') ||
             errorMsg.toLowerCase().includes('already exists')) {
@@ -120,8 +136,7 @@ module.exports = async function(request) {
     const accessToken = authData.access_token || authData.accessToken;
     const userId = authData.user.id;
 
-    // 4. Profile Management (Upsert)
-    // Filet de sécurité : le trigger auth.users → profiles crée déjà la ligne.
+    // 4. Profile Management (Upsert) — link Google ID to profile
     await fetch(`${baseUrl}/api/database/records/profiles`, {
       method: 'POST',
       headers: {
@@ -132,14 +147,17 @@ module.exports = async function(request) {
       },
       body: JSON.stringify([{
         id: userId,
-        email: email
+        email: email,
+        provider: 'google',
+        google_id: googleId
       }]),
     });
 
     return new Response(JSON.stringify({
       ...authData,
       role: 'authenticated',
-      source: 'google-bridge-v6'
+      provider: 'google', // CRITIQUE: retourne le provider pour le client
+      source: 'google-bridge-v7'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

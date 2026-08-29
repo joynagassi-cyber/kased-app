@@ -268,6 +268,7 @@ class AuthService {
           'name': data['user']['name'] ?? googleUser.displayName ?? 'Utilisateur',
           'id': data['user']['id'],
           'photo': googleUser.photoUrl,
+          'provider': data['provider'] ?? 'google', // CRITIQUE: provider depuis le bridge
         };
       }
 
