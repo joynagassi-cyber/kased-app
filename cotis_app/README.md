@@ -77,3 +77,10 @@ test/
 ├── widget/         # Tests widgets (UI)
 └── e2e/            # Tests d'intégration
 ```
+
+## 📚 Documentation
+
+- [Wiki Technique](https://github.com/joynagassi-cyber/kased-app/wiki)
+- [Architecture Detailée](docs-architect/KASED-APP-ARCHITECTURE.md)
+- [Wiki Complet](https://github.com/joynagassi-cyber/kased-wiki)
+
