@@ -50,3 +50,6 @@ cotis_app/.env.local
 
 # WDS session state
 progress/
+
+# GitHub Wiki
+wiki/
