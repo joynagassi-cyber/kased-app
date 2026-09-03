@@ -76,6 +76,10 @@ class SyncManager {
       final pendingMembreIds = <String>{};
       final pendingCulteIds = <String>{};
       final pendingCotisationIds = <String>{};
+      // Track IDs that were locally deleted but cloud hasn't confirmed yet
+      final pendingDeleteMembreIds = <String>{};
+      final pendingDeleteCulteIds = <String>{};
+      final pendingDeleteCotisationIds = <String>{};
 
       for (final op in pendingOps) {
         try {
@@ -84,20 +88,32 @@ class SyncManager {
           // Ajouter temporairement aux pending pour protéger le merge
           if (op.entityType == 'membre') {
             pendingMembreIds.add(op.entityId);
+            // Si c'est une suppression, tracker pour protéger le merge
+            if (op.type == 'DELETE') {
+              pendingDeleteMembreIds.add(op.entityId);
+            }
           } else if (op.entityType == 'culte') {
             pendingCulteIds.add(op.entityId);
+            if (op.type == 'DELETE') {
+              pendingDeleteCulteIds.add(op.entityId);
+            }
           } else if (op.entityType == 'cotisation') {
             pendingCotisationIds.add(op.entityId);
+            if (op.type == 'DELETE') {
+              pendingDeleteCotisationIds.add(op.entityId);
+            }
           }
 
           await _cache.deleteSyncOp(op.isarId);
           // Retirer de la protection après suppression réussie
-          if (op.entityType == 'membre')
+          if (op.entityType == 'membre') {
             pendingMembreIds.remove(op.entityId);
-          else if (op.entityType == 'culte')
+            // Garder les suppressions dans pendingDelete jusqu'au merge
+          } else if (op.entityType == 'culte') {
             pendingCulteIds.remove(op.entityId);
-          else if (op.entityType == 'cotisation')
+          } else if (op.entityType == 'cotisation') {
             pendingCotisationIds.remove(op.entityId);
+          }
         } catch (e) {
           failed++;
           debugPrint(
@@ -132,6 +148,9 @@ class SyncManager {
         pendingMembreIds: pendingMembreIds,
         pendingCulteIds: pendingCulteIds,
         pendingCotisationIds: pendingCotisationIds,
+        pendingDeleteMembreIds: pendingDeleteMembreIds,
+        pendingDeleteCulteIds: pendingDeleteCulteIds,
+        pendingDeleteCotisationIds: pendingDeleteCotisationIds,
       );
 
       return SyncResult(

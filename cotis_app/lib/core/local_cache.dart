@@ -86,6 +86,10 @@ abstract class LocalCache {
     required Set<String> pendingMembreIds,
     required Set<String> pendingCulteIds,
     required Set<String> pendingCotisationIds,
+    // Suppressions locales en attente: ne pas écraser par le cloud
+    required Set<String> pendingDeleteMembreIds,
+    required Set<String> pendingDeleteCulteIds,
+    required Set<String> pendingDeleteCotisationIds,
   });
 
   // ── Mutations atomiques avec SyncOperation ────────────────────────────────

@@ -127,10 +127,23 @@ class StubLocalCache implements LocalCache {
     _cotisations.clear(); _cotisations.addAll(cotisations);
   }
   @override
-  Future<void> mergeFromCloud({required List<Membre> cloudMembres, required List<Culte> cloudCultes, required List<Cotisation> cloudCotisations, required Set<String> pendingMembreIds, required Set<String> pendingCulteIds, required Set<String> pendingCotisationIds}) async {
-    _membres.clear(); _membres.addAll(cloudMembres);
-    _cultes.clear(); _cultes.addAll(cloudCultes);
-    _cotisations.clear(); _cotisations.addAll(cloudCotisations);
+  Future<void> mergeFromCloud({
+    required List<Membre> cloudMembres,
+    required List<Culte> cloudCultes,
+    required List<Cotisation> cloudCotisations,
+    required Set<String> pendingMembreIds,
+    required Set<String> pendingCulteIds,
+    required Set<String> pendingCotisationIds,
+    required Set<String> pendingDeleteMembreIds,
+    required Set<String> pendingDeleteCulteIds,
+    required Set<String> pendingDeleteCotisationIds,
+  }) async {
+    _membres.clear();
+    _membres.addAll(cloudMembres);
+    _cultes.clear();
+    _cultes.addAll(cloudCultes);
+    _cotisations.clear();
+    _cotisations.addAll(cloudCotisations);
   }
   @override
   Future<void> saveMembreWithSyncOp(Membre membre, SyncOperation op) async {

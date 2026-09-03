@@ -194,6 +194,9 @@ class StubLocalCache implements LocalCache {
     required Set<String> pendingMembreIds,
     required Set<String> pendingCulteIds,
     required Set<String> pendingCotisationIds,
+    required Set<String> pendingDeleteMembreIds,
+    required Set<String> pendingDeleteCulteIds,
+    required Set<String> pendingDeleteCotisationIds,
   }) async {
     _cultes.clear();
     _cultes.addAll(cloudCultes);

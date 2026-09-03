@@ -206,6 +206,9 @@ class IsarLocalCache implements LocalCache {
     required Set<String> pendingMembreIds,
     required Set<String> pendingCulteIds,
     required Set<String> pendingCotisationIds,
+    required Set<String> pendingDeleteMembreIds,
+    required Set<String> pendingDeleteCulteIds,
+    required Set<String> pendingDeleteCotisationIds,
   }) =>
       _isar.writeTxn(() async {
         // ── Membres ─────────────────────────────────────────
@@ -226,12 +229,17 @@ class IsarLocalCache implements LocalCache {
           }
           final cloud = cloudMembresById[id];
           final local = localMembresById[id];
-          
+
+          // Si c'est une suppression locale en attente, ne pas restaurer depuis le cloud
+          if (pendingDeleteMembreIds.contains(id)) {
+            continue;
+          }
+
           // Si local est supprimé et ne contient aucune opération, l'éliminer
           if (local != null && local.isDeleted) {
             continue;
           }
-          
+
           if (cloud != null && local != null) {
             mergedMembres.add(_pickMembre(local, cloud));
           } else {
@@ -257,14 +265,18 @@ class IsarLocalCache implements LocalCache {
             }
             continue;
           }
+          // Si c'est une suppression locale en attente, ne pas restaurer depuis le cloud
+          if (pendingDeleteCulteIds.contains(id)) {
+            continue;
+          }
           final cloud = cloudCultesById[id];
           final local = localCultesById[id];
-          
+
           // Si local est supprimé et ne contient aucune opération, l'éliminer
           if (local != null && local.isDeleted) {
             continue;
           }
-          
+
           if (cloud != null && local != null) {
             mergedCultes.add(_pickCulte(local, cloud));
           } else {
