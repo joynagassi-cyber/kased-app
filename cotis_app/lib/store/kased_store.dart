@@ -210,6 +210,11 @@ class KasedStore {
           final membres5 = await cache.getAllMembres();
           _state = _state.copyWith(cotisations: cots5, membres: membres5);
           onStateChanged?.call(_state);
+        case PayAllRetards():
+          await _cotisationHandler.payAllRetards(action);
+          final cots6 = await cache.getAllCotisations();
+          _state = _state.copyWith(cotisations: cots6);
+          onStateChanged?.call(_state);
         // Sync
         case SyncData():
           await _handleSyncData();

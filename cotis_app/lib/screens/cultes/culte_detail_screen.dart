@@ -485,7 +485,7 @@ class _CulteDetailScreenState extends ConsumerState<CulteDetailScreen> {
           ),
         );
       },
-      loading: () => const Scaffold(body: CulteDetailSkeleton()),
+      loading: () => const CulteDetailSkeleton(),
       error: (e, _) => Scaffold(body: Center(child: Text('Impossible de charger les données. Vérifiez votre connexion.'))),
     );
   }

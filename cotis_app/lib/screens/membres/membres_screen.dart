@@ -26,6 +26,7 @@ class MembresScreen extends ConsumerStatefulWidget {
 
 class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> retards = [];
+  bool _hasLoaded = false;
 
   // Filter/sort state
   String _searchQuery = '';
@@ -164,6 +165,7 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
       ),
       body: appDataAsync.when(
         data: (state) {
+          _hasLoaded = true;
           final membres = state.membres;
           final filtered = _getFilteredMembres(membres);
 
@@ -372,7 +374,10 @@ class _MembresScreenState extends ConsumerState<MembresScreen> with SingleTicker
             ],
           );
         },
-        loading: () => const MembresListSkeleton(),
+        loading: () {
+          final showSkeleton = !_hasLoaded;
+          return showSkeleton ? const MembresListSkeleton() : const SizedBox.shrink();
+        },
         error: (e, _) => Center(child: Text('Erreur: $e')),
       ),
       floatingActionButton: SpringButton(

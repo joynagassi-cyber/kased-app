@@ -31,6 +31,8 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   double _objectifMensuel = 0.0;
+  bool _hasLoaded = false;
+  DateTime? _lastLoadedAt;
 
   @override
   void initState() {
@@ -226,6 +228,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           body: appDataAsync.when(
             data: (state) {
+              _hasLoaded = true;
+              _lastLoadedAt = DateTime.now();
               final stats = ref.read(kasedAppProvider.notifier).getDashboardStats();
               final topRetards = ref.read(kasedAppProvider.notifier).getRetardsMembresLocally().take(3).toList();
 
@@ -557,7 +561,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ],
               );
             },
-            loading: () => const DashboardSkeleton(),
+            loading: () {
+              final showSkeleton = !_hasLoaded ||
+                  DateTime.now().difference(_lastLoadedAt ?? DateTime.now()).inMilliseconds < 800;
+              return showSkeleton ? const DashboardSkeleton() : const SizedBox.shrink();
+            },
             error: (e, _) => Center(child: Text('Erreur: $e')),
           ),
         );

@@ -296,6 +296,10 @@ class KasedApp extends _$KasedApp {
     ));
   }
 
+  Future<void> payerToutRetard(String membreId) async {
+    await dispatch(PayAllRetards(membreId));
+  }
+
   Future<void> syncData() async {
     await dispatch(SyncData());
   }

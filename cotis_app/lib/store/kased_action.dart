@@ -146,6 +146,12 @@ class BulkSetPaiements extends CotisationAction {
   });
 }
 
+class PayAllRetards extends CotisationAction {
+  final String membreId;
+
+  PayAllRetards(this.membreId);
+}
+
 class TogglePaiement extends CotisationAction {
   final String membreId, culteId;
 

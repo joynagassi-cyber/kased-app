@@ -37,12 +37,12 @@ class AppShell extends ConsumerWidget {
     final currentIndex = _currentIndex(context);
 
     // Watch AppData state to get active delay counts
+    // Utilise getRetardsMembresLocally() pour être cohérent avec l'écran Retards
     final appStateAsync = ref.watch(kasedAppProvider);
-    final stats = appStateAsync.maybeWhen(
-      data: (state) => ref.read(kasedAppProvider.notifier).getDashboardStats(),
-      orElse: () => null,
+    final retardsCount = appStateAsync.maybeWhen(
+      data: (state) => ref.read(kasedAppProvider.notifier).getRetardsMembresLocally().length,
+      orElse: () => 0,
     );
-    final retardsCount = stats?.membresEnRetard ?? 0;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,

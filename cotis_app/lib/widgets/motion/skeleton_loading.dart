@@ -4,12 +4,15 @@ class SkeletonLoading extends StatefulWidget {
   final double width;
   final double height;
   final BorderRadius? borderRadius;
+  /// Durée minimale d'affichage pour éviter le flash
+  final Duration minDisplayDuration;
 
   const SkeletonLoading({
     super.key,
     required this.width,
     required this.height,
     this.borderRadius,
+    this.minDisplayDuration = const Duration(milliseconds: 800),
   });
 
   @override
@@ -20,6 +23,7 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  bool _showSkeleton = false;
 
   @override
   void initState() {
@@ -33,6 +37,13 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
     _animation = Tween<double>(begin: -2.0, end: 2.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.linear),
     );
+
+    // Garantir un affichage minimal du skeleton pour éviter le flash
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(widget.minDisplayDuration, () {
+        if (mounted) setState(() => _showSkeleton = true);
+      });
+    });
   }
 
   @override
@@ -43,6 +54,8 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
 
   @override
   Widget build(BuildContext context) {
+    if (!_showSkeleton) return const SizedBox.shrink();
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Couleurs plus contrastées pour meilleure visibilité
     final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
@@ -322,6 +335,61 @@ class CulteDetailSkeleton extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+class RetardsListSkeleton extends StatelessWidget {
+  const RetardsListSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: 5,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF131A2A) : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              ),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: const Row(
+              children: [
+                SkeletonLoading(
+                  width: 40,
+                  height: 40,
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonLoading(width: 140, height: 16),
+                      SizedBox(height: 6),
+                      SkeletonLoading(width: 90, height: 12),
+                    ],
+                  ),
+                ),
+                SkeletonLoading(
+                  width: 60,
+                  height: 28,
+                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

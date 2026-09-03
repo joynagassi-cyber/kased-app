@@ -274,4 +274,47 @@ class CotisationHandler {
       unawaited(onPush('cotisation_en_avance', membre.nomComplet));
     }
   }
+
+  /// Pays all overdue cotisations for a single member.
+  /// Used by the "Valider tout" button on the Retards screen.
+  Future<void> payAllRetards(PayAllRetards action) async {
+    final cotisations = await onGetCotisations();
+    final cultes = await cache.getAllCultes();
+    final membres = await onGetMembres();
+    final now = DateTime.now();
+
+    final cultesById = {for (final c in cultes) c.id: c};
+    final membre = membres.firstWhereOrNull((m) => m.id == action.membreId);
+
+    // Find all overdue cotisations for this member
+    final overdueCotisations = cotisations
+        .where((c) =>
+            c.membreId == action.membreId &&
+            c.estEnRetard &&
+            cultesById[c.culteId]?.dateCulte.isBefore(now) == true)
+        .toList();
+
+    if (overdueCotisations.isEmpty) return;
+
+    for (final cot in overdueCotisations) {
+      final updated = cot.copyWith(
+        statut: StatutCotisation.paye,
+        montantPaye: cot.montantObligatoire,
+        datePaiement: now,
+        updatedAt: now,
+      );
+      await cache.saveCotisation(updated);
+
+      final culte = cultesById[cot.culteId];
+      if (membre != null && culte != null) {
+        final culteTitre = culte.titre ?? 'Culte du ${culte.dateCulte.day}/${culte.dateCulte.month}';
+        notifCoordinator.notifierPaiementEnregistreFull(cot.montantObligatoire, membre.nomComplet, culteTitre);
+      }
+    }
+
+    if (membre != null) {
+      notifCoordinator.notifierPaiementsEnMasseFull(overdueCotisations.length, 'retards validés');
+      unawaited(onPush('retards_valides', membre.nomComplet));
+    }
+  }
 }
