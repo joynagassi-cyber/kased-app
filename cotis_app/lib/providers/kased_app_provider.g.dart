@@ -6,7 +6,7 @@ part of 'kased_app_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$kasedAppHash() => r'6f64c7f38ff0498d13dbb5773b6ea1ff7fb703ac';
+String _$kasedAppHash() => r'3a4a71c27274aaca453aa252be9a2953111ff01d';
 
 /// Provider Riverpod adaptateur pour [KasedStore].
 ///

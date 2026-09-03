@@ -105,6 +105,13 @@ abstract class LocalCache {
   /// Soft delete d'un culte : isDeleted=true + SyncOperation DELETE des cotisations.
   Future<void> softDeleteCulteWithSyncOp(Culte culte, List<Cotisation> cotisations, SyncOperation op);
 
+  /// Soft delete d'un culte avec suppression de ses cotisations ET sauvegarde de toutes les SyncOps.
+  Future<void> softDeleteCulteWithCotisationsAndSyncOps(
+    Culte culte,
+    List<Cotisation> cotisations,
+    List<SyncOperation> syncOps,
+  );
+
   /// Restaure un membre (isDeleted=false) + SyncOperation RESTORE.
   Future<void> restoreMembreWithSyncOp(Membre membre, SyncOperation op);
 

@@ -8,6 +8,7 @@ import 'package:kased_app/core/services/notification_coordinator.dart';
 import 'package:kased_app/core/sync/device_service_port.dart';
 import 'package:kased_app/core/utils/uuid.dart';
 import 'package:kased_app/models/culte.dart';
+import 'package:kased_app/models/cotisation.dart';
 import 'package:kased_app/models/sync_operation.dart';
 import 'package:kased_app/store/kased_action.dart';
 
@@ -118,9 +119,11 @@ class CulteHandler {
 
     // Récupérer les cotisations associées
     final cotisations = await cache.getAllCotisations();
-    final culteCotisations = cotisations.where((c) => c.culteId == culte.id).toList();
+    final culteCotisations = cotisations
+        .where((c) => c.culteId == culte.id && !c.isDeleted)
+        .toList();
 
-    // Soft delete : marquer comme supprimé
+    // Soft delete du culte
     final deletedCulte = Culte()
       ..id = culte.id
       ..dateCulte = culte.dateCulte
@@ -133,8 +136,38 @@ class CulteHandler {
       ..deletedAt = now
       ..deletedBy = deviceId;
 
-    // Créer l'opération de synchronisation
-    final syncOp = SyncOperation()
+    // Créer une SyncOperation par cotisation à supprimer + une pour le culte
+    final syncOps = <SyncOperation>[];
+
+    // Sync op pour chaque cotisation
+    for (final cotisation in culteCotisations) {
+      final deletedCotisation = Cotisation()
+        ..id = cotisation.id
+        ..culteId = cotisation.culteId
+        ..membreId = cotisation.membreId
+        ..statut = cotisation.statut
+        ..montantObligatoire = cotisation.montantObligatoire
+        ..montantPaye = cotisation.montantPaye
+        ..datePaiement = cotisation.datePaiement
+        ..createdAt = cotisation.createdAt
+        ..updatedAt = now
+        ..isDeleted = true
+        ..deletedAt = now
+        ..deletedBy = deviceId;
+
+      final syncOp = SyncOperation()
+        ..operationId = UuidUtils.generate()
+        ..type = 'DELETE'
+        ..entityType = 'cotisation'
+        ..entityId = cotisation.id
+        ..payloadJson = jsonEncode(deletedCotisation.toJson())
+        ..createdAt = now
+        ..deviceId = deviceId;
+      syncOps.add(syncOp);
+    }
+
+    // Sync op pour le culte
+    final culteSyncOp = SyncOperation()
       ..operationId = UuidUtils.generate()
       ..type = 'DELETE'
       ..entityType = 'culte'
@@ -142,9 +175,24 @@ class CulteHandler {
       ..payloadJson = jsonEncode(deletedCulte.toJson())
       ..createdAt = now
       ..deviceId = deviceId;
+    syncOps.add(culteSyncOp);
 
-    // Soft delete du culte + soft delete des cotisations
-    await cache.softDeleteCulteWithSyncOp(deletedCulte, culteCotisations, syncOp);
+    // Soft delete du culte + marquer les cotisations comme supprimées + save les sync ops
+    await cache.softDeleteCulteWithCotisationsAndSyncOps(deletedCulte, culteCotisations, syncOps);
+
+    // En ligne : supprimer aussi sur le serveur pour éviter un sync ultérieur
+    try {
+      await api.deleteCulte(culte.id);
+      for (final cotisation in culteCotisations) {
+        await api.deleteCotisation(cotisation.id);
+      }
+      // Supprimer les ops sync locales car déjà pushées
+      for (final op in syncOps) {
+        await cache.deleteSyncOp(op.isarId);
+      }
+    } catch (e) {
+      debugPrint('[CulteHandler] deleteCulte réseau échoué (hors ligne ou erreur): $e');
+    }
 
     unawaited(onPush('culte_supprime', culte.titre ?? culte.id));
   }

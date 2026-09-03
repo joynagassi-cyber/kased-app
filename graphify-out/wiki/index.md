@@ -2,6 +2,17 @@
 
 Navigatez par module plutôt que par fichiers bruts.
 
+## Analytics & Graphe Sémantique
+
+Le projet dispose d'un **graphe sémantique étendu** dans `graphify-out/` :
+- **1 375 nœuds** (rôle, domaine, stabilité)
+- **911 arêtes sémantiques** (19 types de relations)
+- **9 règles métier** comme nœuds autonomes
+- **47 liens cross-process** (Flutter ↔ InsForge functions)
+- **14 modules wiki** cartographiés
+
+Voir [[Graph Analytics]] pour la documentation complète et les requêtes.
+
 ---
 
 ## Navigation

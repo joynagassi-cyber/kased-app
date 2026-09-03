@@ -205,6 +205,15 @@ class MemberHandler {
 
     await cache.softDeleteMembreWithSyncOp(deletedMembre, syncOp);
 
+    // En ligne : supprimer aussi sur le serveur pour éviter un sync ultérieur
+    try {
+      await api.deleteMembre(membre.id);
+      // Supprimer l'opération sync locale car déjà pushée
+      await cache.deleteSyncOp(syncOp.isarId);
+    } catch (e) {
+      debugPrint('[MemberHandler] deleteMembre réseau échoué (hors ligne ou erreur): $e');
+    }
+
     NotificationCoordinator.annulerAnniversaireMembre(membre.id);
     notifCoordinator.notifierSuppressionMembreFull(membre);
     unawaited(onPush('membre_supprime', membre.nomComplet));

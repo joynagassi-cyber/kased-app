@@ -344,6 +344,20 @@ class IsarLocalCache implements LocalCache {
       });
 
   @override
+  Future<void> softDeleteCulteWithCotisationsAndSyncOps(
+    Culte culte,
+    List<Cotisation> cotisations,
+    List<SyncOperation> syncOps,
+  ) =>
+      _isar.writeTxn(() async {
+        await _isar.cultes.put(culte);
+        for (final c in cotisations) {
+          await _isar.cotisations.put(c);
+        }
+        await _isar.syncOperations.putAll(syncOps);
+      });
+
+  @override
   Future<void> restoreMembreWithSyncOp(Membre membre, SyncOperation op) =>
       _isar.writeTxn(() async {
         await _isar.membres.put(membre);

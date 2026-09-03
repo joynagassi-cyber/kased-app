@@ -184,10 +184,11 @@ class _KasedAppState extends ConsumerState<KasedApp> with WidgetsBindingObserver
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // L'app reprend : forcer une vérification de l'auth pour récupérer
-      // la session si elle a été perdue (ex: secure storage réinitialisé).
+      // L'app reprend : vérifier seulement si l'auth a changé (pas de refresh auto)
+      // Le timer de 2 min gère déjà le refresh proactif
+      // On force juste un re-read du storage pour gérer les cas où
+      // le storage a été restauré (ex: après un crash AndroidKeyStore)
       ref.read(authProvider.notifier).checkPersistedAuth();
-      // Vérifier aussi si une mise à jour est disponible
       ref.read(updateNotifierProvider.notifier).checkNow();
     }
   }

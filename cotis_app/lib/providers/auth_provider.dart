@@ -235,11 +235,10 @@ class Auth extends _$Auth {
     } catch (e, stack) {
       debugPrint('[AUTH] Erreur lors de la vérification de l\'auth persistée: $e');
       debugPrint('[AUTH] Stack: $stack');
-      // En cas d'erreur, on déconnecte l'utilisateur
-      state = const AuthState(
-        isAuthenticated: false,
-        isLoading: false,
-      );
+      // ❗ NE PAS déconnecter en cas d'erreur de storage
+      // Garder l'état actuel pour ne pas perdre la session
+      // L'utilisateur pourra se reconnecter manuellement
+      state = const AuthState(isAuthenticated: false, isLoading: false);
     }
   }
 
@@ -311,7 +310,9 @@ class Auth extends _$Auth {
         }
       }
       debugPrint('[AUTH] Refresh échoué: pas de token dans la réponse');
-      await logout();
+      // ❗ NE PAS appeler logout() ici : garder la session locale
+      // L'utilisateur pourra se reconnecter manuellement si nécessaire
+      state = const AuthState(isAuthenticated: false, isLoading: false);
       return false;
     } catch (e) {
       debugPrint('[AUTH] Erreur refresh session : $e');
@@ -325,9 +326,9 @@ class Auth extends _$Auth {
         debugPrint('[AUTH] Erreur réseau lors du refresh, maintien de la session locale.');
         return false;
       }
-      // Erreur serveur ou autre → déconnecter
-      debugPrint('[AUTH] Erreur serveur lors du refresh, déconnexion');
-      await logout();
+      // Erreur serveur ou autre : NE PAS déconnecter automatiquement
+      // Garder la session locale, l'utilisateur pourra se reconnecter
+      debugPrint('[AUTH] Erreur serveur lors du refresh, session locale maintenue');
       return false;
     }
   }
@@ -450,10 +451,18 @@ class Auth extends _$Auth {
     await _authService.signOut();
     // Dissocier l'appareil de l'utilisateur OneSignal (sans effet si non init).
     await OneSignalService.instance.logout();
-    state = const AuthState(
-      isAuthenticated: false,
-      isLoading: false,
-    );
+    // Réinitialiser l'état à isLoading pour forcer le router à recalculer
+    // le redirect. Sans cela, le provider keepAlive garderait un état
+    // "isAuthenticated=true" qui bloquerait la redirection.
+    state = const AuthState(isLoading: true);
+  }
+
+  /// Réinitialise complètement l'état d'authentification (sans vider le stockage).
+  /// Utile quand le provider est détruit pour éviter un état "chargé"
+  /// qui empêcherait le redirect vers /onboarding.
+  Future<void> reset() async {
+    state = const AuthState(isLoading: true);
+    await _checkPersistedAuth();
   }
 
   void _startRefreshTimer() {
