@@ -39,6 +39,9 @@ void main() {
         pendingMembreIds: any(named: 'pendingMembreIds'),
         pendingCulteIds: any(named: 'pendingCulteIds'),
         pendingCotisationIds: any(named: 'pendingCotisationIds'),
+        pendingDeleteMembreIds: any(named: 'pendingDeleteMembreIds'),
+        pendingDeleteCulteIds: any(named: 'pendingDeleteCulteIds'),
+        pendingDeleteCotisationIds: any(named: 'pendingDeleteCotisationIds'),
       )).thenAnswer((_) async => {});
       when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
       when(() => mockCache.getAllCultes()).thenAnswer((_) async => []);
@@ -126,6 +129,9 @@ void main() {
         pendingMembreIds: any(named: 'pendingMembreIds'),
         pendingCulteIds: any(named: 'pendingCulteIds'),
         pendingCotisationIds: any(named: 'pendingCotisationIds'),
+        pendingDeleteMembreIds: any(named: 'pendingDeleteMembreIds'),
+        pendingDeleteCulteIds: any(named: 'pendingDeleteCulteIds'),
+        pendingDeleteCotisationIds: any(named: 'pendingDeleteCotisationIds'),
       )).thenAnswer((_) async => {});
       when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
       when(() => mockCache.getAllCultes()).thenAnswer((_) async => []);
@@ -212,6 +218,9 @@ void main() {
         pendingMembreIds: any(named: 'pendingMembreIds'),
         pendingCulteIds: any(named: 'pendingCulteIds'),
         pendingCotisationIds: any(named: 'pendingCotisationIds'),
+        pendingDeleteMembreIds: any(named: 'pendingDeleteMembreIds'),
+        pendingDeleteCulteIds: any(named: 'pendingDeleteCulteIds'),
+        pendingDeleteCotisationIds: any(named: 'pendingDeleteCotisationIds'),
       )).thenAnswer((_) async => {});
       when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
       when(() => mockCache.getAllCultes()).thenAnswer((_) async => []);
@@ -281,6 +290,9 @@ void main() {
         pendingMembreIds: any(named: 'pendingMembreIds'),
         pendingCulteIds: any(named: 'pendingCulteIds'),
         pendingCotisationIds: any(named: 'pendingCotisationIds'),
+        pendingDeleteMembreIds: any(named: 'pendingDeleteMembreIds'),
+        pendingDeleteCulteIds: any(named: 'pendingDeleteCulteIds'),
+        pendingDeleteCotisationIds: any(named: 'pendingDeleteCotisationIds'),
       )).thenAnswer((_) async => {});
       when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
       when(() => mockCache.getAllCultes()).thenAnswer((_) async => []);
@@ -373,6 +385,9 @@ void main() {
         pendingMembreIds: any(named: 'pendingMembreIds'),
         pendingCulteIds: any(named: 'pendingCulteIds'),
         pendingCotisationIds: any(named: 'pendingCotisationIds'),
+        pendingDeleteMembreIds: any(named: 'pendingDeleteMembreIds'),
+        pendingDeleteCulteIds: any(named: 'pendingDeleteCulteIds'),
+        pendingDeleteCotisationIds: any(named: 'pendingDeleteCotisationIds'),
       )).thenAnswer((_) async => {});
       when(() => mockCache.getPendingSyncOps()).thenAnswer((_) async => []);
       when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);
@@ -538,6 +553,9 @@ void main() {
         pendingMembreIds: any(named: 'pendingMembreIds'),
         pendingCulteIds: any(named: 'pendingCulteIds'),
         pendingCotisationIds: any(named: 'pendingCotisationIds'),
+        pendingDeleteMembreIds: any(named: 'pendingDeleteMembreIds'),
+        pendingDeleteCulteIds: any(named: 'pendingDeleteCulteIds'),
+        pendingDeleteCotisationIds: any(named: 'pendingDeleteCotisationIds'),
       )).thenAnswer((_) async => {});
 
       when(() => mockCache.getAllMembres()).thenAnswer((_) async => []);

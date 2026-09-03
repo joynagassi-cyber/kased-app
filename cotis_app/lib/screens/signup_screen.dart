@@ -56,9 +56,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final msg = e.toString().replaceAll('Exception: ', '');
+        final msg = e.toString();
+        // Afficher des messages compréhensibles pour l'utilisateur
+        String userMsg;
+        if (msg.contains('No Internet') || msg.contains('Network')) {
+          userMsg = 'Vérifiez votre connexion internet';
+        } else if (msg.contains('timeout') || msg.contains('Timeout')) {
+          userMsg = 'La connexion a pris trop de temps, réessayez';
+        } else if (msg.contains('email') || msg.contains('address')) {
+          userMsg = 'Adresse email déjà utilisée';
+        } else {
+          userMsg = 'Une erreur est survenue, veuillez réessayer';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
+          SnackBar(content: Text(userMsg)),
         );
       }
     }

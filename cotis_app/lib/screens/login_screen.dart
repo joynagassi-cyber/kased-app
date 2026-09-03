@@ -47,9 +47,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
-        final msg = e.toString().replaceAll('Exception: ', '');
+        final msg = e.toString();
+        // Afficher des messages compréhensibles pour l'utilisateur
+        String userMsg;
+        if (msg.contains('No Internet') || msg.contains('Network')) {
+          userMsg = 'Vérifiez votre connexion internet';
+        } else if (msg.contains('timeout') || msg.contains('Timeout')) {
+          userMsg = 'La connexion a pris trop de temps, réessayez';
+        } else if (msg.contains('credentials') || msg.contains('auth')) {
+          userMsg = 'Email ou mot de passe incorrect';
+        } else {
+          userMsg = 'Une erreur est survenue, veuillez réessayer';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
+          SnackBar(content: Text(userMsg)),
         );
       }
     }

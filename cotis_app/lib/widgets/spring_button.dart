@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
-import 'package:flutter/services.dart';
 import 'package:kased_app/core/animation_constants.dart';
 
 class SpringButton extends StatefulWidget {
@@ -36,9 +35,6 @@ class _SpringButtonState extends State<SpringButton>
   }
 
   void _onTapDown(TapDownDetails _) {
-    if (widget.enableHaptic) {
-      HapticFeedback.lightImpact();
-    }
     _controller.animateTo(
       1.0,
       duration: AppAnimDurations.fast,

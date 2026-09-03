@@ -39,7 +39,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _next() {
     if (_showing || _page >= 2) return;
-    HapticFeedback.lightImpact();
     setState(() => _showing = true);
     _pageCtrl.nextPage(
       duration: const Duration(milliseconds: 400),
@@ -49,7 +48,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _finish() {
     if (_showing) return;
-    HapticFeedback.mediumImpact();
     setState(() => _showing = true);
     AppPrefs.markOnboardingSeen();
     Future.delayed(const Duration(milliseconds: 300), () {
