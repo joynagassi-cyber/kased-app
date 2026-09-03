@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class SkeletonLoading extends StatefulWidget {
@@ -24,6 +26,7 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _showSkeleton = false;
+  Timer? _delayTimer;
 
   @override
   void initState() {
@@ -40,7 +43,7 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
 
     // Garantir un affichage minimal du skeleton pour éviter le flash
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(widget.minDisplayDuration, () {
+      _delayTimer = Timer(widget.minDisplayDuration, () {
         if (mounted) setState(() => _showSkeleton = true);
       });
     });
@@ -48,6 +51,7 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
 
   @override
   void dispose() {
+    _delayTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

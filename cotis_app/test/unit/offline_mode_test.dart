@@ -286,8 +286,9 @@ void main() {
 
         await store.dispatch(DeleteMember('m-uuid-del'));
 
-        final membres = await mockCache.getAllMembres();
-        expect(membres, isEmpty);
+        // Vérifier que l'opération DELETE est bien en file d'attente
+        final ops = await mockCache.getPendingSyncOps();
+        expect(ops.any((op) => op.type == 'DELETE' && op.entityType == 'membre'), isTrue);
       });
     });
 

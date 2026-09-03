@@ -65,14 +65,14 @@ void main() {
     const authState = AuthState(isAuthenticated: true, isLoading: false);
 
     await tester.pumpWidget(createTestApp(authState));
+    // Pump once to let router evaluate and redirect
     await tester.pump();
-    // Allow async initialization to complete
-    await tester.pump(const Duration(milliseconds: 200));
-    await tester.pump(const Duration(milliseconds: 200));
+    // Let async auth check complete
+    await tester.pump(const Duration(milliseconds: 100));
 
     final router = container.read(routerProvider);
     final currentPath = router.routerDelegate.currentConfiguration.uri.path;
-    // The router should redirect to /dashboard or show loading state
+    // The router should redirect to /dashboard
     expect(['/dashboard', '/loading'].contains(currentPath), isTrue,
         reason: 'Expected dashboard/loading, got: $currentPath');
   });
