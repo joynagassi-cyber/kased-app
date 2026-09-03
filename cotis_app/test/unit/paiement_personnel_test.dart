@@ -108,6 +108,13 @@ class StubLocalCache implements LocalCache {
     for (final item in co) await saveCotisation(item);
     await saveSyncOp(op);
   }
+  @override
+  Future<void> softDeleteCulteWithCotisationsAndSyncOps(
+      Culte c, List<Cotisation> co, List<SyncOperation> ops) async {
+    await saveCulte(c);
+    for (final item in co) await saveCotisation(item);
+    for (final op in ops) await saveSyncOp(op);
+  }
 
   @override
   Future<void> restoreMembreWithSyncOp(Membre m, SyncOperation op) async {
