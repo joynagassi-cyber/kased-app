@@ -105,6 +105,7 @@ class _AddMembreScreenState extends ConsumerState<AddMembreScreen> {
                           initialDate: _dateAdhesion,
                           firstDate: DateTime(2000),
                           lastDate: DateTime.now(),
+                          locale: const Locale('fr', 'FR'),
                         );
                         if (picked != null) setState(() => _dateAdhesion = picked);
                       },

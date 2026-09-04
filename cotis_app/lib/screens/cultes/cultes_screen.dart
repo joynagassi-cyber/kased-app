@@ -856,6 +856,7 @@ class _DatePickerTile extends StatelessWidget {
             initialDate: selectedDate,
             firstDate: DateTime(2000),
             lastDate: DateTime.now().add(const Duration(days: 365)),
+            locale: const Locale('fr', 'FR'),
           );
           if (pickedDate != null) onDateChanged(pickedDate);
         },
