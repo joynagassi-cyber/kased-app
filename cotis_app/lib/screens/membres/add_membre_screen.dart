@@ -150,6 +150,7 @@ class _AddMembreScreenState extends ConsumerState<AddMembreScreen> {
                           initialDate: _dateNaissance ?? DateTime(1990, 1, 1),
                           firstDate: DateTime(1900),
                           lastDate: DateTime.now(),
+                          locale: const Locale('fr', 'FR'),
                         );
                         if (picked != null) setState(() => _dateNaissance = picked);
                       },
