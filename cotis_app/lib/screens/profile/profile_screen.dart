@@ -407,7 +407,42 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 const SizedBox(height: 16),
 
-                // Bouton Réinitialiser le cache
+                // Bouton Dictionnaire des fonctionnalités
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colorScheme.primary,
+                      side: BorderSide(
+                        color: colorScheme.primary.withValues(alpha: 0.5),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DictionaryScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.help_outline),
+                    label: const Text(
+                      'Dictionnaire des fonctionnalités',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Bouton Déconnexion
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -670,6 +705,146 @@ class _ThemeChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Écran dictionnaire des fonctionnalités ────────────────────────────────────
+
+class DictionaryScreen extends StatelessWidget {
+  const DictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: const Text('Dictionnaire des fonctionnalités'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildSection(context, colorScheme, isDark, 'Membres', [
+            ('Ajouter un membre', 'Appuyez sur le bouton "+" pour créer un nouveau membre avec son nom, prénom et date d\'adhésion.'),
+            ('Modifier un membre', 'Appuyez sur un membre dans la liste pour voir et modifier ses informations.'),
+            ('Supprimer un membre', 'Faites glisser un membre vers la gauche pour supprimer. Il sera placé dans la corbeille.'),
+            ('Membres en avance', 'Section "En avance" affiche les membres qui ont payé avant la date du culte.'),
+          ]),
+          _buildSection(context, colorScheme, isDark, 'Cultes', [
+            ('Créer un culte', 'Appuyez sur "Créer un culte" pour ajouter une date de culte et le montant de la cotisation.'),
+            ('Saisie rapide', 'Dans le détail d\'un culte, utilisez "Saisie rapide" pour marquer plusieurs membres en une fois.'),
+            ('Paiement personnel', 'Chaque membre peut payer avec un montant personnalisé via le dialog de paiement.'),
+            ('Culte verrouillé', 'Un culte est verrouillé 30 jours après sa date. Plus de modification possible.'),
+          ]),
+          _buildSection(context, colorScheme, isDark, 'Cotisations', [
+            ('Statuts', 'Payé (vert), Non payé (rouge), Absent (gris), En avance (bleu).'),
+            ('Validation auto', 'Quand un membre adhère avant un culte, il apparaît automatiquement dans la liste.'),
+            ('Avances', 'Les paiements en avance sont déduits du portefeuille du membre.'),
+          ]),
+          _buildSection(context, colorScheme, isDark, 'Sync & Offline', [
+            ('Synchronisation', 'Les données sont sync automatiquement quand la connexion revient.'),
+            ('Mode offline', 'Travaillez sans internet. Les actions sont queue et sync plus tard.'),
+            ('Refresh', 'Glissez vers le bas pour rafraîchir manuellement les données.'),
+          ]),
+          _buildSection(context, colorScheme, isDark, 'Corbeille', [
+            ('Suppression', 'Les éléments supprimés vont dans la corbeille pendant 30 jours.'),
+            ('Restauration', 'Restaurez un élément depuis la corbeille avant purge automatique.'),
+            ('Purge', 'Après 30 jours, les éléments sont définitivement supprimés.'),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(BuildContext context, ColorScheme colorScheme, bool isDark, String title, List<(String, String)> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8, top: 16),
+          child: Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colorScheme.outlineVariant),
+          ),
+          child: Column(
+            children: items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final (term, desc) = entry.value;
+              final isLast = index == items.length - 1;
+              return Column(
+                children: [
+                  _buildItem(context, colorScheme, term, desc),
+                  if (!isLast)
+                    Divider(
+                      height: 1,
+                      color: colorScheme.outlineVariant,
+                    ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildItem(BuildContext context, ColorScheme colorScheme, String term, String desc) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  term,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
